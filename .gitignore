@@ -22,3 +22,6 @@ node_modules/
 
 # Material de traspaso: se consulta local, no se versiona (instrucción del PO)
 *.zip
+
+# Bandeja de entrada del PO: los insumos se mueven a su destino, no se versionan aquí
+incoming/
