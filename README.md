@@ -10,8 +10,18 @@ llevan el prefijo `SPEC-NNN: <qué>`.
 
 - **`SPEC-NNN`** — funcionalidades y entregables nuevos. Propósito único.
 - **`SPEC-FIX-NN`** — corrección de una SPEC ya ejecutada (bug del material).
+- **`SPEC-DIAG-NN` / `SPEC-AUDIT-NN`** — diagnóstico e investigación que no producen
+  material. Se versionan siempre.
 - **Sufijo `-R1`, `-R2`** — revisión de una SPEC aún no ejecutada.
 - **Ninguna ejecución comienza antes de que su SPEC esté commiteada.**
+
+Toda **`SPEC-FIX-NN`** se ejecuta en rama propia y termina en tag:
+`fix/<slug>` → merge a `main` → tag `material-vX.Y.Z` (patch bump). Las `SPEC-NNN` de
+features pueden ir directo a `main` mientras el material no esté dictándose; **desde el
+primer dictado, también van por rama.**
+
+El nombre del archivo **no lleva sufijo de versión**: Git ya versiona el contenido. Una
+SPEC ejecutada es inmutable; una SPEC aún no ejecutada se revisa como archivo `-R1` nuevo.
 
 ## Roles
 
