@@ -1,0 +1,124 @@
+# =============================================================================
+#  material-ci.yml — CI del MATERIAL del curso (tooling interno del repo)
+# -----------------------------------------------------------------------------
+#  Protege dos invariantes que el proyecto declara y que, hasta la SPEC-004,
+#  solo vivían en la memoria de una conversación:
+#
+#   1. `temario` — la FUENTE (.md) y el BUILD (.docx) no divergen, y la matriz
+#      Módulo × Sesión cuadra por las dos vías. Verificado por la SPEC-003 una
+#      vez; nada impedía que la siguiente edición lo rompiera en silencio.
+#   2. `siembra` — toda TEORIA.md de un lab con sucesor siembra el módulo N+1
+#      (P-18 del ADN). Detección por PATRÓN, jamás por título literal: los labs
+#      09-12 del curso de Cypress usan otro encabezado y son correctos.
+#
+#  Filtro de rutas: Actions no soporta `paths` a nivel de job, así que el filtro
+#  vive a nivel de workflow con la UNIÓN de las rutas que interesan a los dos
+#  jobs. Ambos son de segundos; correr uno de más no cuesta nada, y perder un
+#  disparo sí. (Discrepancia declarada en el reporte de la SPEC-004.)
+# =============================================================================
+name: material-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/temario/**'
+      - 'tools/**'
+      - 'labs/**'
+      - '.github/workflows/material-ci.yml'
+  pull_request:
+    paths:
+      - 'docs/temario/**'
+      - 'tools/**'
+      - 'labs/**'
+      - '.github/workflows/material-ci.yml'
+  workflow_dispatch:        # para poder exigirle el verde a mano
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  #  Coherencia del temario: fuente <-> build, y la matriz que cuadra.
+  # ---------------------------------------------------------------------------
+  temario:
+    name: temario · coherencia .md <-> .docx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # El verificador lee las CELDAS del .docx, no su texto renderizado
+      # (lección D2 de la SPEC-003): por eso python-docx y no pandoc.
+      - name: Instalar python-docx
+        run: pip install --quiet python-docx
+
+      - name: Verificar coherencia del temario
+        run: python3 tools/verificar-temario.py
+
+  # ---------------------------------------------------------------------------
+  #  Regla de siembra (P-18). Armada hoy; se activa sola cuando nazca labs/.
+  # ---------------------------------------------------------------------------
+  siembra:
+    name: siembra · toda TEORIA.md con sucesor siembra el módulo N+1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar la siembra
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Guarda de activación: sin labs, la regla queda armada, no activa.
+          if [ ! -d labs ] || [ -z "$(ls -A labs 2>/dev/null)" ]; then
+            echo "[INFO] Sin labs aún: la regla de siembra queda armada, no activa."
+            exit 0
+          fi
+
+          # Sin `mapfile` ni `${a[-1]}`: bash 3.2 también corre esto (Git Bash,
+          # macOS del instructor). El CI no es el único que debe poder ejecutarlo.
+          #
+          # `for` sobre IFS=nueva-línea, NO `... | while read`: un while tras una
+          # tubería corre en subshell y perdería el contador FALLOS — el gate
+          # saldría siempre verde. Es justo el "gate decorativo" que la rúbrica
+          # del Lab 13 castiga (P-05 del ADN).
+          LABS="$(find labs -maxdepth 1 -mindepth 1 -type d | sort)"
+          ULTIMO="$(printf '%s\n' "$LABS" | tail -n 1)"
+          FALLOS=0
+
+          IFS=$'\n'
+          for LAB in $LABS; do
+            TEORIA="$LAB/TEORIA.md"
+
+            if [ "$LAB" = "$ULTIMO" ]; then
+              # El último lab cierra el arco: no hay módulo N+1 que sembrar.
+              echo "[INFO] $LAB es el último lab: exento de sembrar (cierra el arco)."
+              continue
+            fi
+
+            if [ ! -f "$TEORIA" ]; then
+              echo "[ERROR] $LAB no tiene TEORIA.md"
+              FALLOS=$((FALLOS + 1))
+              continue
+            fi
+
+            # Por PATRÓN, no por título literal (P-18): "siembra", sin distinguir
+            # mayúsculas. Un lab puede titular su cierre como quiera.
+            if grep -qi 'siembra' "$TEORIA"; then
+              echo "[OK] $TEORIA siembra el módulo siguiente"
+            else
+              echo "[ERROR] $TEORIA no siembra el módulo siguiente (patrón 'siembra' ausente)"
+              FALLOS=$((FALLOS + 1))
+            fi
+          done
+
+          echo
+          if [ "$FALLOS" -gt 0 ]; then
+            echo "[ERROR] $FALLOS lab(s) sin siembra. Ver P-18 en docs/adn/adn-cypress.md."
+            exit 1
+          fi
+          echo "[OK] Todos los labs con sucesor siembran el módulo N+1."
