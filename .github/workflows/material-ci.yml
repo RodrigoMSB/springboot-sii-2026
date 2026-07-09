@@ -25,12 +25,14 @@ on:
       - 'docs/temario/**'
       - 'tools/**'
       - 'labs/**'
+      - 'dgt-tramites-api/**'
       - '.github/workflows/material-ci.yml'
   pull_request:
     paths:
       - 'docs/temario/**'
       - 'tools/**'
       - 'labs/**'
+      - 'dgt-tramites-api/**'
       - '.github/workflows/material-ci.yml'
   workflow_dispatch:        # para poder exigirle el verde a mano
 
@@ -122,3 +124,38 @@ jobs:
             exit 1
           fi
           echo "[OK] Todos los labs con sucesor siembran el módulo N+1."
+
+  # ---------------------------------------------------------------------------
+  #  La app canónica: compila, sus 7 guardianes vigilan y sus 7 mordidas se
+  #  certifican. Testcontainers corre nativo: los runners ubuntu traen Docker.
+  # ---------------------------------------------------------------------------
+  app:
+    name: app · dgt-tramites-api (verify)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dgt-tramites-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: ./mvnw verify
+        run: ./mvnw -B verify
+
+      - name: Las 7 reglas y las 7 mordidas corrieron
+        run: |
+          set -euo pipefail
+          # Un verde no basta: hay que ver que la suite de arquitectura EXISTIÓ.
+          # Un `verify` que no ejecuta a los guardianes es un gate decorativo (P-05).
+          for suite in ArquitecturaTest MordidaDeLosGuardianesTest; do
+            informe="target/surefire-reports/cl.dgt.tramites.arquitectura.$suite.txt"
+            [ -f "$informe" ] || { echo "[ERROR] No se ejecutó $suite"; exit 1; }
+            cat "$informe" | sed -n '4p'
+            grep -q "Failures: 0, Errors: 0" "$informe" || { echo "[ERROR] $suite no está limpio"; exit 1; }
+          done
+          echo "[OK] Los 7 guardianes vigilan y los 7 muerden."
