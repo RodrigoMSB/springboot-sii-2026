@@ -1,0 +1,24 @@
+# Build
+target/
+*.class
+*.jar
+
+# IDE / SO
+.idea/
+.DS_Store
+
+# Logs
+*.log
+
+# Secretos y credenciales — nunca al repo
+*.pem
+*.key
+*.p12
+*.jks
+.env
+
+# Dependencias
+node_modules/
+
+# Material de traspaso: se consulta local, no se versiona (instrucción del PO)
+*.zip
