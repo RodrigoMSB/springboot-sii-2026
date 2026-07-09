@@ -4,9 +4,14 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 
 ## Protocolo SPEC
 
-El arquitecto emite especificaciones numeradas (`SPEC-NNN`), versionadas en `docs/specs/`
-**antes** de ejecutarse. Si la ejecución difiere de la SPEC, la SPEC manda y la
-discrepancia se reporta. Los commits llevan el prefijo `SPEC-NNN: <qué>`.
+El arquitecto emite especificaciones numeradas, versionadas en `docs/specs/`. Si la
+ejecución difiere de la SPEC, la SPEC manda y la discrepancia se reporta. Los commits
+llevan el prefijo `SPEC-NNN: <qué>`.
+
+- **`SPEC-NNN`** — funcionalidades y entregables nuevos. Propósito único.
+- **`SPEC-FIX-NN`** — corrección de una SPEC ya ejecutada (bug del material).
+- **Sufijo `-R1`, `-R2`** — revisión de una SPEC aún no ejecutada.
+- **Ninguna ejecución comienza antes de que su SPEC esté commiteada.**
 
 ## Roles
 
