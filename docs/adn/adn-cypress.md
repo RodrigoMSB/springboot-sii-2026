@@ -1,6 +1,7 @@
 # ADN del curso de Cypress · destilado con evidencia
 
 > Producido por [SPEC-001](../specs/SPEC-001-destilacion-adn-cypress.md).
+> Ampliado con P-15…P-18 por [SPEC-002](../specs/SPEC-002-addendum-adn-y-gobernanza.md).
 
 ## 1. Propósito
 
@@ -270,6 +271,78 @@ El flag `--dir` está presente en **12 de 13** `validar-lab.sh` (`grep -ln -- "-
 
 ---
 
+### P-15 · Lo opcional nunca baja el veredicto
+
+**Evidencia:** `labs/lab-03-inicio-de-actividades/bin/validar-lab.sh:150` y `:158`
+```bash
+#  7 · Desafío opcional: gemelo.cy.js (no bloquea la aprobación)
+    paso_fail "El desafío gemelo.cy.js tiene {{TODO}} sin completar" "Termínalo — Guía 99." "no-gate"
+```
+El tercer argumento `"no-gate"` es el mecanismo, definido en la línea 56: `[ "${3:-}" = "no-gate" ] || GATE_OK=0`. Y la numeración lo saca de la secuencia obligatoria: `labs/*/guia/99-desafio-*.md` existe en **12 de 13** labs (`99-desafio-el-gemelo.md`, `99-desafio-el-pipeline-que-miente.md`, …).
+
+**Por qué funciona:** el desafío tiene tres estados, no dos. Ausente → `paso_skip` (línea 58: incrementa `SKIP`, nunca toca `GATE_OK`). Presente e incompleto o rojo → `paso_fail` **con** `"no-gate"`: el alumno ve el ✖ y la guía a la que volver, pero el veredicto del núcleo no se mueve. El salto de `04-` a `99-` señala "esto está fuera del camino obligatorio" antes de abrir el archivo. Lo opcional es visible sin ser punitivo: se puede fallar sin reprobar.
+
+**Traslado a Spring Boot:** `90-validar.sh` trata `desafio/` con contador aparte y la misma semántica de tres estados. En Maven, el desafío vive en un perfil (`-Pdesafio`) o un `@Tag("desafio")` excluido del `verify` por defecto; el script lo corre, reporta su resultado y **nunca** lo suma a `GATE_OK`. Regla derivada: si un chequeo puede bajar el veredicto, no es opcional — y si es opcional, se pasa `no-gate` explícito, no se omite el chequeo.
+
+---
+
+### P-16 · El antes y el después conviven, y el CI exige que ambos pasen
+
+**Evidencia:** `labs/lab-08-la-gran-refactorizacion/solucion-refactor/` contiene `antes/flujo-declaracion.cy.js` y `despues/flujo-declaracion.cy.js` — mismo nombre, dos mundos. Cabecera del primero (líneas 2-7):
+```js
+//  [ANTES] flujo-declaracion.cy.js — SIN Page Objects ni cy.login (el "pecado")
+//     FUNCIONA (pasa en verde) pero es largo y frágil: si cambia la pantalla de
+//     acceso o el data-cy de un campo, hay que editar AQUÍ (y en 13 archivos más).
+```
+Y el validador **exige que los dos estén verdes**, `bin/validar-lab.sh:125-131`:
+```bash
+#  7 · El refactor preserva comportamiento: antes/ y despues/ AMBOS verdes
+    paso_ok "solucion-refactor: antes/ y despues/ ambos en verde (mismo comportamiento)"
+```
+
+**Por qué funciona:** el `antes/` **pasa en verde** (42 líneas) y el `despues/` también (34 líneas, ~20 % menos; su cabecera invita: *"Cuenta las líneas"*). Que ambos pasen es la definición ejecutable de refactorizar: **cambiar la estructura sin cambiar el comportamiento**. Si el `antes/` estuviera roto, el alumno concluiría que se refactoriza porque el código *falla*, y aprendería la lección equivocada — la misma trampa que el Acto 2 de P-10 desactiva. La Guía 01 lo explota como ejercicio de lectura (`guia/01-la-deuda-en-la-pizarra.md:36`: *"¿Cuántas líneas tiene el `beforeEach` de `antes/`? ¿Y el de `despues/`?"*).
+
+**Traslado a Spring Boot:** el Lab 05 versiona `solucion-con-n1/` y `solucion/` con **la misma suite de tests** y distinto conteo de queries. El validador corre las dos y exige verde en ambas; la diferencia se mide, no se narra: un test con `@SqlCount`/`datasource-proxy` asevera *N+1 queries* en la primera y *1* en la segunda. El alumno diffea su propia deuda, y el CI garantiza que el refactor no cambió comportamiento.
+
+---
+
+### P-17 · El entorno del alumno tiene documento propio, correlato humano del CI
+
+**Evidencia:** `docs/entorno-windows.md:1-7`
+```
+# Entorno Windows — Git Bash (guía verificada por CI)
+> [...] Lo que aquí se describe está **verificado por el CI** en runners
+> `windows-latest`, donde `bash` **es Git Bash** — exactamente tu entorno.
+```
+Y el doc registra lo que el CI **no** puede atrapar (líneas 23-26):
+```
+> ⚠️ **`nvm-windows` NO lee `.nvmrc` automáticamente.** [...] El `.nvmrc` del repo es
+> respetado por `nvm` (Mac/Linux) y por el CI, pero no por `nvm-windows`.
+```
+
+**Por qué funciona:** el título reclama una garantía —*"verificada por CI"*— y la matriz de P-12 la respalda: el doc no es una promesa, es la lectura humana de un job que corre en cada push. El párrafo del `nvm-windows` es la otra mitad, y la más honesta: marca con precisión la **frontera** donde el CI deja de cubrir al alumno (el runner tiene Node preinstalado; la máquina del alumno, no). Un doc de entorno que solo dijera lo que funciona sería una trampa.
+
+**Traslado a Spring Boot:** `docs/entorno-alumno.md`, encabezado *"guía verificada por CI"*, respaldado por la matriz `os × java` de P-12. Documenta el modo `--sin-docker` (decisión **D-007**, aún no registrada en `decisiones.md` — ver reporte de SPEC-002) y las fronteras que el CI no cubre: `JAVA_HOME` en Windows, el wrapper `mvnw.cmd` vs `mvnw`, y Testcontainers exigiendo Docker Desktop. Regla: **lo que el CI verifica, el doc lo explica; lo que el CI no puede verificar, el doc lo advierte.**
+
+---
+
+### P-18 · La siembra es un invariante estructural, no un título
+
+**Evidencia:** el invariante se cumple en los 12 labs con sucesor, pero con **dos** encabezados distintos:
+```
+labs/lab-01-tu-primer-dia-en-la-dgt/TEORIA.md:314   ## 9. Conclusiones y siembra del Módulo 2
+labs/lab-08-la-gran-refactorizacion/TEORIA.md:247   ## 12. Conclusiones y siembra del Módulo 9
+labs/lab-11-la-flota-de-fiscalizacion/TEORIA.md:248 ## ⏭️ La recta final (siembra M12)
+labs/lab-13-el-framework-de-la-dgt/TEORIA.md:131    ## 8. Cierre
+```
+El Lab 13 no siembra: no hay Módulo 14. (Ver §5 y P-09, del que este es el corolario verificable.)
+
+**Por qué funciona:** una regla de CI escrita contra el **título** (`grep "Conclusiones y siembra del Módulo"`) daría falso rojo en cuatro labs correctos y presionaría a renombrarlos — el tooling dictándole el tono a la pedagogía. Escrita contra el **invariante** (existe una sección de siembra, salvo en el último lab), pasa en los 13 y sigue atrapando el olvido real. Es exactamente la lección de A-01 aplicada al propio material: no confundir la forma del texto con la propiedad que importa.
+
+**Traslado a Spring Boot:** regla de CI **registrada, no implementada** — se activa cuando exista `material-ci.yml` (SPEC posterior). Especificación: para cada `labs/lab-NN/TEORIA.md` con sucesor, exigir una sección que contenga el patrón `siembra` y la referencia al módulo `N+1`; el último lab queda exento por lista explícita, no por silencio. La detección es por patrón, jamás por título literal.
+
+---
+
 ## 3. Anti-herencias
 
 ### A-01 · Verificar código fuente con `grep` — frágil por construcción
@@ -363,3 +436,5 @@ labs/lab-13-.../plantillas/reporte-egreso.md:52      - [ ] `./bin/validar-egreso
 | H9 | ⚠️ Invariante confirmado (12/12 labs con sucesor); **encabezado literal refutado** (labs 09–12 usan otro título) |
 | A1, A2 | ✅ Defecto confirmado; anti-herencia justificada |
 | A3 | ✅ Ausencia confirmada (§4 N-01) — declarada, no omitida |
+
+**Addendum SPEC-002.** P-15…P-18 no provienen de las hipótesis del arquitecto sino de hallazgos del ejecutor durante la verificación, adoptados por decisión del PO y sometidos al mismo estándar de evidencia: ruta, cita y traslado. El origen no rebaja el rigor.
