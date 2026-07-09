@@ -322,7 +322,7 @@ Y el doc registra lo que el CI **no** puede atrapar (líneas 23-26):
 
 **Por qué funciona:** el título reclama una garantía —*"verificada por CI"*— y la matriz de P-12 la respalda: el doc no es una promesa, es la lectura humana de un job que corre en cada push. El párrafo del `nvm-windows` es la otra mitad, y la más honesta: marca con precisión la **frontera** donde el CI deja de cubrir al alumno (el runner tiene Node preinstalado; la máquina del alumno, no). Un doc de entorno que solo dijera lo que funciona sería una trampa.
 
-**Traslado a Spring Boot:** `docs/entorno-alumno.md`, encabezado *"guía verificada por CI"*, respaldado por la matriz `os × java` de P-12. Documenta el modo `--sin-docker` (decisión **D-007**, aún no registrada en `decisiones.md` — ver reporte de SPEC-002) y las fronteras que el CI no cubre: `JAVA_HOME` en Windows, el wrapper `mvnw.cmd` vs `mvnw`, y Testcontainers exigiendo Docker Desktop. Regla: **lo que el CI verifica, el doc lo explica; lo que el CI no puede verificar, el doc lo advierte.**
+**Traslado a Spring Boot:** `docs/entorno-alumno.md`, encabezado *"guía verificada por CI"*, respaldado por la matriz `os × java` de P-12. Documenta el modo `--sin-docker` ([`decisiones.md`, fila del 2026-07-09](../decisiones.md), que ratifica la D-007 del documento de traspaso) y las fronteras que el CI no cubre: `JAVA_HOME` en Windows, el wrapper `mvnw.cmd` vs `mvnw`, y Testcontainers exigiendo Docker Desktop. Regla: **lo que el CI verifica, el doc lo explica; lo que el CI no puede verificar, el doc lo advierte.**
 
 ---
 
