@@ -29,7 +29,7 @@ la sala se va a quedar en silencio.
 | | Qué | Dónde | ≈ |
 |---|---|---|---|
 | **TODO_1** | Externalizar la conexión: el perfil `prod` pide sus secretos al entorno | `application-prod.yml` | 15 min |
-| **TODO_2** | Tres perfiles, y que `prod` **falle rápido y claro** sin sus variables | `application-*.yml` + `config/` | 15 min |
+| **TODO_2** | Tres perfiles, y completar el verificador que hace `prod` **fallar rápido y claro** | `application-*.yml` + `config/` | 15 min |
 | **TODO_3** | `DgtProperties`: configuración tipada, inmutable y **validada** | `config/DgtProperties.java` | 15 min |
 | **TODO_4** | Tu primer endpoint: `GET /api/tramites/{id}` + 404 con `ProblemDetail` | `web/controller/` | 15 min |
 

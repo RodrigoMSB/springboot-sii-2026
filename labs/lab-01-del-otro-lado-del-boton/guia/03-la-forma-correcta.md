@@ -43,16 +43,17 @@ Factory method 'dataSource' threw exception with message: 'url' must start with 
 Falló rápido, sí. Pero ese mensaje **no nombra la variable que falta**, no dice quién debía
 definirla, y manda a quien lo lee a leer el código de Hikari. A las tres de la mañana.
 
-Escribe un `BeanFactoryPostProcessor` con `@Profile("prod")` que compruebe las tres
-variables y lance un `IllegalStateException` que las nombre. Es un `BeanFactoryPostProcessor`
-y no un `@Component` corriente porque corre **antes** de instanciar cualquier bean: gana la
-carrera contra el `DataSource`.
+El andamio ya está escrito: `config/VerificadorDeSecretosProd.java` corre en el perfil
+`prod`, es un `BeanFactoryPostProcessor` (se ejecuta **antes** de instanciar cualquier bean,
+así que gana la carrera contra el `DataSource`) y ya recibe el `Environment`. **Lo único que
+falta es el corazón**, marcado con `{{TODO_2}}`: recorrer las tres variables, juntar las que
+falten, y lanzar un `IllegalStateException` que las **nombre a todas**.
 
 **Fallar rápido no es solo que falle. Es que falle antes, y con un mensaje accionable.**
 
-> **Pista 2.** `implements BeanFactoryPostProcessor, EnvironmentAware`. El `Environment` te
-> da `getProperty("DGT_DB_URL")`. Junta las que falten y lánzalas todas de una vez: nadie
-> quiere arreglar tres errores de uno en uno.
+> **Pista 2.** `entorno.getProperty("DGT_DB_URL")` devuelve `null` si falta;
+> `StringUtils.hasText(...)` te dice si un valor es usable. Junta las que falten y lánzalas
+> todas de una vez: nadie quiere arreglar tres errores de uno en uno.
 
 Cuando termines, **transcribe literalmente** el mensaje que produce tu código. Te lo pide el
 reporte entregable, y no vale resumirlo.

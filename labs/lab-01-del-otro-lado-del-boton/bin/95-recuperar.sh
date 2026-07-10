@@ -57,9 +57,12 @@ if [ "$MODO" = "enunciado" ]; then
     rm -rf "${DESTINO:?}/$ENUNCIADO"
     mkdir -p "$DESTINO/$ENUNCIADO"
     cp "$SOLUCION/$ENUNCIADO"/*.java "$DESTINO/$ENUNCIADO/"
+    rm -rf "$DESTINO/target"
     paso_ok "Tests del enunciado restaurados"
 else
     ( cd "$SOLUCION" && tar cf - --exclude='./target' --exclude='./.estado' . ) | ( cd "$DESTINO" && tar xf - )
+    # tar preserva fechas: un .class viejo puede tapar la fuente nueva. Limpia el build.
+    rm -rf "$DESTINO/target"
     paso_ok "Solución aplicada sobre $(basename "$DESTINO")/"
 fi
 
