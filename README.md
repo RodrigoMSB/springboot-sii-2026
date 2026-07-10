@@ -26,8 +26,11 @@ llevan el prefijo `SPEC-NNN: <qué>`.
 > congelado (SPEC-FIX-01 §3.1); se activa el día que haya GitHub Pro o el repo deje de ser
 > privado. Aquí no se declara activo lo que no lo está.
 
-El nombre del archivo **no lleva sufijo de versión**: Git ya versiona el contenido. Una
-SPEC ejecutada es inmutable; una SPEC aún no ejecutada se revisa como archivo `-R1` nuevo.
+El nombre del archivo **no lleva sufijo de versión**: Git ya versiona el contenido.
+
+**Cuándo una SPEC se vuelve inmutable:** al **cerrar**, es decir, cuando su PR se mergea —
+no cuando se commitea. Mientras su PR vive, los ajustes acordados se anotan *dentro* de la
+SPEC. Una vez cerrada, se corrige con una `SPEC-FIX-NN` o se revisa como `-R1` nuevo.
 
 **Verificación en dos etapas.** Todo script y todo flujo lo ejecuta **primero el ejecutor**,
 sobre estado limpio, y cita la salida en su reporte. Solo entonces el PO lo corre como

@@ -28,3 +28,7 @@ incoming/
 
 # El estado local del lab (log y PID de la app). No se versiona.
 labs/**/.estado/
+
+# Bancos de pruebas y respaldos de los labs. Efímeros.
+labs/**/.e2e/
+labs/**/.respaldo-*/

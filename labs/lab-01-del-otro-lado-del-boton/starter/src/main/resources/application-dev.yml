@@ -1,0 +1,21 @@
+# =============================================================================
+#  Perfil dev — tu portátil
+# -----------------------------------------------------------------------------
+#  Boot levanta el compose.yaml y cablea el DataSource solo. Tú no escribes
+#  ninguna cadena de conexión aquí, y por tanto no hay ninguna que filtrar.
+#
+#  TODO_1 y TODO_2 — te faltan dos perfiles hermanos de este:
+#
+#    application-test.yml  · para la suite: sin compose (lo levanta Testcontainers)
+#    application-prod.yml  · para el servidor: la conexión llega por VARIABLES DE
+#                            ENTORNO, con placeholders ${DGT_DB_URL} y sin valores
+#                            por defecto.
+#
+#  Pista 2: un `${VAR}` sin `:valor` no admite omisiones. Un `${VAR:algo}` sí, y
+#  por eso es peligroso: arranca en silencio contra la base equivocada.
+# =============================================================================
+spring:
+  docker:
+    compose:
+      enabled: true
+      lifecycle-management: start_and_stop

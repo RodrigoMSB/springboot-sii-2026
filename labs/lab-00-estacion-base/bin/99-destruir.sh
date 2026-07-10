@@ -102,11 +102,27 @@ if [ -d "$ESTADO" ]; then
     paso_ok "Archivos temporales del lab borrados (.estado/)"
 fi
 
+# -----------------------------------------------------------------------------
+#  4 · Testcontainers: los vemos, no los tocamos.
+# -----------------------------------------------------------------------------
+#  `./mvnw verify` levanta contenedores propios (y un vigilante, `ryuk`). Los
+#  creó Maven, no este laboratorio, así que este script NO los apaga: hacerlo
+#  sería volver al pecado de matar procesos ajenos. Pero callarlos tampoco vale:
+#  el alumno vería basura y creería que "Todo quedó como estaba" le mintió.
+if docker info >/dev/null 2>&1; then
+    SOBRANTES="$(docker ps -q --filter label=org.testcontainers 2>/dev/null | wc -l | tr -d ' ')"
+    if [ "${SOBRANTES:-0}" -gt 0 ]; then
+        log_info "Veo $SOBRANTES contenedor(es) de Testcontainers, de un './mvnw verify'."
+        log_info "No los toco: no los levantó este laboratorio. Cómo limpiarlos: ver T-11."
+    fi
+fi
+
 resumen_final "Todo quedó como estaba" "Quedó algo a medio desmontar"
 VEREDICTO=$?
 
 printf '\n'
-log_info "Tus otros contenedores siguen intactos: este script solo toca los del curso."
+log_info "«Todo quedó como estaba» se refiere a lo que ESTE laboratorio creó."
+log_info "Tus otros contenedores y procesos siguen intactos."
 printf '\n'
 
 exit "$VEREDICTO"
