@@ -1,7 +1,14 @@
 # =============================================================================
 #  application.yml — configuración común de dgt-tramites-api
 # -----------------------------------------------------------------------------
-#  Configuración de la aplicación.
+#  Este archivo está "limpio". No hay ninguna contraseña aquí.
+#
+#  Antes sí la había. Alguien la borró en un commit. Míralo tú:
+#      git log --oneline -- src/main/resources/application.yml
+#      git show <el commit "ajustes de conexión">
+#
+#  Y ahora pregúntate lo que te va a preguntar Carolina:
+#  ¿borrarla arregló algo?
 # =============================================================================
 spring:
   application:
@@ -9,12 +16,6 @@ spring:
 
   profiles:
     active: ${DGT_PERFIL:dev}
-
-  # Conexión al servidor de la DGT. Ya quedó configurada, no la toquen.
-  datasource:
-    url: jdbc:postgresql://prod-db.dgt.gob.cl:5432/dgt
-    username: dgt_app
-    password: Dgt2026Pr0d!
 
   jpa:
     open-in-view: false
