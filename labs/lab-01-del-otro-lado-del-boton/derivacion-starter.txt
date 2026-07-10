@@ -1,0 +1,9 @@
+# Archivos del starter/ del Lab 01 que difieren de su solucion/ A PROPOSITO:
+# los huecos de los TODOs. Base: labs/lab-01-.../solucion
+src/main/resources/application.yml
+src/main/resources/application-dev.yml
+src/main/java/cl/dgt/tramites/config/VerificadorDeSecretosProd.java
+src/main/java/cl/dgt/tramites/config/DgtProperties.java
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
+src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java
+src/main/java/cl/dgt/tramites/application/SelloService.java
