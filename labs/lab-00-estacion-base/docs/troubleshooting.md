@@ -5,7 +5,7 @@ veinte mensajes averiguando de qué hablas.
 
 | # | Síntoma | Qué pasa de verdad | Qué haces |
 |---|---|---|---|
-| **T-01** | `El puerto 8080 ya está ocupado por: java (PID 1234)` | Otro programa escucha en ese puerto. Suele ser otro proyecto Spring Boot tuyo. | No mates el proceso a ciegas. Levanta la DGT en otro puerto: `./bin/start-lab.sh --puerto 8081`. Todo lo demás funciona igual; solo cambia el número en tus `curl`. |
+| **T-01** | `El puerto 8099 ya está ocupado por: java (PID 1234)` | Algo escucha en el puerto del curso. Es raro —por eso elegimos el 8099 y no el 8080, que ocupa medio mundo— pero puede pasar. | No mates el proceso a ciegas: puede ser tu trabajo. Levanta la DGT en otro puerto: `./bin/start-lab.sh --puerto 8100`. Todo funciona igual; solo cambia el número en tus `curl`. |
 | **T-02** | `Java 21 es muy antiguo; el curso pide 25` | Tienes otra versión de Java primero en el `PATH`. Muy común si hiciste otro curso este año. | Instala Temurin 25 (guía 01) y **comprueba** con `java -version`. Si usas `sdkman`: `sdk use java 25-tem`. Si usas `nvm`-style para Java en Windows, ver `entorno-alumno.md`. |
 | **T-03** | `docker está instalado, pero su demonio NO responde` | Docker Desktop está cerrado. Es el fallo nº 1 del primer día. | Abre Docker Desktop y **espera** a que el icono de la ballena deje de animarse. Luego repite `./bin/00-verificar.sh`. |
 | **T-04** | `No encuentro ni 'docker' ni 'podman'` | No está instalado, o tu institución no lo autoriza. | Si puedes instalarlo: guía 01. Si **no** te dejan: `./bin/00-verificar.sh --sin-docker` y avisa al instructor. No estás fuera del curso; hay un plan para ti. |

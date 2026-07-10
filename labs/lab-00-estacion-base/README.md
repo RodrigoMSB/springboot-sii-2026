@@ -27,11 +27,17 @@ media hora tarde y tus 17 compañeros te van a mirar.
 Después del paso 3, si escribes esto:
 
 ```bash
-curl http://localhost:8080/api/contribuyentes/11111111-1
+curl http://localhost:8099/api/contribuyentes/11111111-1
 ```
 
 Valentina Rojas te va a responder. Ese es el momento en que la DGT deja de ser una
 diapositiva.
+
+> **¿Por qué el 8099 y no el 8080?** Porque el 8080 lo ocupa medio mundo: la app del
+> trabajo, un contenedor olvidado, el Tomcat de otro curso. Chocar contra él sería tu
+> primera frustración, y no te enseñaría nada. El 8099 es el puerto de la DGT en los doce
+> laboratorios. Si aun así estuviera ocupado, el script te dirá **quién** lo ocupa
+> (**T-01**) y podrás usar `--puerto`.
 
 ---
 

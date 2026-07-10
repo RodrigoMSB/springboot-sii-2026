@@ -48,10 +48,11 @@ cd labs/lab-00-estacion-base
 ./bin/start-lab.sh
 ```
 
-Cuando termine, haz lo que te pide:
+Cuando termine, haz lo que te pide (la DGT vive en el puerto **8099**, no en el 8080:
+ese lo ocupa medio mundo):
 
 ```bash
-curl http://localhost:8080/api/contribuyentes/11111111-1
+curl http://localhost:8099/api/contribuyentes/11111111-1
 ```
 
 ```json

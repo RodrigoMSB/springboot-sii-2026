@@ -25,6 +25,23 @@
 #     resumen_final "ESTACIÓN LISTA"
 # =============================================================================
 
+# -----------------------------------------------------------------------------
+#  El puerto del curso
+# -----------------------------------------------------------------------------
+#  8099, no 8080. El 8080 es el puerto por defecto de medio mundo: la app del
+#  trabajo, el Tomcat de otro curso, un contenedor olvidado. Chocar contra él es
+#  la primera frustración del alumno, y no enseña nada.
+#
+#  Vive AQUÍ, en la caja de herramientas, para que los doce labs hereden el mismo
+#  número y el alumno no tenga que recordar uno distinto cada sesión.
+#
+#  La defensa sigue en pie: si el 8099 estuviera ocupado, `start-lab.sh` lo dice
+#  con nombre y PID, y `--puerto N` siempre está disponible.
+# shellcheck disable=SC2034  # las consume cada lab que hace `source` de esta lib
+DGT_PUERTO_DEFECTO=8099
+# shellcheck disable=SC2034  # ídem: se usa en el mensaje de puerto ocupado
+DGT_PUERTO_SUGERIDO=8100      # el que se propone cuando el de arriba está tomado
+
 # Contadores. Globales a propósito: son el estado del validador.
 DGT_OK=0
 DGT_FALLOS=0

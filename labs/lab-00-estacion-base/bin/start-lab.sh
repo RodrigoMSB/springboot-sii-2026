@@ -2,8 +2,11 @@
 # =============================================================================
 #  start-lab.sh — levanta la DGT en tu máquina
 # -----------------------------------------------------------------------------
-#    ./bin/start-lab.sh                 # puerto 8080
-#    ./bin/start-lab.sh --puerto 8081   # si el 8080 está ocupado
+#    ./bin/start-lab.sh                 # puerto 8099, el del curso
+#    ./bin/start-lab.sh --puerto 8100   # si el 8099 estuviera ocupado
+#
+#  El puerto por defecto (8099) vive en lib-comunes.sh, no aquí: los doce labs
+#  usan el mismo. No es 8080 a propósito — ese lo ocupa medio mundo.
 #
 #  Levanta PostgreSQL (docker compose), arranca la API en SEGUNDO PLANO con su
 #  log en un archivo, y espera a que responda. Segundo plano y no primer plano
@@ -25,19 +28,28 @@ APP="$RAIZ/dgt-tramites-api"
 ESTADO="$DIR_LAB/.estado"
 LOG="$ESTADO/dgt.log"
 PID="$ESTADO/dgt.pid"
-PUERTO=8080
+PUERTO="$DGT_PUERTO_DEFECTO"   # de lib-comunes.sh: el mismo en los 12 labs
+
+es_numero() {
+    printf '%s' "${1:-}" | grep -q '^[0-9][0-9]*$'
+}
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --puerto)
             PUERTO="${2:-}"
-            if ! printf '%s' "$PUERTO" | grep -q '^[0-9][0-9]*$'; then
-                printf '[ERROR] --puerto necesita un número. Ej: --puerto 8081\n' >&2
+            if ! es_numero "$PUERTO"; then
+                printf '[ERROR] --puerto necesita un número. Ej: --puerto %s\n' "$DGT_PUERTO_SUGERIDO" >&2
                 exit 2
             fi
             shift 2 ;;
         --puerto=*)
-            PUERTO="${1#*=}"; shift ;;
+            PUERTO="${1#*=}"
+            if ! es_numero "$PUERTO"; then
+                printf '[ERROR] --puerto necesita un número. Ej: --puerto=%s\n' "$DGT_PUERTO_SUGERIDO" >&2
+                exit 2
+            fi
+            shift ;;
         -h|--help)
             printf 'Uso: %s [--puerto N]\n' "$(basename "$0")"; exit 0 ;;
         *)
@@ -66,10 +78,10 @@ if puerto_ocupado "$PUERTO"; then
     CULPABLE="$(quien_ocupa_puerto "$PUERTO")"
     if [ -n "$CULPABLE" ]; then
         paso_fail "El puerto $PUERTO ya está ocupado por: $CULPABLE" \
-                  "No es un error tuyo. Levanta la DGT en otro puerto:  ./bin/start-lab.sh --puerto 8081   (ver T-01)"
+                  "No es un error tuyo. Levanta la DGT en otro puerto:  ./bin/start-lab.sh --puerto $DGT_PUERTO_SUGERIDO   (ver T-01)"
     else
         paso_fail "El puerto $PUERTO ya está ocupado por otro programa" \
-                  "Levanta la DGT en otro puerto:  ./bin/start-lab.sh --puerto 8081   (ver T-01)"
+                  "Levanta la DGT en otro puerto:  ./bin/start-lab.sh --puerto $DGT_PUERTO_SUGERIDO   (ver T-01)"
     fi
     printf '\n'
     exit 1

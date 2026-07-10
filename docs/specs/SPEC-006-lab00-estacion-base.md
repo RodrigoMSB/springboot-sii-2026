@@ -165,6 +165,13 @@ La SPEC-006 **no se considera cerrada** hasta que el PO reporte su resultado. Si
 encuentra un fallo, se corrige en la misma rama antes del merge (no es SPEC-FIX: la
 SPEC aún no cerró).
 
+> **Ajuste en ejecución (arquitecto, ratificado por el PO):** el laboratorio deja de usar
+> el 8080. `start-lab.sh` levanta la DGT en el **8099**, constante `DGT_PUERTO_DEFECTO` de
+> `lib-comunes.sh` para que los doce labs hereden el mismo puerto. La detección de puerto
+> ocupado con nombre y PID se mantiene como defensa, y `--puerto N` sigue existiendo. El
+> `curl` de la victoria, T-01, el README del lab, la guía 02 y la Prueba del PO se
+> actualizan en consecuencia.
+
 ## §8 · Criterios de aceptación
 
 - [ ] SPEC-006 commiteada antes que el material; trabajo por rama + PR.
