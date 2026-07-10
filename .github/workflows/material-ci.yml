@@ -10,11 +10,19 @@
 #   2. `siembra` — toda TEORIA.md de un lab con sucesor siembra el módulo N+1
 #      (P-18 del ADN). Detección por PATRÓN, jamás por título literal: los labs
 #      09-12 del curso de Cypress usan otro encabezado y son correctos.
+#   3. `app` — el tronco compila, sus 7 guardianes vigilan y sus 7 mordidas se
+#      certifican (SPEC-005).
 #
-#  Filtro de rutas: Actions no soporta `paths` a nivel de job, así que el filtro
-#  vive a nivel de workflow con la UNIÓN de las rutas que interesan a los dos
-#  jobs. Ambos son de segundos; correr uno de más no cuesta nada, y perder un
-#  disparo sí. (Discrepancia declarada en el reporte de la SPEC-004.)
+#  ¿Por qué `pull_request` NO lleva filtro de rutas? (SPEC-FIX-01 §2)
+#  Porque `main` exige estos tres checks para mergear. Con filtro, un PR que solo
+#  tocara `docs/specs/` no dispararía ninguno y quedaría colgado para siempre
+#  esperando un veredicto que nadie iba a emitir. El filtro era una trampa armada.
+#  Se descartaron las alternativas: un job centinela no-op protege menos, y el
+#  filtro fino por job no existe en Actions. Todo PR corre los tres jobs, siempre.
+#  Cuesta ~1 minuto; un PR colgado cuesta más.
+#
+#  El evento `push` a `main` sí conserva filtros: es post-merge, ya no hay nada
+#  que bloquear y ahorra runs.
 # =============================================================================
 name: material-ci
 
@@ -27,14 +35,8 @@ on:
       - 'labs/**'
       - 'dgt-tramites-api/**'
       - '.github/workflows/material-ci.yml'
-  pull_request:
-    paths:
-      - 'docs/temario/**'
-      - 'tools/**'
-      - 'labs/**'
-      - 'dgt-tramites-api/**'
-      - '.github/workflows/material-ci.yml'
-  workflow_dispatch:        # para poder exigirle el verde a mano
+  pull_request:            # sin `paths`: ver la cabecera. Ningún PR queda colgado.
+  workflow_dispatch:       # para poder exigirle el verde a mano
 
 permissions:
   contents: read
@@ -127,7 +129,20 @@ jobs:
 
   # ---------------------------------------------------------------------------
   #  La app canónica: compila, sus 7 guardianes vigilan y sus 7 mordidas se
-  #  certifican. Testcontainers corre nativo: los runners ubuntu traen Docker.
+  #  certifican.
+  #
+  #  SOLO ubuntu-latest, y la exclusión de Windows va escrita aquí para que nadie
+  #  la lea como un olvido ni la "arregle" rompiendo el CI:
+  #
+  #    `ContratoRn03IT` levanta PostgreSQL con Testcontainers, que necesita un
+  #    demonio Docker con contenedores LINUX. Los runners `windows-latest`
+  #    hospedados no lo ofrecen. Es la misma exclusión —y la misma razón— que el
+  #    Lab 11 del curso de Cypress documenta en su matriz (P-12 del ADN).
+  #
+  #  El alumno Windows sí corre esto: su Docker Desktop con backend WSL2 levanta
+  #  contenedores Linux. Lo que no existe es el runner, no el escenario.
+  #  Si algún día hay tests sin Docker que valga la pena correr en Windows, se
+  #  parte el job en dos: `app-sin-docker` (matriz de SO) y `app-it` (solo ubuntu).
   # ---------------------------------------------------------------------------
   app:
     name: app · dgt-tramites-api (verify)
