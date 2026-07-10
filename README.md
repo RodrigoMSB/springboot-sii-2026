@@ -15,10 +15,10 @@ llevan el prefijo `SPEC-NNN: <qué>`.
 - **Sufijo `-R1`, `-R2`** — revisión de una SPEC aún no ejecutada.
 - **Ninguna ejecución comienza antes de que su SPEC esté commiteada.**
 
-Toda **`SPEC-FIX-NN`** se ejecuta en rama propia y termina en tag:
-`fix/<slug>` → merge a `main` → tag `material-vX.Y.Z` (patch bump). Las `SPEC-NNN` de
-features pueden ir directo a `main` mientras el material no esté dictándose; **desde el
-primer dictado, también van por rama.**
+**Toda SPEC va por rama, con PR. Sin excepciones.** `main` está protegida: el push directo
+se rechaza y el merge exige los tres checks de `material-ci` (`temario`, `siembra`, `app`)
+en verde. Una **`SPEC-FIX-NN`** además termina en tag: `fix/<slug>` → merge a `main` →
+tag `material-vX.Y.Z` (patch bump).
 
 El nombre del archivo **no lleva sufijo de versión**: Git ya versiona el contenido. Una
 SPEC ejecutada es inmutable; una SPEC aún no ejecutada se revisa como archivo `-R1` nuevo.
