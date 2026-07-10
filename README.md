@@ -29,6 +29,13 @@ llevan el prefijo `SPEC-NNN: <qué>`.
 El nombre del archivo **no lleva sufijo de versión**: Git ya versiona el contenido. Una
 SPEC ejecutada es inmutable; una SPEC aún no ejecutada se revisa como archivo `-R1` nuevo.
 
+**Verificación en dos etapas.** Todo script y todo flujo lo ejecuta **primero el ejecutor**,
+sobre estado limpio, y cita la salida en su reporte. Solo entonces el PO lo corre como
+aceptación final. **El PO jamás es el primero en correr algo.**
+
+**Toda SPEC actualiza [`ESTADO.md`](ESTADO.md) al cerrar.** Un `ESTADO.md` desactualizado es
+un bug del material, no un descuido.
+
 ## Roles
 
 - **Product Owner** (Rodrigo): aprueba las SPEC y decide los commits de fondo.

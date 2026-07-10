@@ -25,3 +25,6 @@ node_modules/
 
 # Bandeja de entrada del PO: los insumos se mueven a su destino, no se versionan aquí
 incoming/
+
+# El estado local del lab (log y PID de la app). No se versiona.
+labs/**/.estado/

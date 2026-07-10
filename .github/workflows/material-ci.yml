@@ -77,8 +77,14 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Solo los directorios `lab-NN-*`. `labs/lib/` es la caja de herramientas
+          # compartida, no un laboratorio: si la contáramos, exigiríamos que tuviera
+          # una TEORIA.md que siembre el módulo siguiente. Un filtro por convención
+          # de nombre, no por "todo lo que cuelgue de labs/".
+          LABS="$(find labs -maxdepth 1 -mindepth 1 -type d -name 'lab-*' | sort)"
+
           # Guarda de activación: sin labs, la regla queda armada, no activa.
-          if [ ! -d labs ] || [ -z "$(ls -A labs 2>/dev/null)" ]; then
+          if [ -z "$LABS" ]; then
             echo "[INFO] Sin labs aún: la regla de siembra queda armada, no activa."
             exit 0
           fi
@@ -90,13 +96,22 @@ jobs:
           # tubería corre en subshell y perdería el contador FALLOS — el gate
           # saldría siempre verde. Es justo el "gate decorativo" que la rúbrica
           # del Lab 13 castiga (P-05 del ADN).
-          LABS="$(find labs -maxdepth 1 -mindepth 1 -type d | sort)"
           ULTIMO="$(printf '%s\n' "$LABS" | tail -n 1)"
           FALLOS=0
 
           IFS=$'\n'
           for LAB in $LABS; do
             TEORIA="$LAB/TEORIA.md"
+
+            # Exclusión documentada: el Lab 00 es pre-curso. No computa horas, no
+            # tiene módulo, no tiene teoría — es el chequeo de la máquina del alumno
+            # (SPEC-000 §9). Exigirle una siembra sería exigirle que enseñe algo.
+            case "$LAB" in
+              */lab-00-*)
+                echo "[INFO] $LAB es pre-curso: exento de sembrar (no tiene teoría)."
+                continue
+                ;;
+            esac
 
             if [ "$LAB" = "$ULTIMO" ]; then
               # El último lab cierra el arco: no hay módulo N+1 que sembrar.
@@ -174,3 +189,81 @@ jobs:
             grep -q "Failures: 0, Errors: 0" "$informe" || { echo "[ERROR] $suite no está limpio"; exit 1; }
           done
           echo "[OK] Los 7 guardianes vigilan y los 7 muerden."
+
+  # ---------------------------------------------------------------------------
+  #  El andamiaje de los labs: los scripts que el ALUMNO ejecuta.
+  #
+  #  Dos mitades, y la segunda importa tanto como la primera:
+  #
+  #   · ubuntu   -> `shellcheck -x`. La calidad real: variables sin comillas,
+  #                 subshells que se tragan contadores, etc.
+  #   · windows  -> `bash -n` (solo SINTAXIS). En windows-latest, `bash` ES Git
+  #                 Bash: exactamente el entorno del alumno Windows.
+  #
+  #  LIMITACIÓN DECLARADA: en Windows NO se ejecutan los scripts, solo se
+  #  comprueba que parsean. Levantar la app necesita PostgreSQL en un contenedor
+  #  Linux, y los runners `windows-latest` hospedados no lo ofrecen (la misma
+  #  razón por la que el job `app` es solo ubuntu). Garantizamos que el día que
+  #  un alumno de Windows los corra, al menos no explotarán al leerse. El resto
+  #  lo advierte labs/lab-00-estacion-base/docs/entorno-alumno.md, §3.
+  # ---------------------------------------------------------------------------
+  labs-sh:
+    name: labs-sh · andamiaje (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guarda de activación
+        id: guarda
+        shell: bash
+        run: |
+          set -euo pipefail
+          # `find`, no globs: `labs/**/*.sh` sin globstar no baja más de un nivel.
+          if [ -z "$(find labs -name '*.sh' 2>/dev/null)" ]; then
+            echo "[INFO] Sin scripts en labs/ todavía: el job queda armado, no activo."
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: shellcheck (solo ubuntu)
+        if: matrix.os == 'ubuntu-latest' && steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          fallos=0
+          for f in $(find labs -name '*.sh' | sort); do
+            if shellcheck -x "$f"; then
+              echo "[OK] $f"
+            else
+              echo "[ERROR] $f"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" -eq 0 ] || { echo "[ERROR] $fallos script(s) con problemas"; exit 1; }
+          echo "[OK] shellcheck limpio en todo el andamiaje."
+
+      - name: bash -n · sintaxis en Git Bash (solo windows)
+        if: matrix.os == 'windows-latest' && steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "[INFO] bash de este runner: $(bash --version | head -n 1)"
+          fallos=0
+          for f in $(find labs -name '*.sh' | sort); do
+            if bash -n "$f"; then
+              echo "[OK] $f parsea"
+            else
+              echo "[ERROR] $f NO parsea en Git Bash"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" -eq 0 ] || { echo "[ERROR] $fallos script(s) no parsean"; exit 1; }
+          echo "[OK] Todo el andamiaje parsea en el bash del alumno Windows."
+          echo "[INFO] Recuerda: aquí NO se ejecutan. Ver entorno-alumno.md §3."
+
