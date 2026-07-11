@@ -1,0 +1,9 @@
+# starter/ L8 vs su solucion/. El cliente de TESO INGENUO y los huecos:
+#   · TesoreriaAdapter -> RestClient sin timeout, imperativo, sin traducir el fallo (TODO_1/2).
+#   · SeguridadConfig  -> sin CORS ni cabeceras de endurecimiento (TODO_4).
+#   · ManejadorDeErrores -> sin el handler 503 de Tesorería (TODO_2).
+# El starter NO trae TesoreriaClient (@HttpExchange) ni TesoreriaConfig: son el TODO_3 (migrar al
+# cliente declarativo). Al no existir en el starter, no se comparan.
+src/main/java/cl/dgt/tramites/infrastructure/teso/TesoreriaAdapter.java
+src/main/java/cl/dgt/tramites/config/SeguridadConfig.java
+src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java

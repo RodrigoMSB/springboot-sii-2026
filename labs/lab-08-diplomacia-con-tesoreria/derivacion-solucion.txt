@@ -1,0 +1,20 @@
+# solucion/ L8 vs solucion/ L7. La diplomacia con TESO: cliente HTTP con timeouts, degradación
+# 503, cliente declarativo (@HttpExchange), y el endurecimiento (CORS/cabeceras, la hora de M9).
+#
+# Archivos NUEVOS (adiciones): TesoreriaPort, ConfirmacionPago, PagoService (application);
+# TesoreriaClient, TesoreriaAdapter (infrastructure/teso); TesoreriaConfig (config);
+# TesoreriaNoDisponibleException (domain); teso-mappings/ (WireMock); los tests del enunciado de
+# resiliencia (enunciado/, excluidos). Los tests de seguridad del L7 se movieron a seguridad/.
+#
+# Archivos COMPARTIDOS que cambian a proposito:
+compose.yaml
+src/main/resources/application.yml
+src/main/java/cl/dgt/tramites/config/SeguridadConfig.java
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
+src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java
+# --- Refinamiento de un guardian (hallazgo del ejecutor, Lab 08): AU-07 usaba el patron ancho
+#     `..web..`, que tambien matchea `org.springframework.web..`. El primer cliente HTTP en
+#     infraestructura (@HttpExchange importa @PathVariable, @GetExchange) lo destapo. Se afino a
+#     `cl.dgt.tramites.web..` (la web del PROYECTO). El fixture de AU-07 sigue cazado. Propaga hacia
+#     adelante. Declarado.
+src/test/java/cl/dgt/tramites/arquitectura/ReglasDeLaCasa.java

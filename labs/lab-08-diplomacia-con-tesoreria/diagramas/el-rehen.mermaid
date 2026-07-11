@@ -1,0 +1,11 @@
+%% Sin timeout: el pago retiene una conexión mientras espera a TESO. El pool se agota.
+sequenceDiagram
+    participant C as Cliente
+    participant API as DGT (pool de 5 conexiones)
+    participant TESO as TESO (30 s)
+    C->>API: POST /pago (x6, en paralelo)
+    API->>TESO: GET /pagos/... (retiene 1 conexión c/u)
+    Note over API: 5 conexiones tomadas, la 6.ª espera
+    C->>API: GET /tramites (necesita 1 conexión)
+    Note over API: no queda ninguna libre -> COLGADO
+    Note over API,TESO: la lentitud de TESO se volvió NUESTRA caída

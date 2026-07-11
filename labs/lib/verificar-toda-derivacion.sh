@@ -25,7 +25,7 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria; do
     [ -d "$LAB/solucion" ] || continue
     chequear "$ANTERIOR"      "$LAB/solucion" "$LAB/derivacion-solucion.txt"
     chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
