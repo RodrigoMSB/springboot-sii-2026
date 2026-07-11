@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-012.*
+*Última actualización: SPEC-013.*
 
 ---
 
@@ -29,6 +29,12 @@
   llevan el mismo folio; se resuelve con bloqueo pesimista (`SELECT … FOR UPDATE`) en la misma
   transacción, idempotencia por `tramiteId`, y la primera migración correctiva (un `CHECK` en
   `linea_f29`). RN-01, RN-02 y RN-05 por fin con suelo, probadas con concurrencia real.
+- **Lab 07** (`labs/lab-07-el-portero/`): la seguridad. La API se cierra por defecto (Spring
+  Security 7), hay login real contra la tabla de usuarios (BCrypt de la semilla), el JWT se
+  valida por su firma (no se cree — un token adulterado da 401), y la emisión de folios exige
+  el rol FUNCIONARIO (403 para el resto). El secreto de firma vive fuera del repo. Es el primer
+  lab que **rompe hacia atrás**: los tests heredados ganaron autenticación, declarados en la
+  derivación.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
@@ -42,25 +48,26 @@ Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía
 
 | | | |
 |---|---|---|
-| Lab 07 · El portero | Lab 10 · Latidos | |
-| Lab 08 · Diplomacia con Tesorería | Lab 11 · Amortiguadores | |
-| Lab 09 · Caja negra | Lab 12 · Cápsula y egreso | |
+| Lab 08 · Diplomacia con Tesorería | Lab 10 · Latidos | Lab 12 · Cápsula y egreso |
+| Lab 09 · Caja negra | Lab 11 · Amortiguadores | |
 
 Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 06, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 07, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de
-PRs (#6 a la del Lab 06) espera su palabra, empezando por el #6.
+PRs (#6 a la del Lab 07) espera su palabra, empezando por el #6.
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
 ## 3 · Qué viene ahora
 
-**SPEC-013: el Lab 07, «El portero».** Los folios ya no se repiten ni se saltan, pero
-cualquiera con `curl` puede emitirlos. La próxima sesión pone portero en la puerta:
-autenticación y autorización — quién eres, y qué puedes hacer.
+**SPEC-014: el Lab 08, «Diplomacia con Tesorería».** La puerta ya tiene portero. Pero la DGT
+necesita hablar con Tesorería (TESO) para confirmar pagos, y TESO se demora treinta segundos —
+o no contesta. Toda la API se cuelga esperando. La próxima sesión: timeouts, reintentos y un
+cortafuegos (circuit breaker) para no morir por culpa del vecino. (Aquí también entran CORS,
+CSRF y las cabeceras de seguridad que el Lab 07 dejó anotadas.)
 
 ## 4 · Si estás perdido
 

@@ -1,0 +1,7 @@
+# starter/ L7 vs su solucion/. La PUERTA FALSA que el alumno reemplaza:
+#   · SeguridadConfig  -> permitAll + filtro base64 (sin firma): el crimen (TODO_1/TODO_3).
+#   · EmisorDeTokens   -> devuelve base64(rut:rol), ignora la clave (TODO_2).
+#   · TramiteController -> sin @PreAuthorize: cualquiera emite (TODO_4).
+src/main/java/cl/dgt/tramites/config/SeguridadConfig.java
+src/main/java/cl/dgt/tramites/application/EmisorDeTokens.java
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
