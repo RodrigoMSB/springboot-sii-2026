@@ -1,0 +1,15 @@
+%% La carrera por el folio: emisión ingenua (sin bloqueo, sin transacción).
+%% Dos emisores leen el mismo número. La PK atrapa el duplicado a costa de un 500.
+sequenceDiagram
+    participant A as Emisor A
+    participant B as Emisor B
+    participant DB as contador_folio / folio
+
+    A->>DB: leer contador (sin bloqueo) -> 41
+    B->>DB: leer contador (sin bloqueo) -> 41
+    Note over A,B: los dos calcularon 42
+    A->>DB: INSERT folio(42) ✔ (persiste)
+    B->>DB: INSERT folio(42) ✘ duplicate key (folio_pkey)
+    Note over B: emisión VÁLIDA caída con HTTP 500
+
+%% La forma correcta: SELECT ... FOR UPDATE en la misma transacción serializa a los emisores.

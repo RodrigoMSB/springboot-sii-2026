@@ -1,0 +1,4 @@
+# starter/ L6 vs su solucion/. La emision INGENUA (sin bloqueo, sin idempotencia, sin
+# @Transactional): el crimen que el alumno arregla. La V3 no esta en el starter (es TODO_3),
+# pero al no existir en el derivado no se compara: no necesita declararse aqui.
+src/main/java/cl/dgt/tramites/application/EmisionService.java

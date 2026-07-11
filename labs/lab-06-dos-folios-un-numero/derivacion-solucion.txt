@@ -1,0 +1,6 @@
+# solucion/ L6 vs solucion/ L5. El controlador gana el endpoint POST /{id}/folio (TODO_1/2),
+# y LineaF29 corrige su comentario: el CHECK del M8 es `monto <> 0`, no `monto >= 0` (los
+# creditos son negativos). Todo lo demas de la emision (EmisionService, ContadorFolio, sus
+# repositorios, FolioDto, ResultadoEmision, la V3) son archivos NUEVOS: adiciones, no deriva.
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
+src/main/java/cl/dgt/tramites/domain/entity/LineaF29.java

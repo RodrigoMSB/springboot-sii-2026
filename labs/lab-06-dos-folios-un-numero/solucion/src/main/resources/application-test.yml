@@ -1,0 +1,10 @@
+# =============================================================================
+#  Perfil test — la suite automatizada
+# -----------------------------------------------------------------------------
+#  Nada de compose: el contenedor lo levanta Testcontainers desde el propio test,
+#  y @ServiceConnection cablea el DataSource. Cada suite, su base limpia.
+# =============================================================================
+spring:
+  docker:
+    compose:
+      enabled: false
