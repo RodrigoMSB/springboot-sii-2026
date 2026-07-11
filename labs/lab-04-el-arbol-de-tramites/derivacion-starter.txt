@@ -1,0 +1,15 @@
+# starter/ del Lab 04 vs su solucion/. El CRIMEN (todas las relaciones en EAGER, con el
+# logging SQL para ver el muro) y los HUECOS de los TODOs (repositorio con defaults que
+# lanzan, ReporteService stub, AU-04 stubeada y la suite reducida). Base: solucion/
+src/main/java/cl/dgt/tramites/domain/entity/Tramite.java
+src/main/java/cl/dgt/tramites/domain/entity/Contribuyente.java
+src/main/java/cl/dgt/tramites/domain/entity/Formulario29.java
+src/main/java/cl/dgt/tramites/domain/entity/LineaF29.java
+src/main/java/cl/dgt/tramites/domain/entity/Folio.java
+src/main/java/cl/dgt/tramites/domain/entity/Adjunto.java
+src/main/resources/application.yml
+src/main/java/cl/dgt/tramites/infrastructure/repository/TramiteRepository.java
+src/main/java/cl/dgt/tramites/application/ReporteService.java
+src/test/java/cl/dgt/tramites/arquitectura/ReglasDeLaCasa.java
+src/test/java/cl/dgt/tramites/arquitectura/ArquitecturaTest.java
+src/test/java/cl/dgt/tramites/arquitectura/MordidaDeLosGuardianesTest.java
