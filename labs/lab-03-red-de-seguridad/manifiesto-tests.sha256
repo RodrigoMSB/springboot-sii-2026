@@ -1,0 +1,4 @@
+f2dbf6f63f892bd2453f0965f1d4ec0cda2c7a20be87aeebc44a01b0f4450f8d  src/test/java/cl/dgt/tramites/enunciado/E1_ValidacionDelRequestTest.java
+ae888e770a2e3d4eeeaa962968f75202abbb446ecd7598126812e589c003e000  src/test/java/cl/dgt/tramites/enunciado/E2_RutValidoTest.java
+90b9a3813a80827e9f6aac1d793bcf2961343dbdfad05b059f3d1ba3dfdae99e  src/test/java/cl/dgt/tramites/enunciado/E3_TransicionIlegalTest.java
+d3eb778f1ccdfb6855e9458a12e6a521277a8943c5db7548d279af1ab504540d  src/test/java/cl/dgt/tramites/enunciado/E4_AU05VigilaTest.java

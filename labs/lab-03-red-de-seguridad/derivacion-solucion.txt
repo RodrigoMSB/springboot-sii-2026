@@ -1,0 +1,7 @@
+# solucion/ del Lab 03 vs solucion/ del Lab 02 (encadenamiento). Cambios A PROPOSITO:
+# el pom añade config de surefire (nombres frase), y el controlador/servicio/advice
+# ganan los endpoints y handlers de esta sesion (crear, avanzar, validacion 400, 409).
+pom.xml
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
+src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java
+src/main/java/cl/dgt/tramites/application/TramiteService.java
