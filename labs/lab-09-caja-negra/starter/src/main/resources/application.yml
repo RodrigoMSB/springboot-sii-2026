@@ -1,0 +1,79 @@
+# =============================================================================
+#  application.yml — configuración común de dgt-tramites-api
+# -----------------------------------------------------------------------------
+#  AQUÍ NO HAY CREDENCIALES. Ninguna. Ni de desarrollo ni de producción.
+#
+#  Lo que cambia entre entornos vive en `application-<perfil>.yml`, y lo que es
+#  secreto vive FUERA del repositorio: en variables de entorno.
+#
+#  Si algún día vuelves a ver una contraseña en este archivo, mira antes de
+#  borrarla: `git log -- src/main/resources/application.yml`. Borrarla no la
+#  quita del historial. Hay que ROTARLA.
+# =============================================================================
+spring:
+  application:
+    name: dgt-tramites-api
+
+  profiles:
+    active: ${DGT_PERFIL:dev}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  datasource:
+    hikari:
+      # Pool de conexiones DELIBERADAMENTE pequeño en este lab: un pago @Transactional retiene
+      # una conexión mientras espera a TESO. Sin timeout, ~6 pagos colgados agotan el pool y
+      # cualquier consulta (el listado) se queda sin conexión: la API entera, secuestrada.
+      maximum-pool-size: 5
+
+# Configuración propia de la DGT. La lee DgtProperties: tipada y validada.
+dgt:
+  adjuntos:
+    # Dónde se guardan los archivos subidos. Fuera del repo; en dev, un directorio temporal.
+    dir: ${DGT_ADJUNTOS_DIR:${java.io.tmpdir}/dgt-adjuntos}
+  teso:
+    # URL del servicio de Tesorería. La define cada perfil (dev: el WireMock del compose;
+    # test: el contenedor de Testcontainers). El default apunta al WireMock del compose (dev).
+    base-url: ${DGT_TESO_URL:http://localhost:8089}
+  institucion: Dirección General de Tributación
+  folio:
+    prefijo: DGT
+    largo: 8
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  # Texto plano. El del practicante. No se puede indexar ni correlacionar: un muro de líneas.
+  level:
+    cl.dgt.tramites: INFO
+
+# Pool de hilos de Tomcat, DELIBERADAMENTE pequeño en este lab: hace VISIBLE la lección del
+# secuestro. Con 10 hilos, bastan ~12 pagos colgados (sin timeout) para llenar el pool y
+# tumbar la API entera. En producción el pool es grande; el crimen tarda más en aparecer,
+# pero es el mismo crimen.
+server:
+  tomcat:
+    threads:
+      max: 10

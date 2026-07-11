@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-014.*
+*Última actualización: SPEC-015.*
 
 ---
 
@@ -40,6 +40,11 @@
   cuando TESO se pone lento; se resuelve con timeout corto y dirigido, degradación elegante
   (503 rápido, el trámite intacto), el cliente migrado a `@HttpExchange`, y el endurecimiento
   (CORS nominal + cabeceras). La hora de M9 diferida del Lab 07 se cobra aquí.
+- **Lab 09** (`labs/lab-09-caja-negra/`): la observabilidad. El sistema mudo (texto plano, sin
+  correlación) donde buscar un folio en el log es imposible. Se resuelve con `traceId` por
+  petición en el MDC, logging JSON estructurado, un aspecto de auditoría (AOP) que registra el
+  dominio sin ensuciarlo (RUT enmascarado, respeta el límite del proxy), y carga de adjuntos con
+  desconfianza (MIME real por magic bytes, anti path-traversal, descarga en streaming).
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
@@ -53,25 +58,24 @@ Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía
 
 | | | |
 |---|---|---|
-| Lab 09 · Caja negra | Lab 10 · Latidos | Lab 12 · Cápsula y egreso |
-| | Lab 11 · Amortiguadores | |
+| Lab 10 · Latidos | Lab 11 · Amortiguadores | Lab 12 · Cápsula y egreso |
 
 Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 08, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 09, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de
-PRs (#6 a la del Lab 08) espera su palabra, empezando por el #6.
+PRs (#6 a la del Lab 09) espera su palabra, empezando por el #6.
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
 ## 3 · Qué viene ahora
 
-**SPEC-015: el Lab 09, «La caja negra».** TESO ya no puede matarnos. Pero anoche alguien emitió
-un folio al contribuyente equivocado, sin caída ni alarma, y Carolina llegó con 400 MB de logs
-y una pregunta: encuéntralo. La próxima sesión trae lupa: logging estructurado, trazas
-correlacionadas y observabilidad — para que la caja negra cuente la historia, no la esconda.
+**SPEC-016: el Lab 10, «El reloj con problema de identidad».** El sistema ya sabe contar lo que
+hizo. Y contando, Carolina notó que el cierre nocturno del viernes se ejecutó DOS veces: hay dos
+servidores y los dos se creyeron el único. La próxima sesión: tareas programadas y cómo hacer que
+una tarea que debe correr una vez, corra una sola vez en un mundo de muchas instancias.
 
 ## 4 · Si estás perdido
 
