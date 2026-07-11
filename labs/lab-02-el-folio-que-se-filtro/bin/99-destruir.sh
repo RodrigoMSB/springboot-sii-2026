@@ -65,7 +65,9 @@ else
     paso_skip "Docker no responde: no hay contenedores del lab que bajar"
 fi
 
-rm -rf "$ESTADO" "$DIR_LAB"/.e2e "$DIR_LAB"/.respaldo-* 2>/dev/null
+borrar_seguro "$ESTADO"
+    borrar_seguro "$DIR_LAB/.e2e"
+    for _r in "$DIR_LAB"/.respaldo-*; do [ -e "$_r" ] && borrar_seguro "$_r"; done
 paso_ok "Archivos temporales del lab borrados"
 
 resumen_final "Todo quedó como estaba" "Quedó algo a medio desmontar"

@@ -1,0 +1,28 @@
+# =============================================================================
+#  Perfil prod — el servidor de la DGT
+# -----------------------------------------------------------------------------
+#  Los tres valores llegan por VARIABLE DE ENTORNO. Ninguno tiene valor por
+#  defecto, y eso es deliberado: `${DGT_DB_PASSWORD}` sin `:` no admite
+#  omisiones. Si falta, la aplicación NO ARRANCA y dice cuál falta.
+#
+#  Compáralo con `${DGT_DB_PASSWORD:cambiame}`: eso arranca en silencio, se
+#  conecta a la base equivocada o a ninguna, y el error aparece un martes a las
+#  tres de la mañana. Fallar rápido y fuerte es una decisión de diseño.
+# =============================================================================
+spring:
+  docker:
+    compose:
+      enabled: false
+
+  datasource:
+    url: ${DGT_DB_URL}
+    username: ${DGT_DB_USER}
+    password: ${DGT_DB_PASSWORD}
+
+  flyway:
+    # En producción las migraciones las aplica el pipeline, no la app al arrancar.
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate

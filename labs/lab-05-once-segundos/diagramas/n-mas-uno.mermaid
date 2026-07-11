@@ -1,0 +1,11 @@
+%% El N+1, y las dos formas de matarlo.
+flowchart TB
+    L["GET /api/v1/tramites (página de N)"]
+    L --> Q1["1 consulta: los N trámites"]
+    Q1 --> NP["por cada trámite: getContribuyente()"]
+    NP --> QN["N consultas más → 1+N (el N+1)"]
+    L -.proyección.-> P["1 consulta:<br/>SELECT id,tipo,estado,c.rut<br/>JOIN contribuyente"]
+    classDef mal fill:#fee,stroke:#c00
+    classDef bien fill:#efe,stroke:#0a0
+    class QN mal
+    class P bien

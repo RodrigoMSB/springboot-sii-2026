@@ -23,7 +23,7 @@ DIR_BIN="$(cd "$(dirname "$0")" && pwd)"
 DIR_LAB="$(cd "$DIR_BIN/.." && pwd)"
 BANCO="$DIR_LAB/.e2e"
 
-limpiar() { rm -rf "$BANCO" "$DIR_LAB"/.respaldo-*; }
+limpiar() { borrar_seguro "$BANCO"; for _r in "$DIR_LAB"/.respaldo-*; do [ -e "$_r" ] && borrar_seguro "$_r"; done; }
 trap limpiar EXIT
 
 printf '\n  Lab 03 · encadenamiento starter -> solucion\n\n'

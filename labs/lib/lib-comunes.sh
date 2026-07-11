@@ -189,6 +189,31 @@ quien_ocupa_puerto() {
     fi
 }
 
+# -----------------------------------------------------------------------------
+#  borrar_seguro <ruta> — un rm -rf con cinturón de seguridad.
+# -----------------------------------------------------------------------------
+#  Se NIEGA a borrar si la ruta está vacía, es la raíz, es $HOME, o cae fuera del
+#  repositorio. El peligro real: `rm -rf "$VAR/target"` con $VAR vacío se convierte
+#  en `rm -rf "/target"`. Este cinturón lo hace imposible. Todo borrado con variable
+#  en los scripts del repo pasa por aquí (SPEC-011 §0.1).
+borrar_seguro() {
+    ruta="${1:-}"
+    if [ -z "$ruta" ]; then
+        printf '[ERROR] borrar_seguro: ruta vacía — abortado (no vamos a borrar la raíz)\n' >&2
+        return 1
+    fi
+    case "$ruta" in
+        /|/*/|"$HOME"|"$HOME"/) printf '[ERROR] borrar_seguro: ruta peligrosa (%s) — abortado\n' "$ruta" >&2; return 1 ;;
+    esac
+    # Debe estar DENTRO del repo. Comparamos rutas absolutas.
+    raiz="$(raiz_repo)"
+    abs="$(cd "$(dirname "$ruta")" 2>/dev/null && printf '%s/%s' "$(pwd)" "$(basename "$ruta")" || printf '%s' "$ruta")"
+    case "$abs" in
+        "$raiz"/*) rm -rf "$ruta" ;;
+        *) printf '[ERROR] borrar_seguro: %s cae fuera del repo (%s) — abortado\n' "$ruta" "$raiz" >&2; return 1 ;;
+    esac
+}
+
 # raiz_repo — ruta absoluta a la raíz del repositorio, desde donde sea.
 raiz_repo() {
     if command -v git >/dev/null 2>&1 && git rev-parse --show-toplevel >/dev/null 2>&1; then
