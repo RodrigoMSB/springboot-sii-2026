@@ -47,6 +47,10 @@
   desconfianza (MIME real por magic bytes, anti path-traversal, descarga en streaming).
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
+- **El manifiesto pedagógico**: `MANIFIESTO.md`, en la raíz. Por qué el curso se enseña así —el
+  concepto por encima de la receta, la memoria narrativa, el aprendizaje que ocurre en la sala o
+  no ocurre— y qué se le pide a quien dicta. Es texto de autor del PO. Quien vaya a dar una
+  sesión lo lee **antes** que cualquier otra cosa del repo; el README enlaza a él desde arriba.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
