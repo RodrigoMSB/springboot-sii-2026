@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-011.*
+*Última actualización: SPEC-012.*
 
 ---
 
@@ -25,6 +25,10 @@
 - **Lab 05** (`labs/lab-05-once-segundos/`): el clímax. El N+1 medido con un contador de
   consultas, no contado. Dos soluciones conviven (P-16): `solucion-con-n1/` (13 consultas) y
   `solucion/` (3) — mismo comportamiento, distinto costo.
+- **Lab 06** (`labs/lab-06-dos-folios-un-numero/`): la concurrencia. Dos emisiones a la vez se
+  llevan el mismo folio; se resuelve con bloqueo pesimista (`SELECT … FOR UPDATE`) en la misma
+  transacción, idempotencia por `tramiteId`, y la primera migración correctiva (un `CHECK` en
+  `linea_f29`). RN-01, RN-02 y RN-05 por fin con suelo, probadas con concurrencia real.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
@@ -38,25 +42,25 @@ Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía
 
 | | | |
 |---|---|---|
-| Lab 06 · Dos folios, un número | Lab 10 · Latidos | |
-| Lab 07 · El portero | Lab 11 · Amortiguadores | |
-| Lab 08 · Diplomacia con Tesorería | Lab 12 · Cápsula y egreso | |
-| Lab 09 · Caja negra | | |
+| Lab 07 · El portero | Lab 10 · Latidos | |
+| Lab 08 · Diplomacia con Tesorería | Lab 11 · Amortiguadores | |
+| Lab 09 · Caja negra | Lab 12 · Cápsula y egreso | |
 
 Faltan también las diapositivas y el material del instructor.
 
-**Pendiente del PO:** correr la prueba de aceptación del Lab 00 (los tres comandos de su
-README). Quedó diferida al cerrar la SPEC-006; el laboratorio está verificado por el
-ejecutor, pero nadie más lo ha corrido.
+**Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
+de su README), y los Labs 01 a 06, cada uno con su Prueba del PO. Todas diferidas; los
+laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de
+PRs (#6 a la del Lab 06) espera su palabra, empezando por el #6.
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
 ## 3 · Qué viene ahora
 
-**SPEC-012: el Lab 06, «Dos folios, un número».** Dos contribuyentes emiten a la vez y se
-llevan el mismo folio. La carrera, el bloqueo, y las transacciones. El cronómetro se cambia
-por un fiscalizador.
+**SPEC-013: el Lab 07, «El portero».** Los folios ya no se repiten ni se saltan, pero
+cualquiera con `curl` puede emitirlos. La próxima sesión pone portero en la puerta:
+autenticación y autorización — quién eres, y qué puedes hacer.
 
 ## 4 · Si estás perdido
 

@@ -1,0 +1,5 @@
+bbcb9c5b0f934132aa6ce6a7baa36de309605f87f395219e677100ac2c445d97  src/test/java/cl/dgt/tramites/enunciado/BaseConcurrenciaIT.java
+3020cfabcc6641a6a83f699f6310380ef63d3ccfda49d2040d2ab07445fdb8fb  src/test/java/cl/dgt/tramites/enunciado/E1_EmisionConcurrenteIT.java
+71ec30a8bf57c42bc42d650d5dc8fb50d7203995ab63e4950c4f8d37727021d6  src/test/java/cl/dgt/tramites/enunciado/E2_IdempotenciaIT.java
+e7606887061f7b05a96eec519c9acb3c1cc044f2df6cbc94a5ddff1a51297972  src/test/java/cl/dgt/tramites/enunciado/E3_CheckMontoCeroIT.java
+0b116270ad7bd7f24ea8bc2f2ddfd91a86af3095122d3071125906e31bb8baf0  src/test/java/cl/dgt/tramites/enunciado/E4_RollbackIT.java
