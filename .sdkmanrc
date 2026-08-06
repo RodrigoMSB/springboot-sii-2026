@@ -1,0 +1,16 @@
+# Toolchain del curso, fijado por proyecto.
+#
+# El pom de dgt-tramites-api compila con <java.version>25</java.version>
+# (Spring Boot 4.1.0), así que el JDK del proyecto es Java 25 — Temurin,
+# no GraalVM: un solo sabor para todos.
+#
+# Con SDKMAN instalado, al entrar a la raíz del repo:
+#
+#     sdk env            # aplica esta versión a la sesión
+#     sdk env install    # la instala antes, si aún no la tienes
+#
+# Para que se aplique solo al hacer cd, activa una vez:
+#
+#     sdk config         # y pon sdkman_auto_env=true
+#
+java=25-tem
