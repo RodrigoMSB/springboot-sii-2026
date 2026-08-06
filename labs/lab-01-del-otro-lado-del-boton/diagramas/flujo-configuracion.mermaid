@@ -1,0 +1,20 @@
+%% Cómo llega un valor de configuración a tu código, y quién gana.
+%% De menor a mayor precedencia: lo de abajo sobrescribe a lo de arriba.
+flowchart TD
+    A["application.yml<br/>(dentro del jar)"] --> E[Environment]
+    B["application-&lt;perfil&gt;.yml"] --> E
+    C["Variables de entorno<br/>DGT_DB_PASSWORD"] --> E
+    D["Argumentos de CLI<br/>--server.port=8099"] --> E
+
+    E --> F{"¿Perfil prod?"}
+    F -- sí --> G["VerificadorDeSecretosProd<br/>(BeanFactoryPostProcessor)"]
+    G -- "falta una variable" --> H["✋ NO ARRANCA<br/>y nombra cuál falta"]
+    G -- "están las tres" --> I[DataSource]
+    F -- no --> I
+
+    E --> J["DgtProperties<br/>@ConfigurationProperties + @Validated"]
+    J -- "largo &lt; 6" --> H
+    J -- válido --> K[SelloService]
+
+    classDef malo fill:#fee,stroke:#c00
+    class H malo
