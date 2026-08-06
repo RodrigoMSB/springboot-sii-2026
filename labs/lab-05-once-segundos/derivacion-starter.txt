@@ -1,0 +1,6 @@
+# starter/ L5 vs su solucion/. El listado ingenuo (N+1, para el demo del crimen) con SQL
+# logging, la proyeccion quitada del repositorio, y el andamio de la integracion (TODO_2).
+src/main/java/cl/dgt/tramites/application/ListadoService.java
+src/main/java/cl/dgt/tramites/infrastructure/repository/TramiteRepository.java
+src/main/resources/application.yml
+src/test/java/cl/dgt/tramites/integracion/ListadoIntegracionTest.java

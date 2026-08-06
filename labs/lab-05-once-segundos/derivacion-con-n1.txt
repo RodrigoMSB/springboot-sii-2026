@@ -1,0 +1,4 @@
+# solucion-con-n1/ vs solucion/ (P-16). El "antes": mismo comportamiento, con N+1. Solo cambia
+# ListadoService (itera entidades) y el repositorio (sin la proyeccion). Base: solucion/
+src/main/java/cl/dgt/tramites/application/ListadoService.java
+src/main/java/cl/dgt/tramites/infrastructure/repository/TramiteRepository.java

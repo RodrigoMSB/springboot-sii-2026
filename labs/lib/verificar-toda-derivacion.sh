@@ -25,10 +25,14 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos; do
     [ -d "$LAB/solucion" ] || continue
     chequear "$ANTERIOR"      "$LAB/solucion" "$LAB/derivacion-solucion.txt"
     chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
+    # P-16: una segunda solución (el "antes" con N+1) que tambien deriva de solucion/.
+    if [ -d "$LAB/solucion-con-n1" ]; then
+        chequear "$LAB/solucion" "$LAB/solucion-con-n1" "$LAB/derivacion-con-n1.txt"
+    fi
     ANTERIOR="$LAB/solucion"
 done
 

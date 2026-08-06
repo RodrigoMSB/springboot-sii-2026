@@ -98,7 +98,7 @@ fi
 #  3 · Rastro local
 # -----------------------------------------------------------------------------
 if [ -d "$ESTADO" ]; then
-    rm -rf "$ESTADO"
+    borrar_seguro "$ESTADO"
     paso_ok "Archivos temporales del lab borrados (.estado/)"
 fi
 

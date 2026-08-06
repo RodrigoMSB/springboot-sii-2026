@@ -56,7 +56,7 @@ mkdir -p "$DESTINO"
 # Invalidar cualquier build previo del destino. `tar` PRESERVA las fechas, así que
 # un `.class` viejo puede quedar más nuevo que la fuente recién copiada y Maven NO
 # recompila: correría bytecode fantasma. Quien reemplaza fuentes limpia el target.
-rm -rf "$DESTINO/target"
+borrar_seguro "$DESTINO/target"
 
 paso_ok "Derivado: $ORIGEN -> $DESTINO"
 resumen_final "Derivación completa" "La derivación falló"
