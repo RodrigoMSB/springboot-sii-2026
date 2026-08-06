@@ -1,0 +1,6 @@
+%% El tipo real se juzga por el contenido, no por el nombre.
+flowchart TD
+    U["Sube 'documento.pdf'<br/>Content-Type: application/pdf"] --> D{"Primeros bytes"}
+    D -->|"25 50 44 46 (%PDF)"| OK["PDF real: se acepta"]
+    D -->|"4D 5A (MZ)"| NO["Ejecutable disfrazado: 400, rechazado"]
+    Note["El nombre y el header mienten; los magic bytes no."]

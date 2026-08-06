@@ -1,0 +1,12 @@
+# solucion/ L9 vs solucion/ L8. La caja negra: logging JSON, MDC/traceId, AOP de auditoria, adjuntos.
+#
+# Archivos NUEVOS (adiciones): FiltroDeTraza, AspectoDeAuditoria (config/observabilidad);
+# EnsayoDeProxyService, AdjuntoService, ContenidoAdjunto (application); DetectorDeMime
+# (infrastructure/archivo); AdjuntoRepository; ArchivoInvalidoException (domain); AdjuntoController,
+# AdjuntoDto (web); teso-mappings ya venia. Los tests de resiliencia del L8 se movieron a
+# resiliencia/. Los del enunciado (observabilidad) en enunciado/, excluidos.
+#
+# Archivos COMPARTIDOS que cambian a proposito:
+pom.xml
+src/main/resources/application.yml
+src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java

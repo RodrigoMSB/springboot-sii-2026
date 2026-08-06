@@ -1,0 +1,5 @@
+1d3581cede58d6ee543d3b8754192150618840552918b66f889ad4015f3d8e2d  src/test/java/cl/dgt/tramites/enunciado/BaseObservabilidadIT.java
+857a859a82ced1cef6cbe68e388bddaa6d98beee68ae354067c0ced03a024d2f  src/test/java/cl/dgt/tramites/enunciado/E1_TrazabilidadIT.java
+7af70d372605dbe16a1bac8bf129edb5a0095cb3b2f133129d76425cbb416125  src/test/java/cl/dgt/tramites/enunciado/E2_LogJsonIT.java
+88ee81b38c3cdaa389454b422854b8d0261a1a127dea2baaba0f7b08b63519c7  src/test/java/cl/dgt/tramites/enunciado/E3_AuditoriaIT.java
+c04294d7cc003c488ba1b6c2ae5038e5e2860ead3ed79381369cf5baa0f5aef5  src/test/java/cl/dgt/tramites/enunciado/E4_AdjuntosIT.java
