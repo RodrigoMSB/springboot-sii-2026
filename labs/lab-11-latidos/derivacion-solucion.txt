@@ -1,0 +1,32 @@
+# solucion/ L11 vs solucion/ L10. El reloj que se pone de acuerdo consigo mismo: scheduling con
+# candado distribuido, asincronia sobre hilos virtuales y eventos transaccionales (M10).
+#
+# Archivos NUEVOS (adiciones, no derivas):
+#   · CierreDiario (domain/entity) y CierreDiarioRepository — el resumen del dia.
+#   · CierreService (application) — el trabajo del cierre, sin reloj ni candado.
+#   · CandadoDistribuido (application) — el bloqueo sobre la base.
+#   · CierreNocturnoJob (config/scheduling) — el @Scheduled y la toma del candado.
+#   · NotificadorService (application) — el aviso @Async sobre hilos virtuales.
+#   · AsyncConfig (config) — @EnableScheduling + @EnableAsync + el executor virtual.
+#   · FolioEmitido y EscuchaDeFolios (application/evento) — el evento transaccional.
+#   · V4__cierre_diario.sql y V5__candado_tarea.sql — las dos tablas nuevas.
+#
+# Los tests del enunciado del L10 (health, metricas, exposicion, cache) se MOVIERON de enunciado/ a
+# tablero/: dejaron de ser enunciado y pasaron a ser regresion. Un archivo movido es una adicion en
+# el destino y una ausencia en el origen; ninguna de las dos dispara la deriva. El enunciado del L11
+# vive en enunciado/, que el verificador excluye por definicion.
+#
+# Archivos COMPARTIDOS que cambian a proposito:
+#
+#   EmisionService.java
+#     Publica el evento FolioEmitido al emitir uno nuevo. Se publica DENTRO de la transaccion a
+#     proposito: el listener esta marcado AFTER_COMMIT, asi que si esto revierte, el aviso no sale.
+src/main/java/cl/dgt/tramites/application/EmisionService.java
+#
+#   application.yml
+#     dgt.instancia (quien soy: con dos instancias es lo que permite saber cual hizo que),
+#     el bloque dgt.cierre (intervalo, retardo, cron y TTL del candado) y
+#     spring.task.scheduling.pool.size=4 — el default de Spring es UNO, y ese uno esconde el bug
+#     del TODO_1: con un solo hilo un fixedRate no puede solaparse, asi que la diferencia entre
+#     fixedRate y fixedDelay seria invisible.
+src/main/resources/application.yml

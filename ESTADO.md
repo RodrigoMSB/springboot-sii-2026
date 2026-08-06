@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-016.*
+*Última actualización: SPEC-017.*
 
 ---
 
@@ -51,6 +51,12 @@
   de rotación son acciones opuestas), métricas de negocio con Micrometer publicadas en formato
   Prometheus, lista blanca nominal de endpoints (`/env` y `/heapdump` dejan de existir) y un caché
   Caffeine con TTL, hit-rate medido e invalidación explícita al escribir.
+- **Lab 11** (`labs/lab-11-latidos/`): el reloj con problema de identidad. El cierre nocturno se
+  ejecuta una vez por instancia: con dos servidores, dos cierres, totales duplicados y el mismo
+  aviso dos veces al contribuyente. Se resuelve con un candado distribuido en la base (atómico, con
+  expiración y con el reloj del motor, no el de cada máquina), `fixedDelay` en vez de `fixedRate`,
+  el cron con zona `America/Santiago` explícita, notificaciones asíncronas sobre hilos virtuales de
+  Java 25, y eventos `AFTER_COMMIT` — si la transacción revierte, el aviso no sale.
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
@@ -58,22 +64,22 @@
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
-  correctos y que la aplicación pasa su suite completa (86 tests en el Lab 10).
+  correctos y que la aplicación pasa su suite completa (97 tests en el Lab 11).
 
 ## 2 · Qué falta
 
-Tres laboratorios, tras la renumeración del mapa (SPEC-016 §0.2: el nuevo lab de observabilidad
+Dos laboratorios, tras la renumeración del mapa (SPEC-016 §0.2: el nuevo lab de observabilidad
 entra como Lab 10, y los que venían detrás se corren un número):
 
-| | | |
-|---|---|---|
-| Lab 11 · Latidos | Lab 12 · Amortiguadores | Lab 13 · Cápsula y egreso |
+| | |
+|---|---|
+| Lab 12 · Amortiguadores | Lab 13 · Cápsula y egreso |
 
 La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
 está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 10, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 11, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de PRs
 de los labs 01 a 09 **ya está mergeada a `main`** (PRs #6 a #15), así que la fila acumulada puede
 correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
@@ -83,12 +89,12 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**SPEC-017: el Lab 11, «Latidos» — el reloj con problema de identidad.** El sistema ya sabe contar
-lo que hizo y decir cómo está. Y midiendo, Carolina notó que el cierre nocturno del viernes se
-ejecutó DOS veces: hay dos servidores y los dos se creyeron el único. Es el mismo problema que el
-Lab 10 dejó anotado al hablar del caché —cada instancia con su copia, ninguna sabe de las otras—.
-La próxima sesión: tareas programadas y cómo hacer que una tarea que debe correr una vez, corra
-una sola vez en un mundo de muchas instancias.
+**SPEC-018: el Lab 12, «Amortiguadores».** El cierre ya corre una vez y las notificaciones no
+bloquean a nadie. Pero anoche el servicio de notificaciones estuvo caído dos horas, y esos avisos
+no existen: se perdieron en el aire. El gancho está en el propio código del Lab 11 — el notificador
+guarda lo enviado en una cola **en memoria**, que un reinicio se lleva entera. La próxima sesión:
+lo que se envía se guarda hasta que alguien lo reciba. Colas, reintentos, idempotencia en la
+entrega, y qué hacer con el mensaje que no hay forma de entregar.
 
 ## 4 · Si estás perdido
 

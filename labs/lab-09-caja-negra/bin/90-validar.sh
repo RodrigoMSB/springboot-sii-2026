@@ -88,8 +88,12 @@ else
         grep -E '^\[ERROR\]   [A-Za-z0-9_]+\.[a-zA-Z]' "$SALIDA" | sed 's/^\[ERROR\]   /          · /' | head -12
         printf '\n'
         # Pista dirigida: ¿enunciado o arquitectura?
-        if grep -qE '^\[ERROR\]   T[0-9]_' "$SALIDA"; then
-            log_info "Los T#_ son tus TODOs. El número te dice cuál falta."
+        # Los tests del enunciado de este lab se llaman E1_…E4_, y E<n> corresponde a
+        # TODO_<n>. Esta condición buscaba `T[0-9]_`, que no existe: la pista jamás se
+        # imprimía. Corregido en la SPEC-017 §0.1 — una pista que no se imprime es
+        # material muerto, y el alumno perdía el único puntero al TODO que le falta.
+        if grep -qE '^\[ERROR\]   E[0-9]_' "$SALIDA"; then
+            log_info "Los E#_ son tus TODOs: E1 -> TODO_1, E2 -> TODO_2, E3 -> TODO_3, E4 -> TODO_4."
         fi
         if grep -qiE 'arquitectura|Architecture Violation' "$SALIDA"; then
             log_info "Hay una regla de arquitectura roja: su mensaje nombra el crimen."

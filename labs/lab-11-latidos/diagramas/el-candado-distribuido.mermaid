@@ -1,0 +1,31 @@
+%% Dos instancias despiertan a la misma hora. Una trabaja; la otra se va a dormir.
+%% La clave: mirar y tomar son la MISMA sentencia. No hay ventana entre las dos.
+sequenceDiagram
+    autonumber
+    participant R1 as Reloj dgt-1
+    participant R2 as Reloj dgt-2
+    participant DB as PostgreSQL<br/>candado_tarea (PK: nombre)
+    participant W as CierreService
+
+    Note over R1,R2: 03:00 — los dos planificadores despiertan.<br/>Ninguno sabe que el otro existe: @Scheduled es local a la JVM.
+
+    par a la vez
+        R1->>DB: INSERT ... ON CONFLICT DO UPDATE<br/>WHERE expira_en < now()
+    and
+        R2->>DB: INSERT ... ON CONFLICT DO UPDATE<br/>WHERE expira_en < now()
+    end
+
+    Note over DB: El motor SERIALIZA sobre la fila.<br/>No hay empate: la PK lo impide.
+
+    DB-->>R1: 1 fila afectada  ✅ lo tomé
+    DB-->>R2: 0 filas afectadas ❌ otro lo tiene
+
+    R2->>R2: log: "no tomé el candado,<br/>me voy a dormir"
+    Note over R2: No espera. No reintenta.<br/>No tiene nada que aportar.
+
+    R1->>W: ejecutarCierre(hoy, "dgt-1")
+    W-->>R1: 1 fila en cierre_diario
+    R1->>DB: DELETE ... WHERE tomado_por = 'dgt-1'
+    Note over R1,DB: En un finally: si el cierre revienta,<br/>el candado se suelta igual.
+
+    Note over DB: Y si dgt-1 MURIERA aquí, sin soltarlo:<br/>expira_en lo libera solo.<br/>Sin expiración, el cierre no correría NUNCA MÁS.
