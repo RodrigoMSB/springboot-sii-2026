@@ -1,0 +1,7 @@
+%% Deny by default + la diferencia 401 vs 403.
+flowchart TD
+    R["Petición"] --> T{"¿trae token válido y FIRMADO?"}
+    T -->|no| U["401 · no sé quién eres"]
+    T -->|sí| A{"¿su rol abre ESTA puerta? (@PreAuthorize)"}
+    A -->|no| F["403 · sé quién eres, no puedes esto"]
+    A -->|sí| OK["200/201 · adelante"]
