@@ -1,0 +1,3 @@
+# Archivos de la solucion/ del Lab 02 que difieren de la solucion/ del Lab 01
+# A PROPOSITO. Base: labs/lab-01-.../solucion  (encadenamiento N-1 -> N).
+pom.xml

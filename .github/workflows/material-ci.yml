@@ -267,3 +267,37 @@ jobs:
           echo "[OK] Todo el andamiaje parsea en el bash del alumno Windows."
           echo "[INFO] Recuerda: aquí NO se ejecutan. Ver entorno-alumno.md §3."
 
+  # ---------------------------------------------------------------------------
+  #  Deriva: que los labs no se desincronicen de su base EN SILENCIO.
+  #
+  #  Un `starter/`/`solucion/` se deriva de una base (el tronco, o la solución del
+  #  lab anterior). Todo archivo compartido debe ser idéntico, salvo los que el lab
+  #  cambia a propósito (el crimen, los huecos) — y esos están DECLARADOS en un
+  #  allowlist `derivacion-*.txt`, no son excepciones ad-hoc del diff. Resuelve el
+  #  hallazgo 1 de la SPEC-007: el día que el tronco cambie, esto se pone rojo.
+  #
+  #  No compila nada: solo compara bytes. Por eso no instala Java.
+  # ---------------------------------------------------------------------------
+  deriva:
+    name: deriva · labs en sincronía con su base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guarda de activación
+        id: guarda
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f labs/lib/verificar-toda-derivacion.sh ]; then
+            echo "[INFO] Sin verificador de derivación aún: el job queda armado, no activo."
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verificar la cadena de derivación
+        if: steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: ./labs/lib/verificar-toda-derivacion.sh
+

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-007.*
+*Última actualización: SPEC-008.*
 
 ---
 
@@ -14,9 +14,11 @@
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
 - **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
   antes de la sesión 1.
-- **El primer laboratorio de verdad**: `labs/lab-01-del-otro-lado-del-boton/`. La sesión 1
-  completa: una contraseña de producción escondida en el historial de git, y qué se hace de
-  verdad al respecto (se rota, no se borra).
+- **Lab 01** (`labs/lab-01-del-otro-lado-del-boton/`): una contraseña de producción en el
+  historial de git — se rota, no se borra.
+- **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
+  de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit
+  que hacen el crimen imposible de repetir.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
@@ -30,10 +32,10 @@ Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía
 
 | | | |
 |---|---|---|
-| Lab 02 · El folio que se filtró | Lab 06 · Dos folios, un número | Lab 10 · Latidos |
 | Lab 03 · Red de seguridad | Lab 07 · El portero | Lab 11 · Amortiguadores |
 | Lab 04 · El árbol de trámites | Lab 08 · Diplomacia con Tesorería | Lab 12 · Cápsula y egreso |
 | Lab 05 · Once segundos | Lab 09 · Caja negra | |
+| Lab 06 · Dos folios, un número | Lab 10 · Latidos | |
 
 Faltan también las diapositivas y el material del instructor.
 
@@ -46,8 +48,8 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**SPEC-008: el Lab 02, «El folio que se filtró».** Alguien devuelve la entidad en vez del
-DTO, y en la respuesta viaja el puntaje de riesgo interno de un contribuyente.
+**SPEC-009: el Lab 03, «Red de seguridad».** La suite llega en rojo — 14 tests fallando. Los
+tests son el enunciado: ponerlos en verde es descubrir qué hace el sistema.
 
 ## 4 · Si estás perdido
 

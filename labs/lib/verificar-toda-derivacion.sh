@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  verificar-toda-derivacion.sh — el job `deriva`, sobre todos los labs
+# -----------------------------------------------------------------------------
+#  Recorre la CADENA de derivacion y verifica que nada divergio en silencio:
+#    tronco -> Lab01 solucion -> Lab02 solucion -> ...   (encadenamiento)
+#    cada solucion -> su propio starter                  (los huecos + el crimen)
+#
+#  Cada eslabon declara sus divergencias intencionales en un allowlist. Correr
+#  desde la raiz del repo.
+# =============================================================================
+set -uo pipefail
+
+DIR_LIB="$(cd "$(dirname "$0")" && pwd)"
+RAIZ="$(cd "$DIR_LIB/../.." && pwd)"
+VERIF="$DIR_LIB/verificar-derivacion.sh"
+cd "$RAIZ" || exit 2
+
+FALLOS=0
+chequear() {
+    if "$VERIF" "$1" "$2" "$3"; then :; else FALLOS=$((FALLOS + 1)); fi
+}
+
+TRONCO="dgt-tramites-api"
+ANTERIOR="$TRONCO"
+
+# La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro; do
+    [ -d "$LAB/solucion" ] || continue
+    chequear "$ANTERIOR"      "$LAB/solucion" "$LAB/derivacion-solucion.txt"
+    chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
+    ANTERIOR="$LAB/solucion"
+done
+
+echo
+if [ "$FALLOS" -gt 0 ]; then
+    echo "[ERROR] $FALLOS eslabon(es) con deriva silenciosa."
+    exit 1
+fi
+echo "[OK] La cadena de derivacion esta en sincronia."
