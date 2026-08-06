@@ -1,0 +1,4 @@
+# solucion/ del Lab 04 vs solucion/ del Lab 03. Cambio A PROPOSITO: el repositorio gana
+# los metodos derivados (TODO_2) y la JPQL multi-entidad (TODO_3). ReporteService es nuevo
+# (adicion, no divergencia). Base: labs/lab-03-.../solucion
+src/main/java/cl/dgt/tramites/infrastructure/repository/TramiteRepository.java

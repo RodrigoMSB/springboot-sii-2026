@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-009.*
+*Última actualización: SPEC-010.*
 
 ---
 
@@ -19,8 +19,10 @@
 - **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
   de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
 - **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
-  enunciado. Validaciones, un validador de RUT chileno, errores con contrato, y los primeros
-  tests que el alumno escribe con Mockito.
+  enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
+- **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs por
+  pedir una ficha. Se corrige a LAZY, se instala AU-04, y se planta (sin decirlo) la bomba del
+  Lab 05: lo correcto también se mide.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
@@ -34,10 +36,10 @@ Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía
 
 | | | |
 |---|---|---|
-| Lab 04 · El árbol de trámites | Lab 08 · Diplomacia con Tesorería | Lab 12 · Cápsula y egreso |
 | Lab 05 · Once segundos | Lab 09 · Caja negra | |
 | Lab 06 · Dos folios, un número | Lab 10 · Latidos | |
 | Lab 07 · El portero | Lab 11 · Amortiguadores | |
+| Lab 08 · Diplomacia con Tesorería | Lab 12 · Cápsula y egreso | |
 
 Faltan también las diapositivas y el material del instructor.
 
@@ -50,8 +52,8 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**SPEC-010: el Lab 04, «El árbol de trámites».** La app viene configurada "como siempre
-funcionó": todo `FetchType.EAGER`. Funciona con datos de prueba. Ese es el punto.
+**SPEC-011: el Lab 05, «Once segundos».** La bomba plantada en el Lab 04 explota: un listado
+sobre 50.000 lotes tarda once segundos y dispara 1.847 consultas. Se mide y se arregla.
 
 ## 4 · Si estás perdido
 
