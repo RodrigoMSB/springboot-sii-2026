@@ -1,0 +1,26 @@
+%% Las dos preguntas del health, y por qué la respuesta a cada una es OPUESTA.
+%% El error caro del lab: meter la base en liveness (la rama punteada).
+flowchart TB
+    subgraph SONDAS["El orquestador pregunta cada pocos segundos"]
+        L["/actuator/health/liveness<br/><b>¿Está VIVO el proceso?</b>"]
+        R["/actuator/health/readiness<br/><b>¿Puede ATENDER?</b>"]
+    end
+
+    L --> LG["grupo liveness<br/><code>livenessState</code>"]
+    R --> RG["grupo readiness<br/><code>readinessState</code> + <code>baseDeDatos</code>"]
+
+    RG --> BD[("PostgreSQL<br/>SELECT 1")]
+
+    LG -->|UP| LOK["No tocar nada"]
+    LG -->|DOWN| LKO["<b>REINICIAR</b><br/>el proceso está colgado"]
+
+    RG -->|UP| ROK["Mandarle tráfico"]
+    RG -->|DOWN| RKO["<b>SACAR DE ROTACIÓN</b><br/>y esperar — sin reiniciar<br/>readiness nombra el componente:<br/><code>baseDeDatos</code> + causa"]
+
+    BD -.->|"❌ EL ERROR CARO:<br/>meter la base también aquí"| LG
+    LKO -.->|"reiniciar NO levanta PostgreSQL"| BUCLE["Caída de la base<br/><b>+</b> CrashLoopBackOff<br/>= dos incidentes en vez de uno"]
+
+    classDef malo fill:#7f1d1d,stroke:#ef4444,color:#fff
+    classDef bueno fill:#14532d,stroke:#22c55e,color:#fff
+    class BUCLE,LKO malo
+    class LOK,ROK bueno

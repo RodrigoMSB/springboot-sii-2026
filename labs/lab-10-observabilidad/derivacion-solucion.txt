@@ -1,0 +1,52 @@
+# solucion/ L10 vs solucion/ L9. El tablero que dice la verdad: health real, metricas de
+# negocio, exposicion con criterio y cache medido (M12).
+#
+# Archivos NUEVOS (adiciones, no derivas): BaseDeDatosHealthIndicator (config/observabilidad);
+# CacheConfig (config); DeclaracionService (application); Formulario29Repository
+# (infrastructure/repository); ReporteController, NuevaLineaF29Request, TotalF29Dto (web).
+#
+# Los tests del enunciado del L9 (trazabilidad, MDC, AOP, adjuntos) se MOVIERON de enunciado/ a
+# trazabilidad/: dejaron de ser enunciado y pasaron a ser regresion. Un archivo movido es una
+# adicion en el destino y una ausencia en el origen; ninguna de las dos dispara la deriva.
+# El enunciado del L10 vive en enunciado/, que el verificador excluye por definicion.
+#
+# Archivos COMPARTIDOS que cambian a proposito:
+#
+#   pom.xml
+#     micrometer-registry-prometheus (el registro que publica /actuator/prometheus),
+#     spring-boot-starter-cache (la abstraccion) y caffeine (el proveedor con TTL y stats).
+#     Las tres versiones las gestiona el BOM de Boot 4.1.0.
+pom.xml
+#
+#   application.yml
+#     El bloque `management` completo: lista blanca nominal de endpoints, grupos liveness y
+#     readiness separados, el indicador `db` de Boot apagado (escribimos el nuestro) y la
+#     etiqueta comun `application` para Prometheus. Ademas, hikari.connection-timeout baja a
+#     5 s: un health que tarda 30 s en admitir que esta caido llega tarde.
+src/main/resources/application.yml
+#
+#   application-prod.yml
+#     El mismo `management`, apretado: lista blanca repetida a proposito (este archivo es el que
+#     se audita), `exclude` explicito de env/beans/heapdump y compania, y show-details
+#     restringido por rol.
+src/main/resources/application-prod.yml
+#
+#   SeguridadConfig.java
+#     `/actuator/health/**` en vez de `/actuator/health`: las sondas del M12 viven en subrutas y
+#     un matcher exacto no las alcanza. Quien las consulta es el orquestador, no una persona.
+src/main/java/cl/dgt/tramites/config/SeguridadConfig.java
+#
+#   EmisionService.java
+#     Metricas de NEGOCIO: contador de folios etiquetado por resultado (nuevo/reusado) y timer
+#     de la emision. Lo unico que sabe cuantos folios emite la DGT.
+src/main/java/cl/dgt/tramites/application/EmisionService.java
+#
+#   ReporteService.java
+#     @Cacheable sobre el reporte agregado (JOIN + GROUP BY sobre todo el historico) y la
+#     constante del nombre del cache, que comparten cuatro sitios.
+src/main/java/cl/dgt/tramites/application/ReporteService.java
+#
+#   TramiteController.java
+#     POST /{id}/f29/lineas: la unica escritura que mueve los totales cacheados, y por tanto el
+#     punto donde la invalidacion tiene que dispararse.
+src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
