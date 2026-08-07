@@ -25,7 +25,29 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso; do
+
+    # ------------------------------------------------------------------------
+    #  Dos FORMAS de lab, y la diferencia se detecta por estructura, no por
+    #  nombre. Nada de `if [ "$LAB" = "labs/lab-13-..." ]`: un caso especial
+    #  cableado al nombre es una bomba para el lab 14.
+    #
+    #  · Lab con TODOs (01..12):   anterior -> solucion -> starter
+    #      El starter es la solucion con huecos, asi que DERIVA de ella.
+    #
+    #  · Lab de EXAMEN (13):       anterior -> starter -> solucion-referencia
+    #      Aqui el starter es la app entera del lab previo (no tiene huecos) y
+    #      la referencia es UNA solucion posible construida ENCIMA. El sentido
+    #      de la derivacion se invierte, y por eso la cadena continua por la
+    #      referencia: es la que lleva el trabajo nuevo.
+    # ------------------------------------------------------------------------
+    if [ -d "$LAB/solucion-referencia" ]; then
+        chequear "$ANTERIOR"     "$LAB/starter"              "$LAB/derivacion-starter.txt"
+        chequear "$LAB/starter"  "$LAB/solucion-referencia"  "$LAB/derivacion-referencia.txt"
+        ANTERIOR="$LAB/solucion-referencia"
+        continue
+    fi
+
     [ -d "$LAB/solucion" ] || continue
     chequear "$ANTERIOR"      "$LAB/solucion" "$LAB/derivacion-solucion.txt"
     chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
