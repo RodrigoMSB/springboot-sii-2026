@@ -30,12 +30,18 @@ DIR_BIN="$(cd "$(dirname "$0")" && pwd)"
 
 PROYECTO="${1:-}"
 IMAGEN="${2:-}"
-[ -n "$PROYECTO" ] && [ -n "$IMAGEN" ] || { printf '[ERROR] Uso: %s <proyecto> <imagen>\n' "$(basename "$0")" >&2; exit 2; }
+if [ -z "$PROYECTO" ] || [ -z "$IMAGEN" ]; then
+    printf '[ERROR] Uso: %s <proyecto> <imagen>\n' "$(basename "$0")" >&2
+    exit 2
+fi
 
 PUERTO_ACEPTACION=8123
 CONTENEDOR="dgt-aceptacion-$$"
 
-# shellcheck disable=SC2329  # se invoca desde el `trap` de abajo, no por nombre
+# Se invoca desde el `trap` de abajo, nunca por nombre, y shellcheck no puede verlo.
+# Los dos códigos son el MISMO aviso en versiones distintas: SC2329 en la local,
+# SC2317 en la del runner de CI. Se declaran ambos.
+# shellcheck disable=SC2317,SC2329
 limpiar() {
     docker rm -f "$CONTENEDOR" >/dev/null 2>&1 || true
     ( cd "$PROYECTO" && docker compose down -v >/dev/null 2>&1 ) || true
