@@ -1,0 +1,43 @@
+%% Los tres estados del circuito, y qué gana cada uno.
+%% La diferencia entre CLOSED y OPEN no está en el resultado —las dos veces falla—
+%% sino en CUÁNTO TARDA en fallar, y en si el otro recibe el golpe.
+stateDiagram-v2
+    direction LR
+
+    [*] --> CLOSED
+
+    CLOSED: CLOSED
+    CLOSED: Todo pasa. Se cuentan los fallos.
+    CLOSED: Una llamada fallida cuesta el timeout completo (~800 ms)
+    CLOSED: …y golpea a TESO, que ya está en el suelo
+
+    OPEN: OPEN
+    OPEN: Nada pasa. Se falla al instante, SIN tocar la red (&lt;50 ms)
+    OPEN: Gana el que llama: deja de esperar
+    OPEN: Gana el caído: deja de recibir golpes
+
+    HALF_OPEN: HALF_OPEN
+    HALF_OPEN: Pasan 2 llamadas de prueba
+    HALF_OPEN: Es lo que hace que el sistema se recupere SOLO
+
+    CLOSED --> OPEN: tasa de fallo &gt; 50%%<br/>(mínimo 4 llamadas:<br/>no se abre con una golondrina)
+    OPEN --> HALF_OPEN: pasados 2 s
+    HALF_OPEN --> CLOSED: las de prueba van bien
+    HALF_OPEN --> OPEN: siguen fallando
+
+    note right of OPEN
+        El fallback es el MISMO de siempre:
+        TesoreriaNoDisponibleException,
+        que el Lab 08 ya degrada en 503
+        con el trámite intacto.
+
+        El circuito cambió CUÁNTO TARDA
+        la mala noticia, no CUÁL es.
+    end note
+
+    note left of HALF_OPEN
+        Sin este estado, un circuito abierto
+        se quedaría abierto para siempre
+        y alguien tendría que reiniciar a mano:
+        habrías cambiado una caída por otra.
+    end note
