@@ -18,6 +18,14 @@
 #  más gente omite. Por eso está aquí y no como una nota al pie: sin él, "sin
 #  flaky" sería un criterio que ningún mecanismo verifica (A-02).
 #
+#  ⚠️  TARDA. Construye DOS imágenes OCI y corre CINCO suites completas. Es un
+#  pre-vuelo de instructor, no algo que el alumno lance cada diez minutos.
+#
+#  Y usa el boletín COMPLETO a propósito, sin `--sin-imagen`: la aceptación es
+#  la única comprobación de que el consolidado del brief existe. Con el atajo,
+#  el starter saldría aprobado —la suite del Lab 12 pasa entera— y el paso 1
+#  daría un falso verde. Se descubrió ejecutándolo.
+#
 #  Trabaja sobre una COPIA desechable (.e2e/): jamás toca tu entrega.
 # =============================================================================
 set -uo pipefail
@@ -43,7 +51,7 @@ log_info "Copia desechable del starter en .e2e/ (tu entrega no se toca)"
 
 # --- 1 · El starter NO debe aprobar ------------------------------------------
 printf '\n  --- 1/3 · el starter (app del Lab 12) NO debe aprobar el boletín ---\n'
-if "$DIR_BIN/90-validar.sh" --dir "$BANCO" --sin-imagen >/dev/null 2>&1; then
+if "$DIR_BIN/90-validar.sh" --dir "$BANCO" >/dev/null 2>&1; then
     paso_fail "El starter APRUEBA el boletín tal cual" \
               "Entonces el examen no pide nada: el consolidado del brief ya estaría."
 else
@@ -52,7 +60,7 @@ fi
 
 # --- 2 · La referencia SÍ debe aprobar ---------------------------------------
 printf '\n  --- 2/3 · la solución de referencia SÍ debe aprobarlo ---\n'
-if "$DIR_BIN/90-validar.sh" --dir solucion-referencia --sin-imagen >/dev/null 2>&1; then
+if "$DIR_BIN/90-validar.sh" --dir solucion-referencia >/dev/null 2>&1; then
     paso_ok "La referencia aprueba el núcleo del boletín"
 else
     paso_fail "Ni la referencia aprueba el boletín" \

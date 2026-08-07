@@ -60,6 +60,7 @@ esac
 # no da un "X/Y": da un nivel por eje.
 FALLOS_CORRECTITUD=0
 FALLOS_OFICIO=0
+CORRECTITUD_INCOMPLETA=0
 
 eje_correctitud_falla() { FALLOS_CORRECTITUD=$((FALLOS_CORRECTITUD + 1)); paso_fail "$1" "${2:-}"; }
 eje_oficio_falla()      { FALLOS_OFICIO=$((FALLOS_OFICIO + 1)); paso_fail "$1" "${2:-}"; }
@@ -140,8 +141,16 @@ if [ "$CON_IMAGEN" -eq 1 ]; then
         tail -5 "$IMG_LOG" | sed 's/^/          /'
     fi
 else
-    paso_skip "Empaquetado OCI omitido (--sin-imagen)" \
-              "El eje CORRECTITUD queda INCOMPLETO: la entrega exige la imagen (§3 del brief)."
+    # --sin-imagen no es un atajo inocente: se salta el empaquetado Y LA ACEPTACIÓN, que es
+    # LA ÚNICA comprobación de que el consolidado del brief existe. Sin ella, una entrega que
+    # no implementó nada saldría con el núcleo verde — el eje mediría "la suite del Lab 12
+    # sigue pasando", que no es lo que se pidió.
+    #
+    # Por eso el eje queda INCOMPLETO y el boletín NO puede decir "núcleo verde". Sirve para
+    # iterar rápido durante el examen; no sirve para evaluar.
+    CORRECTITUD_INCOMPLETA=1
+    paso_skip "Empaquetado OCI y aceptación omitidos (--sin-imagen)" \
+              "El eje CORRECTITUD queda INCOMPLETO: sin la aceptación nadie comprobó el consolidado."
 fi
 
 # =============================================================================
@@ -223,7 +232,11 @@ printf '===========================================================\n'
 printf '  BOLETÍN\n'
 printf -- '-----------------------------------------------------------\n'
 
-if [ "$FALLOS_CORRECTITUD" -eq 0 ]; then
+if [ "$FALLOS_CORRECTITUD" -eq 0 ] && [ "$CORRECTITUD_INCOMPLETA" -eq 1 ]; then
+    printf '  CORRECTITUD  ·  INCOMPLETO         [automático]\n'
+    printf '                  Se omitió la aceptación (--sin-imagen): nadie\n'
+    printf '                  comprobó que el consolidado exista. No evaluable.\n'
+elif [ "$FALLOS_CORRECTITUD" -eq 0 ]; then
     printf '  CORRECTITUD  ·  SUFICIENTE o más   [automático]\n'
     printf '                  El salto a Competente/Destacado lo pone la\n'
     printf '                  rúbrica: mira QUÉ probó, no solo que pase.\n'
@@ -241,7 +254,14 @@ printf '  CRITERIO     ·  NO MEDIDO AQUÍ     [humano]\n'
 printf -- '-----------------------------------------------------------\n'
 
 NUCLEO=$((FALLOS_CORRECTITUD + FALLOS_OFICIO))
-if [ "$NUCLEO" -eq 0 ]; then
+if [ "$NUCLEO" -eq 0 ] && [ "$CORRECTITUD_INCOMPLETA" -eq 1 ]; then
+    printf '  SIN VEREDICTO — la aceptación no se ejecutó.\n\n'
+    printf '  Corre el boletín completo (sin --sin-imagen) antes de\n'
+    printf '  evaluar a nadie. Un núcleo "verde" que no comprobó lo que\n'
+    printf '  pedía el brief sería exactamente el pipeline deshonesto que\n'
+    printf '  este examen califica Insuficiente.\n'
+    VEREDICTO=1
+elif [ "$NUCLEO" -eq 0 ]; then
     printf '  NÚCLEO VERDE.\n\n'
     printf '  Y eso NO es la aprobación. El umbral del curso es:\n'
     printf '     núcleo verde  Y  criterio >= Suficiente.\n\n'

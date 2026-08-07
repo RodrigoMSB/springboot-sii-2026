@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-018.*
+*Última actualización: SPEC-019.*
 
 ---
 
@@ -62,6 +62,13 @@
   perdieron. Se resuelve entregándolo a una cola durable (RabbitMQ), con un consumidor idempotente
   —«exactly once» no existe—, una DLQ que aparta al mensaje envenenado con su causa sin atascar a
   los buenos, y un circuit breaker que deja de golpear a Tesorería cuando está caída.
+- **Lab 13** (`labs/lab-13-capsula-y-egreso/`): el **examen de egreso**, y el único lab sin crimen.
+  El alumno recibe un *brief* de negocio deliberadamente incompleto en los bordes, y tres horas para
+  entregar un consolidado correcto, seguro, probado por él y empaquetado como imagen OCI. Su
+  validador no cuenta huecos: emite un **boletín de tres ejes** (Correctitud · Oficio · Criterio)
+  que **declara quién mide cada uno** y **no puede aprobar a nadie** — el eje Criterio es humano y
+  el umbral es núcleo verde *y* criterio ≥ Suficiente. Trae rúbrica, guía de defensa con respuestas
+  calibradas por nivel, y una `solucion-referencia/` que dice de entrada que es UNA solución.
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
@@ -69,23 +76,22 @@
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
-  correctos y que la aplicación pasa su suite completa (106 tests en el Lab 12).
+  correctos y que la aplicación pasa su suite completa (106 tests en el Lab 13).
 
 ## 2 · Qué falta
 
-Uno, y es el último: el examen de egreso.
+**Ninguno de los trece.** El curso está construido: los 35 temas oficiales, cubiertos.
 
-| |
-|---|
-| Lab 13 · Cápsula y egreso |
+Queda pendiente un **lab adicional de microservicios**, cuyo código aportará el PO, que cerrará el
+alcance del título oficial («Desarrollo de Microservicios en Java»). Su SPEC se emitirá por separado.
 
-No lleva crimen: lleva un *brief* de negocio, un repositorio casi vacío y una rúbrica de tres ejes.
+Faltan también las diapositivas y el material del instructor para sala.
 
 La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
 está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 12, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 13, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de PRs
 de los labs 01 a 09 **ya está mergeada a `main`** (PRs #6 a #15), así que la fila acumulada puede
 correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
@@ -95,12 +101,13 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**SPEC-019: el Lab 13, el examen de egreso.** No hay crimen. Hay un *brief* de Carolina —un
-problema de negocio escrito como lo escribiría ella, sin una sola instrucción técnica—, un
-repositorio casi vacío y tres horas. Nadie le dice al alumno qué hacer: ni qué capas, ni qué patrón,
-ni qué probar primero. Se evalúa con el boletín de tres ejes (Correctitud · Oficio · Criterio) y el
-umbral es núcleo verde **y** criterio ≥ suficiente. Es la sesión que el manifiesto describe: no si
-recuerda la sintaxis, sino si frente a un problema que no vio reconoce cuál es el problema.
+**El lab de microservicios.** Con los trece laboratorios construidos y los 35 temas oficiales
+cubiertos, lo que queda es el lab adicional que cierra el alcance del título del curso. El PO aporta
+el código; la SPEC se emite por separado.
+
+Mientras tanto, lo que de verdad falta no es material: es que el PO corra la fila de **pruebas de
+aceptación acumuladas** (Labs 00 a 13) y cierre los PRs abiertos. Los laboratorios están verificados
+por el ejecutor; ninguno lo ha corrido su dueño.
 
 ## 4 · Si estás perdido
 
