@@ -90,8 +90,14 @@ Desktop, imágenes ya construidas):
 | **RAM del sistema completo** | **1,54 GiB** (7 contenedores) |
 | Techo configurado | 2,94 GiB — cada contenedor con su `mem_limit` |
 | **Arranque** | **56 s** con las imágenes ya construidas |
-| Primera vez (compilar + construir imágenes) | ~4–6 min, según tu red |
-| Disco | ~1 GB en imágenes |
+| Primera vez, medido por partes | 21 s compilar (repositorio Maven vacío, 146 MB de descarga) + 10 s construir las cinco imágenes + 56 s arrancar |
+| Disco | **1,22 GB** en imágenes (232 MB de capa base compartida + 992 MB propios) |
+
+Sobre la «primera vez»: los 31 s de compilar y construir se midieron con una conexión
+rápida y con la imagen base (`eclipse-temurin:25-jre-alpine`, 232 MB) ya descargada. Con
+una conexión lenta, lo que manda es la descarga —146 MB de dependencias más 232 MB de
+imagen base—, no el procesador. Presupuesta unos minutos la primera vez y ninguno las
+siguientes.
 
 Desglose por pieza, en reposo:
 
