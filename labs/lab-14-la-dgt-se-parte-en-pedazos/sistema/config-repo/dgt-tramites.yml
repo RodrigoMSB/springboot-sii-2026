@@ -1,0 +1,184 @@
+# =============================================================================
+#  dgt-tramites.yml — la configuración del consumidor
+# -----------------------------------------------------------------------------
+#  ⭐ ESTE ES EL ARCHIVO DEL LABORATORIO. Los cuatro TODO están abajo, en el
+#  bloque `resilience4j.circuitbreaker`. Todo lo demás viene resuelto.
+#
+#  Cuando lo edites:  ./bin/start-lab.sh --reiniciar-tramites
+#  (el Config Server sirve el archivo nuevo enseguida; el servicio lo lee al
+#  arrancar, así que hay que reiniciar ESE contenedor, no todo el sistema).
+# =============================================================================
+
+server:
+  port: 0        # efímero, igual que el proveedor
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USUARIO}
+    password: ${DB_CLAVE}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            # -----------------------------------------------------------------
+            #  El timeout de lectura es lo que convierte «lento» en «fallo».
+            # -----------------------------------------------------------------
+            #  Sin él, una instancia que tarda 8 segundos en responder no le
+            #  parece un fallo a nadie: el circuit breaker cuenta EXCEPCIONES, y
+            #  esperar no lanza ninguna. El hilo se queda ahí colgado, y con él
+            #  el del portal, y con él el del navegador.
+            #
+            #  Con `read-timeout: 2000`, esa llamada lanza a los 2 segundos, el
+            #  circuito la cuenta como fallo, y el sistema puede reaccionar.
+            #
+            #  Es la misma lección del Lab 08 —«once segundos»— aplicada a un
+            #  vecino que ahora está al otro lado de la red.
+            connect-timeout: 1000
+            read-timeout: 2000
+
+# =============================================================================
+#  RESILIENCE4J — el corazón del laboratorio
+# =============================================================================
+resilience4j:
+
+  # ---------------------------------------------------------------------------
+  #  RETRY — insistir, pero poco
+  # ---------------------------------------------------------------------------
+  #  Viene resuelto: no es el TODO, pero hay que entenderlo para hacer el TODO.
+  #
+  #  `max-attempts: 2` significa el intento original MÁS uno. Y como Retry
+  #  envuelve al CircuitBreaker (ver el Javadoc de ConsultaDeContribuyentes),
+  #  cada petición del usuario produce DOS llamadas contadas por el circuito.
+  #  Tenlo presente cuando elijas los números de abajo: el circuito cuenta
+  #  llamadas, no clics.
+  #
+  #  Y una advertencia que vale más que la configuración: reintentar contra un
+  #  servicio que se está cayendo es echarle gasolina. Por eso el retry va DENTRO
+  #  del circuito y no al revés — cuando el circuito abre, deja de haber
+  #  reintentos porque deja de haber llamadas.
+  retry:
+    instances:
+      contribuyentes:
+        max-attempts: 2
+        wait-duration: 200ms
+        ignore-exceptions:
+          # Un 404 es una respuesta, no un fallo: ese RUT no existe y no va a
+          # existir por insistir. Reintentarlo es gastar red para nada.
+          - feign.FeignException$NotFound
+          # Y esta es la que casi nadie pone, medida en este mismo laboratorio:
+          # cuando el circuito está ABIERTO lanza CallNotPermittedException, y el
+          # retry —que está por fuera— la trata como cualquier otro fallo y se
+          # espera sus 200 ms antes de volver a preguntar. El circuito ya decidió
+          # que no se llama a nadie: reintentar es esperar por nada.
+          #
+          # Sin esta línea, «fallar rápido» cuesta 250 ms. Con ella, 50 ms.
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+
+  # ---------------------------------------------------------------------------
+  #  CIRCUIT BREAKER — ⭐ AQUÍ ESTÁN LOS CUATRO TODO
+  # ---------------------------------------------------------------------------
+  #  Ahora mismo esta instancia existe pero NO DECLARA NI UN UMBRAL. No está
+  #  rota: Resilience4j la crea con sus valores por defecto y el sistema
+  #  funciona. El problema es que esos valores son invisibles, y son estos:
+  #
+  #      sliding-window-size                           100
+  #      minimum-number-of-calls                       100
+  #      failure-rate-threshold                        50 %
+  #      wait-duration-in-open-state                   60 s
+  #      permitted-number-of-calls-in-half-open-state  10
+  #
+  #  Léelos otra vez y hazte la pregunta del laboratorio: con
+  #  `minimum-number-of-calls: 100`, ¿cuántas peticiones hay que hacer para que
+  #  este circuito llegue siquiera a OPINAR sobre si el otro servicio está
+  #  caído?  ¿Y cuántas peticiones caben en la sesión de hoy?
+  #
+  #  Eso es un circuit breaker decorativo: está en el árbol de dependencias, sale
+  #  en el diagrama de arquitectura, y no va a abrirse jamás.
+  #
+  #  ---------------------------------------------------------------------------
+  #  Tu trabajo: declarar los cuatro umbrales, con los valores que TÚ elijas.
+  #  ---------------------------------------------------------------------------
+  #  No hay una respuesta única. Hay una condición que cumplir y un criterio que
+  #  defender, y el validador comprueba la condición:
+  #
+  #      con el proveedor lento, el circuito tiene que ABRIRSE
+  #      dentro del escenario del laboratorio (~10 llamadas)
+  #
+  #  Escribe los cuatro dentro de `contribuyentes:`, respetando la sangría.
+  #
+  #  Pista 1 (la guía tiene el resto): guia/02-matar-al-proveedor.md, §3.
+  #  Pista 3: config-repo-solucion/dgt-tramites.yml — compara, no copies.
+  circuitbreaker:
+    instances:
+      contribuyentes:
+        register-health-indicator: true
+
+        # TODO 1 — CUÁNTAS LLAMADAS MIRA ANTES DE OPINAR
+        #   Claves: `sliding-window-size` y `minimum-number-of-calls`.
+        #   El circuito lleva una ventana con las últimas N llamadas y calcula
+        #   sobre ellas el porcentaje de fallos. Pero no calcula nada hasta
+        #   tener un mínimo: con dos llamadas y una fallida, un 50 % de fallos
+        #   no significa nada.
+        #   La tensión: pocas llamadas -> abre con ruido estadístico y corta un
+        #   servicio sano; muchas -> tarda tanto en decidir que el daño ya está
+        #   hecho. Tienen que caber en las ~10 llamadas del escenario, y recuerda
+        #   que el retry duplica.
+        #   Pista 2: en un servicio real de alto tráfico, 100 es un número
+        #   razonable. En este laboratorio, no.
+        # {{TODO_1}}
+
+        # TODO 2 — A PARTIR DE QUÉ PORCENTAJE ABRE
+        #   Clave: `failure-rate-threshold` (un entero, porcentaje).
+        #   ¿Con qué tasa de fallo en la ventana das por caído al vecino?
+        #   La tensión: bajarlo mucho corta a la primera hipo de la red; subirlo
+        #   mucho aguanta con estoicismo un servicio que ya no contesta.
+        #   Pista 2: piensa qué porcentaje observarás en el escenario del lab,
+        #   donde el proveedor lento falla el 100 % de las veces. Un umbral por
+        #   encima de eso no se alcanza nunca.
+        # {{TODO_2}}
+
+        # TODO 3 — CUÁNTO SE QUEDA ABIERTO
+        #   Clave: `wait-duration-in-open-state` (con unidad: `10s`, `30s`).
+        #   Mientras está abierto, el circuito RECHAZA sin llamar. Eso es lo que
+        #   le da aire al servicio caído para levantarse — y lo que hace que tu
+        #   sistema falle rápido en vez de quedarse esperando.
+        #   La tensión: corto -> vuelves a golpear al que aún se está levantando;
+        #   largo -> sigues degradado un buen rato después de que se recuperó.
+        #   Pista 2: el default es 60 s. En una clase de tres horas, esperar 60 s
+        #   para ver si el circuito se recuperó es media actividad tirada.
+        # {{TODO_3}}
+
+        # TODO 4 — CUÁNTAS DEJA PASAR PARA PROBAR SI YA VOLVIÓ
+        #   Claves: `permitted-number-of-calls-in-half-open-state` y
+        #   `automatic-transition-from-open-to-half-open-enabled: true`.
+        #   Pasado el tiempo de arriba, el circuito no se fía: pasa a MEDIO
+        #   ABIERTO y deja pasar unas pocas llamadas de prueba. Si van bien,
+        #   cierra; si van mal, vuelve a abrir el reloj entero.
+        #   Sin la segunda clave, el circuito NO pasa solo a medio abierto:
+        #   espera a que llegue una llamada. En un sistema con poco tráfico se
+        #   queda abierto mucho más de lo que dice el reloj, y parece un bug.
+        #   Pista 2: son llamadas de sonda, no de carga. Pocas.
+        # {{TODO_4}}
+
+management:
+  server:
+    # Puerto de GESTIÓN separado del de tráfico.
+    #
+    # El de tráfico es efímero (`server.port: 0`) y no lo conoce nadie hasta que
+    # el servicio arranca — ni el propio contenedor. Pero el healthcheck del
+    # compose tiene que poder preguntar «¿estás vivo?» a una dirección fija, así
+    # que /actuator vive aquí, en el 8081, que sí es fijo.
+    #
+    # Fuera del laboratorio esto se hace igual, y por una razón mejor: el puerto
+    # de gestión se publica solo hacia la red interna, nunca hacia el mundo.
+    port: 8081

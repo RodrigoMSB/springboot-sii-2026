@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   dgt-registro — la guía telefónica de la DGT (Eureka Server)
+  .............................................................................
+   Una sola dependencia y cero código de negocio. Toda la pieza es una anotación.
+
+   ⚠️  ESTADO DEL ARTE (SPEC-020 §2, y va en la teoría):
+   De todo el stack Netflix histórico —Eureka, Hystrix, Ribbon, Zuul— SOLO
+   EUREKA sigue vivo en el tren actual. Los otros tres están muertos y fuera del
+   release train desde hace años. Si el alumno encuentra un tutorial que los usa,
+   está leyendo material caducado, por muy alto que salga en el buscador.
+
+   El sustituto de cada uno, en este mismo laboratorio:
+     · Hystrix -> Resilience4j (spring-cloud-circuitbreaker)
+     · Ribbon  -> Spring Cloud LoadBalancer
+     · Zuul    -> Spring Cloud Gateway
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cl.dgt</groupId>
+        <artifactId>dgt-sistema</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>dgt-registro</artifactId>
+    <name>dgt-registro</name>
+    <description>Eureka Server: quién existe y dónde está</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

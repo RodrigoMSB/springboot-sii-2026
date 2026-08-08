@@ -25,7 +25,41 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
+
+    # ------------------------------------------------------------------------
+    #  TERCERA FORMA de lab: el SISTEMA que no deriva de nadie (Lab 14).
+    #
+    #  Detectada por estructura —tiene `sistema/` y no tiene `solucion*/`—, no
+    #  por nombre: la nota de abajo ya avisaba de que cablear un caso especial
+    #  al nombre del lab 13 sería una bomba para el 14, y no vamos a poner la
+    #  bomba nosotros con el 15.
+    #
+    #  Este lab NO es un eslabón de la cadena y no puede serlo: no es la app
+    #  canónica con un hueco más, son CINCO proyectos Maven nuevos, con otro
+    #  dominio reducido y otro `pom.xml`. Compararlo byte a byte contra el Lab 13
+    #  daría una divergencia del 100 %, y un allowlist que declare «todo es
+    #  distinto» no declara nada.
+    #
+    #  Lo que sí importa declarar es que la cadena SIGUE VIVA hasta el Lab 13 y
+    #  que este lab queda FUERA a propósito. Por eso se dice en voz alta —una
+    #  línea en el log del CI— en vez de dejar que el `continue` lo salte en
+    #  silencio, que es justo la deriva invisible que este job existe para
+    #  impedir.
+    # ------------------------------------------------------------------------
+    if [ -d "$LAB/sistema" ] && [ ! -d "$LAB/solucion" ] && [ ! -d "$LAB/solucion-referencia" ]; then
+        echo "[INFO] $LAB es un SISTEMA propio (5 proyectos Maven nuevos): fuera de la"
+        echo "       cadena de derivacion a proposito. Ver docs/specs/SPEC-020 §7."
+        if [ -f "$LAB/derivacion-sistema.txt" ]; then
+            echo "[OK]   $LAB declara su exclusion en derivacion-sistema.txt"
+        else
+            echo "[ERROR] $LAB no declara por que esta fuera de la cadena."
+            echo "        Falta $LAB/derivacion-sistema.txt"
+            FALLOS=$((FALLOS + 1))
+        fi
+        # ANTERIOR no avanza: la cadena termina en el ultimo lab que si deriva.
+        continue
+    fi
 
     # ------------------------------------------------------------------------
     #  Dos FORMAS de lab, y la diferencia se detecta por estructura, no por

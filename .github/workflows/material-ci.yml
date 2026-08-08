@@ -113,6 +113,22 @@ jobs:
                 ;;
             esac
 
+            # Exclusión por ESTRUCTURA, no por nombre: un lab de EXAMEN se
+            # reconoce porque tiene rubrica/ y solucion-referencia/. No siembra
+            # nada porque no enseña un módulo nuevo — mide los catorce anteriores.
+            #
+            # Hasta la SPEC-020 este caso lo cubría por accidente la regla del
+            # ÚLTIMO lab: el examen era el último y quedaba exento sin decirlo. Al
+            # nacer el Lab 14, el examen dejó de ser el último y esa exención se
+            # evaporó en silencio. Sobrevivía solo porque su TEORIA.md contiene la
+            # frase «este laboratorio NO siembra», que el `grep` de abajo da por
+            # buena — un verde por casualidad, que es la peor clase de verde.
+            # Aquí queda dicho a propósito.
+            if [ -d "$LAB/rubrica" ] && [ -d "$LAB/solucion-referencia" ]; then
+              echo "[INFO] $LAB es el EXAMEN de egreso: exento de sembrar (no enseña un módulo, los mide)."
+              continue
+            fi
+
             if [ "$LAB" = "$ULTIMO" ]; then
               # El último lab cierra el arco: no hay módulo N+1 que sembrar.
               echo "[INFO] $LAB es el último lab: exento de sembrar (cierra el arco)."
@@ -189,6 +205,111 @@ jobs:
             grep -q "Failures: 0, Errors: 0" "$informe" || { echo "[ERROR] $suite no está limpio"; exit 1; }
           done
           echo "[OK] Los 7 guardianes vigilan y los 7 muerden."
+
+  # ---------------------------------------------------------------------------
+  #  El sistema del Lab 14: cinco proyectos Maven que no son la app canónica.
+  #
+  #  El job `app` compila el tronco. Este compila lo OTRO: dgt-registro,
+  #  dgt-config, dgt-portal, dgt-contribuyentes y dgt-tramites, que viven en
+  #  labs/lab-14-*/sistema/ con su propio agregador y su propio release train de
+  #  Spring Cloud. Sin este job, el día que ese tren o Boot cambien de versión,
+  #  el Lab 14 se rompería en la máquina del alumno y en ningún sitio antes.
+  #
+  #  ---------------------------------------------------------------------------
+  #  LO QUE ESTE JOB *NO* HACE, Y POR QUÉ — léelo antes de "arreglarlo"
+  #  ---------------------------------------------------------------------------
+  #  NO levanta las seis piezas en contenedores. La exclusión es deliberada:
+  #
+  #   · Son seis JVM más PostgreSQL. Medido en la construcción de la SPEC-020:
+  #     1,54 GiB de RAM y 56 s de arranque en un portátil con caché caliente. En
+  #     un runner hospedado, sin caché de imágenes, es varias veces eso.
+  #   · Y sobre todo: un E2E de seis contenedores mide TIEMPOS de propagación
+  #     entre cachés (Eureka + LoadBalancer). Eso, en un runner compartido y con
+  #     la CPU en manos de otro, es una fábrica de fallos intermitentes. Un check
+  #     que parpadea se acaba ignorando, y un check ignorado protege menos que
+  #     ninguno.
+  #
+  #  Así que aquí se certifica lo DETERMINISTA —que compila, que los tests pasan,
+  #  que el gate muerde, que no hay dependencias muertas— y el sistema en vivo se
+  #  verifica a mano con `bin/start-lab.sh` y sus banderas, que es además donde el
+  #  alumno lo va a ver. La evidencia de esa verificación está en el reporte de la
+  #  SPEC-020, con sus milisegundos citados.
+  #
+  #  Si algún día hace falta el E2E en CI: job aparte, `continue-on-error: false`
+  #  pero fuera de los checks requeridos, y con reintento. Nunca metido aquí.
+  # ---------------------------------------------------------------------------
+  lab14:
+    name: lab14 · el sistema de microservicios (compila y su gate muerde)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: labs/lab-14-la-dgt-se-parte-en-pedazos/sistema
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guarda de activación
+        id: guarda
+        shell: bash
+        working-directory: .
+        run: |
+          set -euo pipefail
+          if [ -f labs/lab-14-la-dgt-se-parte-en-pedazos/sistema/pom.xml ]; then
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "[INFO] El Lab 14 aún no existe: el job queda armado, no activo."
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.guarda.outputs.hay == 'si'
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Los cinco proyectos compilan sobre Boot 4.1.0 + Spring Cloud 2025.1.2
+        if: steps.guarda.outputs.hay == 'si'
+        run: ./mvnw -B -DskipTests package
+
+      - name: La solución PASA el criterio de aceptación
+        if: steps.guarda.outputs.hay == 'si'
+        run: ./mvnw -B test -pl dgt-tramites -Ddgt.config-repo=../config-repo-solucion
+
+      - name: El starter FALLA — si no, el enunciado no tiene ejercicio
+        if: steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: |
+          set -uo pipefail
+          # El paso canónico de la SPEC-000 §7.6, aquí arriba: un starter que ya
+          # aprueba es un enunciado sin hueco. Se comprueba que el validador diga
+          # que NO, y se falla el job si dice que sí.
+          if ./mvnw -B -q test -pl dgt-tramites -Ddgt.config-repo=../config-repo; then
+            echo "[ERROR] El starter APRUEBA el criterio de aceptación."
+            echo "        Alguien dejó los umbrales puestos en config-repo/dgt-tramites.yml."
+            echo "        Sin hueco no hay laboratorio."
+            exit 1
+          fi
+          echo "[OK] El starter falla, como debe: el hueco es real y el gate muerde."
+
+      - name: Ninguna dependencia arrastra Hystrix, Ribbon ni Zuul
+        if: steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # De todo el stack Netflix histórico solo Eureka sigue vivo en el tren
+          # actual. Que reaparezca cualquiera de los otros significa que alguien
+          # copió un tutorial caducado — y entonces media teoría de este lab deja
+          # de ser cierta.
+          ./mvnw -B -q dependency:tree -DoutputFile=/tmp/arbol.txt -DappendOutput=true
+          # `-q`, no `-c`: con `-c` el propio grep imprime el número de coincidencias
+          # ("0") en la salida del job, y un cero suelto en un log verde despista más
+          # de lo que informa.
+          if grep -qiE 'hystrix|:ribbon|zuul|archaius' /tmp/arbol.txt; then
+            echo "[ERROR] El árbol de dependencias arrastra artefactos muertos:"
+            grep -inE 'hystrix|:ribbon|zuul|archaius' /tmp/arbol.txt
+            exit 1
+          fi
+          echo "[OK] Sin Hystrix, Ribbon, Zuul ni Archaius."
 
   # ---------------------------------------------------------------------------
   #  El andamiaje de los labs: los scripts que el ALUMNO ejecuta.

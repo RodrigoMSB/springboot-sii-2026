@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   dgt-tramites — el consumidor: el servicio que ya conocen, ahora solo
+  .............................................................................
+   Es el que sufre. Necesita el nombre del contribuyente y NO lo tiene: no tiene
+   la tabla, no tiene el usuario de esa base, no tiene forma de mirarlo. Lo único
+   que puede hacer es LLAMAR por HTTP a otro servicio que sí lo tiene.
+
+   Y ahí aparece todo lo que en un monolito no existía:
+     · Feign          — llamar sin escribir el cliente HTTP a mano
+     · LoadBalancer   — a CUÁL de las N instancias llamar
+     · CircuitBreaker — qué hacer cuando el otro no contesta
+     · Retry          — cuántas veces insistir antes de rendirse
+     · fallback       — qué devolver cuando se rindió
+
+   Cinco piezas nuevas de infraestructura para una llamada que en el monolito
+   era `contribuyenteRepository.findByRut(rut)`. Ese es el costo, y hay que
+   verlo escrito para poder decidir si vale la pena.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cl.dgt</groupId>
+        <artifactId>dgt-sistema</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>dgt-tramites</artifactId>
+    <name>dgt-tramites</name>
+    <description>Servicio de trámites: el consumidor</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- Boot 4 sacó las autoconfiguraciones a módulos propios: `flyway-core`
+             por sí solo NO enciende Flyway al arrancar. Sin esta dependencia,
+             Hibernate valida contra una base vacía y el servicio muere con
+             "missing table". Es la misma nota que lleva el pom del tronco. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <!--
+          El circuit breaker. Trae `resilience4j-spring-boot3` por transitividad
+          — y sí, el artefacto se llama "spring-boot3" aunque estemos en Boot 4.
+          No es un error nuestro: es el nombre que Resilience4j le puso al módulo
+          y que el tren de Spring Cloud referencia. Está en docs/troubleshooting.md
+          porque alguien lo va a ver en el árbol y va a pensar que hay un
+          desajuste de versiones donde no lo hay.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
