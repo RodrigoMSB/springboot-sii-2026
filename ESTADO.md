@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-015.*
+*Última actualización: SPEC-016.*
 
 ---
 
@@ -45,6 +45,14 @@
   petición en el MDC, logging JSON estructurado, un aspecto de auditoría (AOP) que registra el
   dominio sin ensuciarlo (RUT enmascarado, respeta el límite del proxy), y carga de adjuntos con
   desconfianza (MIME real por magic bytes, anti path-traversal, descarga en streaming).
+- **Lab 10** (`labs/lab-10-observabilidad/`): el tablero que mentía. `/actuator/health` responde
+  `UP` con la base muerta y la API devolviendo 500. Se resuelve con un health check propio que
+  consulta la base y **nombra** lo que se cayó, liveness y readiness separados (reiniciar y sacar
+  de rotación son acciones opuestas), métricas de negocio con Micrometer publicadas en formato
+  Prometheus, lista blanca nominal de endpoints (`/env` y `/heapdump` dejan de existir) y un caché
+  Caffeine con TTL, hit-rate medido e invalidación explícita al escribir.
+- **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
+  cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
   doce labs que vienen.
 - **El manifiesto pedagógico**: `MANIFIESTO.md`, en la raíz. Por qué el curso se enseña así —el
@@ -54,32 +62,37 @@
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
-  correctos y que la aplicación pasa sus 45 tests.
+  correctos y que la aplicación pasa su suite completa (86 tests en el Lab 10).
 
 ## 2 · Qué falta
 
-Los doce laboratorios del curso, uno por sesión. Ninguno está escrito todavía:
+Tres laboratorios, tras la renumeración del mapa (SPEC-016 §0.2: el nuevo lab de observabilidad
+entra como Lab 10, y los que venían detrás se corren un número):
 
 | | | |
 |---|---|---|
-| Lab 10 · Latidos | Lab 11 · Amortiguadores | Lab 12 · Cápsula y egreso |
+| Lab 11 · Latidos | Lab 12 · Amortiguadores | Lab 13 · Cápsula y egreso |
 
-Faltan también las diapositivas y el material del instructor.
+La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
+está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 09, cada uno con su Prueba del PO. Todas diferidas; los
-laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de
-PRs (#6 a la del Lab 09) espera su palabra, empezando por el #6.
+de su README), y los Labs 01 a 10, cada uno con su Prueba del PO. Todas diferidas; los
+laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de PRs
+de los labs 01 a 09 **ya está mergeada a `main`** (PRs #6 a #15), así que la fila acumulada puede
+correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
 ## 3 · Qué viene ahora
 
-**SPEC-016: el Lab 10, «El reloj con problema de identidad».** El sistema ya sabe contar lo que
-hizo. Y contando, Carolina notó que el cierre nocturno del viernes se ejecutó DOS veces: hay dos
-servidores y los dos se creyeron el único. La próxima sesión: tareas programadas y cómo hacer que
-una tarea que debe correr una vez, corra una sola vez en un mundo de muchas instancias.
+**SPEC-017: el Lab 11, «Latidos» — el reloj con problema de identidad.** El sistema ya sabe contar
+lo que hizo y decir cómo está. Y midiendo, Carolina notó que el cierre nocturno del viernes se
+ejecutó DOS veces: hay dos servidores y los dos se creyeron el único. Es el mismo problema que el
+Lab 10 dejó anotado al hablar del caché —cada instancia con su copia, ninguna sabe de las otras—.
+La próxima sesión: tareas programadas y cómo hacer que una tarea que debe correr una vez, corra
+una sola vez en un mundo de muchas instancias.
 
 ## 4 · Si estás perdido
 

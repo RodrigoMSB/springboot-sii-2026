@@ -169,14 +169,19 @@ Hoy el sistema dejó de ser mudo: sabe contar lo que hizo, en JSON, correlaciona
 auditado sin ensuciar el negocio, y desconfía de los archivos que le suben. Ante un fiscalizador,
 ahora hay una respuesta en cinco minutos, no en cinco horas.
 
-🌱 **Siembra del Módulo 11 (que abre el M12) — "El reloj con problema de identidad".**
+🌱 **Siembra del Lab 10 (Módulo 12) — "El tablero que mentía".**
 
-Ahora que el sistema sabe contar lo que hizo, Carolina notó algo raro en la bitácora: el
-**cierre nocturno del viernes se ejecutó DOS veces**. La DGT corre en dos servidores (para
-aguantar la carga), y a medianoche los dos dispararon la misma tarea programada: los dos se
-creyeron el único. Dos cierres, dos veces los mismos correos, dos veces los mismos cálculos.
+Ahora el sistema sabe contar lo que **hizo**. Lo que todavía no sabe decir es cómo **está**.
 
-La próxima semana, el reloj tiene un problema de identidad: tareas programadas, y cómo hacer que
-en un mundo de dos (o diez) servidores, una tarea que debe correr UNA vez, corra una sola vez.
+Carolina lo descubrió el martes: el monitoreo llevaba toda la mañana en verde —`/actuator/health`
+respondiendo `UP`, impecable— mientras la mesa de ayuda se llenaba de contribuyentes que no podían
+declarar. PostgreSQL llevaba una hora muerto. El tablero no se había enterado, porque nadie le
+había pedido que mirara: solo confirmaba que el proceso Java seguía respirando.
 
-El Módulo 12 se llama *«El reloj con problema de identidad»*.
+> *«Un semáforo que siempre está en verde no es un semáforo: es un adorno.»*
+
+La próxima semana el tablero aprende a decir la verdad —y a nombrar **qué** se cayó—: health
+checks reales, la diferencia entre estar vivo y poder atender, métricas que hablan del negocio y
+no solo del CPU, y una consulta cara servida de memoria sin empezar a mentir por ello.
+
+El Lab 10 se llama *«El tablero que mentía»*.
