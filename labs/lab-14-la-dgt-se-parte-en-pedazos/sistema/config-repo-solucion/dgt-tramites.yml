@@ -1,0 +1,128 @@
+# =============================================================================
+#  dgt-tramites.yml — LA SOLUCIÓN. Compara, no copies.
+# -----------------------------------------------------------------------------
+#  Estos cuatro números NO son la respuesta correcta: son UNA respuesta, con su
+#  razonamiento escrito. Si los tuyos son distintos y los defiendes con un
+#  criterio, están bien. Si son estos y no sabes por qué, están mal aunque el
+#  validador se ponga verde.
+#
+#  El único requisito duro es el del enunciado: con el proveedor lento, el
+#  circuito tiene que abrirse dentro del escenario del laboratorio.
+# =============================================================================
+
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USUARIO}
+    password: ${DB_CLAVE}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 1000
+            read-timeout: 2000
+
+resilience4j:
+
+  retry:
+    instances:
+      contribuyentes:
+        max-attempts: 2
+        wait-duration: 200ms
+        ignore-exceptions:
+          - feign.FeignException$NotFound
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+
+  circuitbreaker:
+    instances:
+      contribuyentes:
+        register-health-indicator: true
+
+        # ---------------------------------------------------------------------
+        #  TODO 1 · cuántas llamadas mira antes de opinar
+        # ---------------------------------------------------------------------
+        #  Ventana de 10 llamadas y un mínimo de 6.
+        #
+        #  El 6 sale de una cuenta, no de la intuición: con `max-attempts: 2`,
+        #  cada petición del usuario son DOS llamadas al circuito. Seis llamadas
+        #  son TRES peticiones. En una demo en vivo, tres clics para ver abrirse
+        #  el circuito es exactamente el ritmo que se quiere — con dos parece
+        #  casualidad, con diez la sala ya se aburrió.
+        #
+        #  Y seis es suficiente para no abrir por ruido: un fallo suelto en una
+        #  ventana de diez da un 10 % y no llega al umbral de abajo.
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 6
+
+        # ---------------------------------------------------------------------
+        #  TODO 2 · a partir de qué porcentaje abre
+        # ---------------------------------------------------------------------
+        #  50 %. Es el default de Resilience4j y aquí se deja a propósito — pero
+        #  ESCRITO, que es lo que cambia. Un valor por defecto que nadie declaró
+        #  es un valor que nadie eligió; escribirlo convierte una casualidad en
+        #  una decisión que se puede discutir en una revisión de código.
+        #
+        #  Por qué 50 y no 80: si una de cada dos llamadas al servicio de
+        #  contribuyentes falla, el servicio NO está sano, y seguir mandándole
+        #  tráfico solo empeora su situación y la nuestra.
+        #
+        #  En el escenario del laboratorio el proveedor lento falla el 100 % de
+        #  las veces, así que cualquier umbral por debajo de 100 abre. El 50 es
+        #  el que se defiende fuera del laboratorio.
+        failure-rate-threshold: 50
+
+        # ---------------------------------------------------------------------
+        #  TODO 3 · cuánto se queda abierto
+        # ---------------------------------------------------------------------
+        #  10 segundos, y este número SÍ está elegido para la clase.
+        #
+        #  El default son 60 s: en una sesión de tres horas, esperar un minuto
+        #  para ver si el circuito se recupera es una actividad entera perdida.
+        #  Con 10 s el alumno ve el ciclo completo —abierto, medio abierto,
+        #  cerrado— sin levantarse de la silla.
+        #
+        #  En producción sería otro: el tiempo que de verdad tarda el servicio de
+        #  al lado en reiniciarse. Ponerlo más corto que eso es garantizar que lo
+        #  vas a volver a tumbar en cuanto empiece a levantarse.
+        wait-duration-in-open-state: 10s
+
+        # ---------------------------------------------------------------------
+        #  TODO 4 · cuántas deja pasar para probar si ya volvió
+        # ---------------------------------------------------------------------
+        #  Dos llamadas de sonda. Son para PREGUNTAR si el otro volvió, no para
+        #  darle carga: si mandas veinte al servicio que se está levantando, lo
+        #  vuelves a tumbar tú.
+        #
+        #  La segunda clave es la que casi todo el mundo olvida. Sin ella, el
+        #  circuito no pasa a medio abierto cuando vence el reloj: espera a que
+        #  llegue una llamada. En un sistema con poco tráfico —como este, en
+        #  clase— se queda abierto mucho más de los 10 s que dice arriba, y
+        #  parece un fallo del framework. No lo es: es el default.
+        permitted-number-of-calls-in-half-open-state: 2
+        automatic-transition-from-open-to-half-open-enabled: true
+
+management:
+  server:
+    # Puerto de GESTIÓN separado del de tráfico.
+    #
+    # El de tráfico es efímero (`server.port: 0`) y no lo conoce nadie hasta que
+    # el servicio arranca — ni el propio contenedor. Pero el healthcheck del
+    # compose tiene que poder preguntar «¿estás vivo?» a una dirección fija, así
+    # que /actuator vive aquí, en el 8081, que sí es fijo.
+    #
+    # Fuera del laboratorio esto se hace igual, y por una razón mejor: el puerto
+    # de gestión se publica solo hacia la red interna, nunca hacia el mundo.
+    port: 8081

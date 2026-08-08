@@ -1,0 +1,56 @@
+# =============================================================================
+#  dgt-contribuyentes.yml — la configuración del proveedor
+# =============================================================================
+
+server:
+  # -----------------------------------------------------------------------
+  #  Puerto CERO: que el sistema operativo elija uno libre.
+  # -----------------------------------------------------------------------
+  #  Con un puerto fijo, la segunda instancia del bloque 3 moriría al arrancar
+  #  con «Address already in use» y media lección se perdería. Con puerto cero,
+  #  se pueden levantar veinte y ninguna choca.
+  #
+  #  ¿Y cómo las encuentra alguien si ni ellas saben en qué puerto quedaron? No
+  #  las encuentra: le pregunta al registro. Ese es el patrón entero.
+  port: 0
+
+spring:
+  datasource:
+    # -----------------------------------------------------------------------
+    #  Credenciales por VARIABLE DE ENTORNO, nunca en el archivo.
+    # -----------------------------------------------------------------------
+    #  Y sin valor por defecto a propósito: si la variable no está, la
+    #  aplicación no arranca y lo dice. Un default silencioso es peor que un
+    #  fallo ruidoso — es la lección del Lab 01, y no la vamos a contradecir en
+    #  la última sesión.
+    #
+    #  Este archivo se sirve por HTTP a quien pregunte. Poner aquí una clave
+    #  sería el crimen del Lab 02 otra vez, con un altavoz.
+    url: ${DB_URL}
+    username: ${DB_USUARIO}
+    password: ${DB_CLAVE}
+
+  jpa:
+    hibernate:
+      # `validate`, no `update` (corrección 3 de la SPEC-020 §6). El esquema lo
+      # crea Flyway; Hibernate solo comprueba que la entidad y la tabla cuadran,
+      # y si no cuadran no arranca.
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  server:
+    # Puerto de GESTIÓN separado del de tráfico.
+    #
+    # El de tráfico es efímero (`server.port: 0`) y no lo conoce nadie hasta que
+    # el servicio arranca — ni el propio contenedor. Pero el healthcheck del
+    # compose tiene que poder preguntar «¿estás vivo?» a una dirección fija, así
+    # que /actuator vive aquí, en el 8081, que sí es fijo.
+    #
+    # Fuera del laboratorio esto se hace igual, y por una razón mejor: el puerto
+    # de gestión se publica solo hacia la red interna, nunca hacia el mundo.
+    port: 8081

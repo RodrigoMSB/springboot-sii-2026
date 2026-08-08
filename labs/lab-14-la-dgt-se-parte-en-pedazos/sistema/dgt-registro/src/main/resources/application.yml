@@ -1,0 +1,81 @@
+# =============================================================================
+#  dgt-registro — configuración LOCAL, y aquí sí tiene que ser local
+# -----------------------------------------------------------------------------
+#  El registro no pide su configuración al Config Server. Podría, pero sería
+#  invertir la pirámide: la pieza que todos usan para encontrarse dependiendo de
+#  otra pieza para arrancar. Cuanto más abajo está algo en la pila, menos cosas
+#  debe necesitar para levantarse.
+# =============================================================================
+server:
+  port: 8761
+
+spring:
+  application:
+    name: dgt-registro
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    instance-id: dgt-registro
+    # Los mismos relojes cortos que el resto de las piezas, por coherencia: la
+    # nota larga que explica por qué están bajados vive en
+    # config-repo/application.yml.
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+  client:
+    # -------------------------------------------------------------------------
+    #  El registro se anota a sí mismo en su propia guía telefónica.
+    # -------------------------------------------------------------------------
+    #  Lo habitual en un Eureka de un solo nodo es poner las dos en `false`: no
+    #  tiene a quién registrarse ni a quién preguntar. Aquí van en `true` a
+    #  propósito, y la razón es pedagógica: así el panel de localhost:8761
+    #  muestra las SEIS piezas del sistema, el registro incluido, y el alumno ve
+    #  el mapa completo en una sola pantalla.
+    #
+    #  En producción, con tres nodos de Eureka, esto es exactamente lo que se
+    #  hace —cada nodo apunta a los otros— y se llama `peer awareness`.
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    # Cada cuánto este nodo relee su propia lista. Ver la nota larga sobre los
+    # relojes de Eureka en config-repo/application.yml.
+    registry-fetch-interval-seconds: 5
+  server:
+    # -------------------------------------------------------------------------
+    #  Los ajustes del SERVIDOR de Eureka, y por qué están aquí y no en el
+    #  config-repo: esta pieza no pide su configuración al Config Server, así que
+    #  no hay otro sitio donde ponerlos.
+    # -------------------------------------------------------------------------
+    #  `enable-self-preservation: false` — el modo de autoconservación es una
+    #  defensa de Eureka contra sí mismo: si de pronto muchas instancias dejan de
+    #  renovar, Eureka asume que el problema es SUYO (una partición de red, no
+    #  cincuenta servicios muertos a la vez) y deja de tachar a nadie hasta que
+    #  se aclare. En producción eso evita un apagón por un hipo de red.
+    #
+    #  En este laboratorio matamos servicios a propósito y de golpe, que es
+    #  exactamente el patrón que dispara la autoconservación. Con ella activa, el
+    #  panel seguiría mostrando instancias muertas y el bloque 3 no se vería.
+    #  Se apaga para el guion, no porque sobre.
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Lista blanca NOMINAL, como en el Lab 10. Nunca `*`.
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    # Eureka es MUY hablador con las renovaciones de contrato cada 30 s. Bajarlo
+    # a WARN deja el log legible; subirlo a DEBUG es lo primero que hay que hacer
+    # cuando algo no se registra (T-2 del troubleshooting).
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN

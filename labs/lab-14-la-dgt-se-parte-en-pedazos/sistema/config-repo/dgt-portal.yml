@@ -1,0 +1,45 @@
+# =============================================================================
+#  dgt-portal.yml — las rutas del portal, servidas por el Config Server
+# -----------------------------------------------------------------------------
+#  Cambiar una ruta es editar este archivo y reiniciar el portal. No se
+#  recompila, no se despliega un jar nuevo, no se toca código. Ese es el punto
+#  de tener configuración centralizada.
+# =============================================================================
+
+server:
+  # 8099, el puerto del curso — el mismo desde el Lab 00.
+  #
+  # El material original de esta práctica ponía el gateway en el 443. En Linux y
+  # macOS, cualquier puerto por debajo del 1024 exige root: el laboratorio habría
+  # empezado con veinte minutos de `sudo` y permisos en vez de con arquitectura.
+  port: 8099
+
+spring:
+  cloud:
+    gateway:
+      # -----------------------------------------------------------------------
+      #  OJO CON EL PREFIJO: `spring.cloud.gateway.server.webmvc`
+      # -----------------------------------------------------------------------
+      #  En el tren 2025.1.x el Gateway se partió en dos sabores y las
+      #  propiedades cambiaron de sitio. Los tutoriales viejos usan
+      #  `spring.cloud.gateway.routes` a secas: con ese prefijo, Spring lee el
+      #  bloque, no reconoce nada, y el gateway arranca SIN NINGUNA RUTA. No hay
+      #  error, no hay aviso: todo devuelve 404 y parece que el problema está en
+      #  otro sitio. Ver T-5 del troubleshooting.
+      server:
+        webmvc:
+          routes:
+            - id: contribuyentes
+              # `lb://` = LoadBalancer. No es un protocolo de red: es una
+              # instrucción para que el nombre lógico se resuelva contra el
+              # registro y se elija una instancia viva. Cambia esto por
+              # `http://dgt-contribuyentes:8080` y habrás vuelto a cablear una
+              # dirección a mano — que es justo lo que se vino a evitar.
+              uri: lb://dgt-contribuyentes
+              predicates:
+                - Path=/api/v1/contribuyentes/**
+
+            - id: tramites
+              uri: lb://dgt-tramites
+              predicates:
+                - Path=/api/v1/tramites/**

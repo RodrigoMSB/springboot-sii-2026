@@ -1,0 +1,35 @@
+# Por qué el Lab 14 NO deriva del Lab 13 — y por qué eso no es un descuido.
+#
+# Los labs 01 a 13 son la MISMA aplicación creciendo: cada solucion/ es la del lab
+# anterior más lo que enseña el lab nuevo. El job `deriva` compara byte a byte y
+# exige que toda divergencia esté declarada en un allowlist. Así, el día que
+# alguien toque el tronco, se enteran los trece.
+#
+# Este laboratorio rompe esa cadena, y a propósito:
+#
+#   · No es dgt-tramites-api con un hueco más. Son CINCO proyectos Maven nuevos
+#     (dgt-registro, dgt-config, dgt-portal, dgt-contribuyentes, dgt-tramites),
+#     con su propio pom, su propio agregador y su propio compose.
+#   · El dominio es una REDUCCIÓN deliberada del monolito, no una continuación:
+#     dos entidades de siete, sin folio, sin F29, sin adjuntos, sin seguridad.
+#     Lo que se dejó fuera está declarado en README.md, §«Qué NO está aquí».
+#   · Comparar esto con el Lab 13 daría una divergencia del 100 %. Un allowlist
+#     que dijera «todo es distinto» no declara nada: sería un gate decorativo,
+#     exactamente lo que la rúbrica del Lab 13 castiga.
+#
+# QUÉ SIGNIFICA ESO PARA EL ALUMNO
+#
+# Que este laboratorio no continúa la aplicación: la CONTRASTA con ella. El
+# monolito de trece sesiones sigue en labs/lab-13-capsula-y-egreso/, entero y sin
+# tocar, y el sentido del Lab 14 es poder poner los dos al lado y ver qué se gana
+# y qué se paga al partirlo.
+#
+# QUÉ SIGNIFICA PARA EL CI
+#
+# Que `verificar-toda-derivacion.sh` detecta la forma por ESTRUCTURA —un lab con
+# sistema/ y sin solucion*/— y lo declara fuera de la cadena en voz alta, con esta
+# nota como respaldo. La cadena de derivación termina en el Lab 13, que es el
+# último eslabón real.
+#
+# Si algún día el Lab 15 vuelve a continuar la aplicación canónica, su base es el
+# Lab 13, no este.

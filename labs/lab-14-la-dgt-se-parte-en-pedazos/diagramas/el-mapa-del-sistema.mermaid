@@ -1,0 +1,64 @@
+%% =============================================================================
+%%  El mapa del sistema — quién depende de quién
+%% -----------------------------------------------------------------------------
+%%  Las flechas de puntos son «se anota en» y «pide su configuración a»: pasan una
+%%  vez, al arrancar, y luego cada pocos segundos. Las flechas sólidas son
+%%  TRÁFICO REAL, el de cada petición del contribuyente.
+%%
+%%  Míralas por separado y entenderás el bloque 4: si tapas dgt-registro, no
+%%  desaparece ninguna flecha sólida. El sistema sigue hablando. Lo que pierde es
+%%  la capacidad de enterarse de que algo CAMBIÓ.
+%% =============================================================================
+graph TB
+    Nav["🌐 El contribuyente"]
+
+    subgraph Puerta["La única puerta"]
+        Portal["dgt-portal<br/>Gateway · 8099"]
+    end
+
+    subgraph Negocio["Los servicios de negocio"]
+        Tram["dgt-tramites<br/>puerto efímero"]
+        Con1["dgt-contribuyentes<br/>instancia 1"]
+        Con2["dgt-contribuyentes<br/>instancia 2"]
+    end
+
+    subgraph Plataforma["La infraestructura que no da valor y hay que operar igual"]
+        Reg["dgt-registro<br/>Eureka · 8761"]
+        Conf["dgt-config<br/>Config Server · 8888"]
+    end
+
+    subgraph Datos["Una base por servicio. Sin puentes."]
+        DBc[("dgt_contribuyentes<br/>usuario: svc_contribuyentes")]
+        DBt[("dgt_tramites<br/>usuario: svc_tramites")]
+    end
+
+    Nav -->|"HTTP :8099"| Portal
+    Portal -->|"lb://dgt-tramites"| Tram
+    Portal -->|"lb://dgt-contribuyentes"| Con1
+    Tram -->|"Feign + CircuitBreaker<br/>+ Retry + fallback"| Con1
+    Tram -.->|"balanceo por turnos"| Con2
+
+    Con1 --> DBc
+    Con2 --> DBc
+    Tram --> DBt
+
+    Tram -. "se anota / pregunta quién hay" .-> Reg
+    Con1 -. "se anota" .-> Reg
+    Con2 -. "se anota" .-> Reg
+    Portal -. "se anota / pregunta" .-> Reg
+    Conf -. "se anota" .-> Reg
+    Reg -. "se anota en sí mismo" .-> Reg
+
+    Tram -. "spring.config.import" .-> Conf
+    Con1 -. "spring.config.import" .-> Conf
+    Con2 -. "spring.config.import" .-> Conf
+    Portal -. "spring.config.import" .-> Conf
+
+    DBt -x|"NO EXISTE ESTE CAMINO<br/>svc_tramites no tiene GRANT"| DBc
+
+    classDef plataforma fill:#eef3fb,stroke:#33507a,stroke-width:1px
+    classDef negocio fill:#f3f8ef,stroke:#4a7a33,stroke-width:1px
+    classDef datos fill:#fbf6ee,stroke:#7a5f33,stroke-width:1px
+    class Reg,Conf plataforma
+    class Tram,Con1,Con2,Portal negocio
+    class DBc,DBt datos

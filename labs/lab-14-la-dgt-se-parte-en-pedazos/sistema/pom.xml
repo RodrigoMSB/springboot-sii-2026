@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   sistema/pom.xml — el agregador de las cinco piezas de la DGT partida
+  .............................................................................
+   Los trece labs anteriores tenían UN proyecto Maven. Este tiene cinco, y esa
+   es la primera lección del laboratorio antes de escribir una línea: partir un
+   sistema no parte solo el código. Parte el build, el despliegue, el arranque,
+   el log, la trazabilidad y la guardia de las 3 AM.
+
+   Cinco módulos, seis procesos: `dgt-contribuyentes` se levanta DOS VECES desde
+   la misma imagen. Un microservicio no es un proceso; es una unidad de
+   despliegue que puede tener N procesos detrás.
+
+   ⚠️  NOTA DE VERSIONES — verificada, no supuesta (SPEC-020 §2)
+
+   Spring Cloud NO usa el versionado de Spring Boot: usa "release trains" con
+   nombre de año (2025.1.x, "Oakwood"). Cada tren declara con qué versiones de
+   Boot es compatible, y ESO es lo que hay que mirar antes de escribir una sola
+   dependencia. Aquí: tren 2025.1.2 sobre Boot 4.1.0.
+
+   El BOM (`spring-cloud-dependencies`) fija las versiones de los ~40 artefactos
+   del tren. Por eso NINGUNA dependencia de spring-cloud lleva <version> abajo:
+   la pone el tren. Escribir una a mano es la forma más rápida de romper todo.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>cl.dgt</groupId>
+    <artifactId>dgt-sistema</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>dgt-sistema</name>
+    <description>La DGT partida en pedazos — Lab 14</description>
+
+    <modules>
+        <module>dgt-registro</module>
+        <module>dgt-config</module>
+        <module>dgt-portal</module>
+        <module>dgt-contribuyentes</module>
+        <module>dgt-tramites</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <!--
+          El tren. Un solo número que gobierna Eureka, Gateway, Config, Feign,
+          LoadBalancer y CircuitBreaker. Si algún día hay que subirlo, se sube
+          AQUÍ y se vuelve a mirar la tabla de compatibilidad con Boot.
+        -->
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Actuator en las cinco piezas: sin salud, un sistema distribuido es
+             una caja negra con cinco compartimentos (M12, Lab 10). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

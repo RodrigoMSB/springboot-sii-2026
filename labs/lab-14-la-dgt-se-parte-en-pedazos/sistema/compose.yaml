@@ -1,0 +1,238 @@
+# =============================================================================
+#  compose.yaml — la DGT partida en pedazos, en tu portátil
+# -----------------------------------------------------------------------------
+#  Seis piezas del sistema (dgt-contribuyentes se levanta DOS VECES) más una de
+#  infraestructura: PostgreSQL.
+#
+#  Sobre PostgreSQL y la cuenta de «seis»: las seis piezas de la SPEC son los
+#  seis procesos de SPRING. La base de datos es infraestructura, igual que la red
+#  del compose — no se registra en Eureka, no tiene una API, no participa del
+#  descubrimiento. Está aquí porque un servicio sin datos propios no es un
+#  servicio, y porque `db-init/01-bases-y-usuarios.sql` es donde se hace real la
+#  frontera entre los dos dominios.
+#
+#  ---------------------------------------------------------------------------
+#  ARRANQUE ORDENADO, SIN UN SOLO `sleep`
+#  ---------------------------------------------------------------------------
+#  Un sistema distribuido tiene un orden de arranque y hay que respetarlo:
+#
+#      postgres  ->  dgt-registro  ->  dgt-config  ->  el resto
+#
+#  Se resuelve con `depends_on: condition: service_healthy`, que espera al
+#  HEALTHCHECK real de cada pieza, no a un cronómetro. Un `sleep 30` funciona en
+#  la máquina de quien lo escribió y falla en la del alumno con menos RAM; un
+#  healthcheck espera lo que haga falta y ni un segundo más.
+#
+#  Y ojo con la conclusión fácil: esto NO significa que el sistema requiera ese
+#  orden en producción. Significa que arrancar ordenado es más rápido. Si matas
+#  el registro (bloque 4), los demás siguen; si matas el Config Server, los que
+#  ya arrancaron siguen. La dependencia es de ARRANQUE, no de vida.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  #  Infraestructura: una instancia de PostgreSQL, dos bases, dos usuarios.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine3.24
+    # PostgreSQL con dos bases pequeñas y tres filas de semilla. 256 MB sobran.
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-dev      # credencial de laboratorio
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      # Puerto de host EFÍMERO: quien ya tenga un PostgreSQL en el 5432 no choca.
+      #   ¿A qué puerto quedó?  docker compose port postgres 5432
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # ---------------------------------------------------------------------------
+  #  PIEZA 1 · el registro. La primera en levantarse y la última en importar.
+  # ---------------------------------------------------------------------------
+  dgt-registro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: dgt-registro
+    # Techo de memoria, y no es decoración: sin él cada JVM mira la RAM de la
+    # MÁQUINA (no la del contenedor) y dimensiona su heap contra ella. En el
+    # portátil de quien escribió esto son 23 GB; en el del alumno son 8, y seis
+    # JVM calculando cada una su heap contra un número distinto convierten «cuánta
+    # RAM necesita el lab» en una respuesta que depende de quién pregunta.
+    #
+    # Con el techo puesto, el -XX:MaxRAMPercentage=60 del Dockerfile se calcula
+    # sobre ESTE número, y el consumo del laboratorio es el mismo en todas las
+    # máquinas. La medición del README se hizo con estos valores.
+    mem_limit: 448m
+    environment:
+      EUREKA_HOSTNAME: dgt-registro
+      EUREKA_URL: http://dgt-registro:8761/eureka/
+    ports:
+      # Puerto FIJO, y es el único servicio de negocio que lo tiene: el panel
+      # tiene que estar siempre en la misma URL o la guía no puede nombrarla.
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8761/actuator/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  #  PIEZA 2 · el Config Server.
+  # ---------------------------------------------------------------------------
+  dgt-config:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: dgt-config
+    mem_limit: 448m          # ver la nota del techo de memoria en dgt-registro
+    environment:
+      EUREKA_URL: http://dgt-registro:8761/eureka/
+      CONFIG_REPO: file:/config-repo
+    volumes:
+      # De dónde salen los archivos de configuración. `start-lab.sh --dir solucion`
+      # cambia esta variable y monta `config-repo-solucion/` en su lugar: el mismo
+      # sistema, otra configuración, sin recompilar nada. Que eso sea posible es
+      # el argumento entero a favor de la configuración centralizada.
+      - ${DGT_CONFIG_REPO:-./config-repo}:/config-repo:ro
+    ports:
+      - "8888:8888"
+    depends_on:
+      dgt-registro:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/actuator/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  #  PIEZA 3 · el portal. La única puerta al exterior.
+  # ---------------------------------------------------------------------------
+  dgt-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: dgt-portal
+    mem_limit: 448m          # ver la nota del techo de memoria en dgt-registro
+    environment:
+      EUREKA_URL: http://dgt-registro:8761/eureka/
+      CONFIG_URL: http://dgt-config:8888
+    ports:
+      # 8099: el puerto del curso desde el Lab 00.
+      - "8099:8099"
+    depends_on:
+      dgt-config:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8099/actuator/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  #  PIEZAS 4 y 5 · el proveedor, DOS VECES desde la misma imagen.
+  # ---------------------------------------------------------------------------
+  #  No hay `replicas` escrito aquí a propósito: el número se pasa en la línea de
+  #  órdenes (`docker compose up --scale dgt-contribuyentes=2`), que es lo que
+  #  permite a `bin/start-lab.sh --escalar` subir y bajar instancias en vivo
+  #  durante el bloque 3.
+  #
+  #  Y por eso este servicio NO publica ningún puerto de host ni fija
+  #  `container_name`: las dos cosas hacen imposible levantar una segunda copia.
+  #  El puerto interno también es efímero (`server.port: 0`) — nadie necesita
+  #  saberlo, para eso está el registro.
+  # ---------------------------------------------------------------------------
+  dgt-contribuyentes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: dgt-contribuyentes
+    mem_limit: 448m          # ver la nota del techo de memoria en dgt-registro
+    environment:
+      EUREKA_URL: http://dgt-registro:8761/eureka/
+      CONFIG_URL: http://dgt-config:8888
+      DB_URL: jdbc:postgresql://postgres:5432/dgt_contribuyentes
+      DB_USUARIO: svc_contribuyentes
+      DB_CLAVE: contribuyentes-dev
+      # El sabotaje del bloque 2. Cero salvo que `--contribuyentes-lento` lo suba.
+      DGT_CONTRIBUYENTES_RETARDO_MS: "${DGT_RETARDO_MS:-0}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dgt-config:
+        condition: service_healthy
+    # El healthcheck pregunta al PUERTO DE GESTIÓN (8081), no al de la API.
+    # El de la API es efímero y nadie lo sabe — ni siquiera el propio contenedor
+    # hasta que arranca. Separar el puerto de gestión del de tráfico es práctica
+    # normal fuera del laboratorio, y aquí además es la única forma de que un
+    # healthcheck sepa a dónde llamar. Ver config-repo/dgt-contribuyentes.yml.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  #  PIEZA 6 · el consumidor. El que sufre.
+  # ---------------------------------------------------------------------------
+  dgt-tramites:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: dgt-tramites
+    mem_limit: 448m          # ver la nota del techo de memoria en dgt-registro
+    environment:
+      EUREKA_URL: http://dgt-registro:8761/eureka/
+      CONFIG_URL: http://dgt-config:8888
+      DB_URL: jdbc:postgresql://postgres:5432/dgt_tramites
+      DB_USUARIO: svc_tramites
+      DB_CLAVE: tramites-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dgt-config:
+        condition: service_healthy
+      # ---------------------------------------------------------------------
+      #  Y depende también del proveedor. No para funcionar: para ARRANCAR sin
+      #  hacerse daño a sí mismo.
+      # ---------------------------------------------------------------------
+      #  Sin esta línea pasa algo que se midió en la construcción de este
+      #  laboratorio y que está contado entero en TEORIA.md §7:
+      #
+      #  dgt-tramites arranca antes de que dgt-contribuyentes se haya anotado en
+      #  el registro. Las primeras llamadas mueren con «Load balancer does not
+      #  contain an instance», el circuit breaker las cuenta como fallos —
+      #  porque LO SON— y en cuanto junta el mínimo de llamadas ve un 66 % de
+      #  fallos y ABRE. Resultado: un sistema entero sano, con el circuito
+      #  abierto, degradando respuestas durante los 10 s que tarda en probar de
+      #  nuevo.
+      #
+      #  Se llama envenenamiento de la ventana en frío, le pasa a todo el mundo
+      #  en producción cada vez que despliega, y la causa nunca es el circuit
+      #  breaker: es haber aceptado tráfico antes de estar listo para servirlo.
+      dgt-contribuyentes:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-019.*
+*Última actualización: SPEC-020.*
 
 ---
 
@@ -69,10 +69,22 @@
   que **declara quién mide cada uno** y **no puede aprobar a nadie** — el eje Criterio es humano y
   el umbral es núcleo verde *y* criterio ≥ Suficiente. Trae rúbrica, guía de defensa con respuestas
   calibradas por nivel, y una `solucion-referencia/` que dice de entrada que es UNA solución.
+- **Lab 14** (`labs/lab-14-la-dgt-se-parte-en-pedazos/`): el lab de **microservicios**, que cierra
+  el alcance del título oficial del contrato. Y es el único que no se teclea: se levanta un sistema
+  de **seis piezas** —registro Eureka, Config Server, gateway, dos instancias del proveedor y el
+  consumidor—, se rompe y se mira. Los seis patrones funcionando (discovery, gateway, configuración
+  centralizada, Feign, balanceo, circuit breaker con fallback) sobre Spring Cloud **2025.1.2** y
+  Boot 4.1.0. El crimen es que **no se cae**: con una pieza apagada el portal devuelve HTTP 200 con
+  un JSON válido al que le falta el nombre del titular, y nadie avisa. El único tecleo son cuatro
+  umbrales de Resilience4j, y el criterio es medible: con los valores por defecto hacen falta CIEN
+  llamadas para que el circuito opine, así que en la sesión no abre nunca. La teoría dedica una
+  sección entera a **cuándo NO usar microservicios**, con los costos medidos de este mismo lab
+  (1,54 GiB de RAM y 56 s de arranque, frente a una sola pieza).
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
-  doce labs que vienen.
+  catorce labs. El Lab 14 le añade `bin/lib-sistema.sh`, su vocabulario propio para hablarle a
+  seis procesos en vez de a uno.
 - **El manifiesto pedagógico**: `MANIFIESTO.md`, en la raíz. Por qué el curso se enseña así —el
   concepto por encima de la receta, la memoria narrativa, el aprendizaje que ocurre en la sala o
   no ocurre— y qué se le pide a quien dicta. Es texto de autor del PO. Quien vaya a dar una
@@ -80,22 +92,23 @@
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
-  correctos y que la aplicación pasa su suite completa (106 tests en el Lab 13).
+  correctos, que la aplicación pasa su suite completa (106 tests en el Lab 13) y que el sistema de
+  microservicios del Lab 14 compila **y que su gate muerde** — el CI exige que el starter FALLE, no
+  solo que la solución pase.
 
 ## 2 · Qué falta
 
-**Ninguno de los trece.** El curso está construido: los 35 temas oficiales, cubiertos.
+**Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
+cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java») cerrado
+por el Lab 14.
 
-Queda pendiente un **lab adicional de microservicios**, cuyo código aportará el PO, que cerrará el
-alcance del título oficial («Desarrollo de Microservicios en Java»). Su SPEC se emitirá por separado.
-
-Faltan también las diapositivas y el material del instructor para sala.
+Faltan las diapositivas y el material del instructor para sala.
 
 La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
 está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 13, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 14, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de PRs
 de los labs 01 a 09 **ya está mergeada a `main`** (PRs #6 a #15), así que la fila acumulada puede
 correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
@@ -105,13 +118,14 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**El lab de microservicios.** Con los trece laboratorios construidos y los 35 temas oficiales
-cubiertos, lo que queda es el lab adicional que cierra el alcance del título del curso. El PO aporta
-el código; la SPEC se emite por separado.
+**Ya no falta material de laboratorio.** Con el Lab 14 construido, los catorce laboratorios están
+escritos, verificados por el ejecutor y con su CI en verde.
 
-Mientras tanto, lo que de verdad falta no es material: es que el PO corra la fila de **pruebas de
-aceptación acumuladas** (Labs 00 a 13) y cierre los PRs abiertos. Los laboratorios están verificados
-por el ejecutor; ninguno lo ha corrido su dueño.
+Lo que falta es que el PO corra la fila de **pruebas de aceptación acumuladas** (Labs 00 a 14) y
+cierre los PRs abiertos. Los laboratorios están verificados por el ejecutor; ninguno lo ha corrido
+su dueño, y esa es la etapa que cierra cada SPEC.
+
+Después, las diapositivas y el material de sala.
 
 ## 4 · Si estás perdido
 

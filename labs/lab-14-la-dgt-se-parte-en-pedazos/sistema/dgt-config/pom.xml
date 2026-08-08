@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   dgt-config — el Config Server de la DGT
+  .............................................................................
+   Backend `native`: la configuración son ARCHIVOS, en `sistema/config-repo/`,
+   versionados con el laboratorio. Decisión del PO (SPEC-020 §3), y sus razones:
+
+     · El alumno VE la configuración y la edita con un editor de texto. El TODO
+       de este lab vive ahí dentro.
+     · No depende de la red ni de un repositorio externo. Un lab que necesita
+       GitHub arriba para arrancar es un lab que a veces no arranca.
+     · Lo que se enseña es CONFIGURACIÓN CENTRALIZADA, no Git.
+
+   En PRODUCCIÓN el backend es un repositorio Git, y no por capricho: se quiere
+   el historial (quién cambió el timeout y cuándo) y la reversión (`git revert`
+   sobre un cambio de configuración que tumbó el sistema). Es el mismo Config
+   Server con otro `spring.cloud.config.server.*`; el concepto no cambia.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>cl.dgt</groupId>
+        <artifactId>dgt-sistema</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>dgt-config</artifactId>
+    <name>dgt-config</name>
+    <description>Config Server: una sola fuente de verdad para la configuración</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-server</artifactId>
+        </dependency>
+        <!-- Se registra en Eureka como cualquier otro: en el panel se ve él también. -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
