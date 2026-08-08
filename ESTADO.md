@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-017.*
+*Última actualización: SPEC-018.*
 
 ---
 
@@ -57,6 +57,11 @@
   expiración y con el reloj del motor, no el de cada máquina), `fixedDelay` en vez de `fixedRate`,
   el cron con zona `America/Santiago` explícita, notificaciones asíncronas sobre hilos virtuales de
   Java 25, y eventos `AFTER_COMMIT` — si la transacción revierte, el aviso no sale.
+- **Lab 12** (`labs/lab-12-amortiguadores/`): mensajería y resiliencia. El aviso se manda al aire:
+  con el servicio de avisos caído se evapora, la API responde 201 y nadie puede decir cuáles se
+  perdieron. Se resuelve entregándolo a una cola durable (RabbitMQ), con un consumidor idempotente
+  —«exactly once» no existe—, una DLQ que aparta al mensaje envenenado con su causa sin atascar a
+  los buenos, y un circuit breaker que deja de golpear a Tesorería cuando está caída.
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
@@ -68,22 +73,23 @@
 - **La memoria del proyecto**: por qué se decidió cada cosa está en `docs/decisiones.md`.
   Las especificaciones, en `docs/specs/`.
 - **Un CI que muerde**: cada cambio comprueba que el temario cuadra, que los scripts son
-  correctos y que la aplicación pasa su suite completa (97 tests en el Lab 11).
+  correctos y que la aplicación pasa su suite completa (106 tests en el Lab 12).
 
 ## 2 · Qué falta
 
-Dos laboratorios, tras la renumeración del mapa (SPEC-016 §0.2: el nuevo lab de observabilidad
-entra como Lab 10, y los que venían detrás se corren un número):
+Uno, y es el último: el examen de egreso.
 
-| | |
-|---|---|
-| Lab 12 · Amortiguadores | Lab 13 · Cápsula y egreso |
+| |
+|---|
+| Lab 13 · Cápsula y egreso |
+
+No lleva crimen: lleva un *brief* de negocio, un repositorio casi vacío y una rúbrica de tres ejes.
 
 La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
 está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
-de su README), y los Labs 01 a 11, cada uno con su Prueba del PO. Todas diferidas; los
+de su README), y los Labs 01 a 12, cada uno con su Prueba del PO. Todas diferidas; los
 laboratorios están verificados por el ejecutor, pero el PO aún no los ha corrido. La pila de PRs
 de los labs 01 a 09 **ya está mergeada a `main`** (PRs #6 a #15), así que la fila acumulada puede
 correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
@@ -93,12 +99,12 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 ## 3 · Qué viene ahora
 
-**SPEC-018: el Lab 12, «Amortiguadores».** El cierre ya corre una vez y las notificaciones no
-bloquean a nadie. Pero anoche el servicio de notificaciones estuvo caído dos horas, y esos avisos
-no existen: se perdieron en el aire. El gancho está en el propio código del Lab 11 — el notificador
-guarda lo enviado en una cola **en memoria**, que un reinicio se lleva entera. La próxima sesión:
-lo que se envía se guarda hasta que alguien lo reciba. Colas, reintentos, idempotencia en la
-entrega, y qué hacer con el mensaje que no hay forma de entregar.
+**SPEC-019: el Lab 13, el examen de egreso.** No hay crimen. Hay un *brief* de Carolina —un
+problema de negocio escrito como lo escribiría ella, sin una sola instrucción técnica—, un
+repositorio casi vacío y tres horas. Nadie le dice al alumno qué hacer: ni qué capas, ni qué patrón,
+ni qué probar primero. Se evalúa con el boletín de tres ejes (Correctitud · Oficio · Criterio) y el
+umbral es núcleo verde **y** criterio ≥ suficiente. Es la sesión que el manifiesto describe: no si
+recuerda la sintaxis, sino si frente a un problema que no vio reconoce cuál es el problema.
 
 ## 4 · Si estás perdido
 

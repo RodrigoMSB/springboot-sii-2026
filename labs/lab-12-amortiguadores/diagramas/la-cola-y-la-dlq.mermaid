@@ -1,0 +1,29 @@
+%% El camino de un aviso: el bueno, el duplicado y el envenenado.
+%% Lo que importa: el envenenado se aparta SIN bloquear a los que van detrás.
+flowchart TB
+    E["EmisionService<br/>@Transactional"] -->|"commit ✔"| L["EscuchaDeFolios<br/><b>AFTER_COMMIT</b>"]
+    E -.->|"rollback ✘"| N0["No se publica nada.<br/>Un mensaje DURABLE de un folio<br/>que no existe sería peor<br/>que el correo del Lab 11"]
+
+    L --> X{{"exchange<br/>dgt.avisos"}}
+    X -->|"routing key<br/>folio.emitido"| Q[("cola dgt.avisos.q<br/><b>durable</b>")]
+
+    Q --> C["ConsumidorDeAvisos"]
+
+    C -->|"clave nueva"| OK["INSERT aviso_procesado<br/>→ se envía el aviso"]
+    C -->|"clave ya vista"| DUP["duplicado:<br/>se descarta sin trabajar<br/><i>(at least once: pasa, y es normal)</i>"]
+    C -->|"falla"| R{"¿quedan<br/>reintentos?"}
+
+    R -->|"sí (máx. 3)"| Q
+    R -->|"no"| RECHAZO["rechazado<br/><code>default-requeue-rejected: false</code>"]
+
+    RECHAZO --> DLX{{"exchange<br/>dgt.avisos.dlx"}}
+    DLX --> DLQ[("cola dgt.avisos.dlq<br/>+ cabeceras x-death<br/><b>con su causa</b>")]
+
+    RECHAZO -.->|"❌ si fuera <code>true</code>:<br/>vuelve al principio, para siempre"| ATASCO["La cola se ATASCA.<br/>Los avisos BUENOS de detrás<br/>no se entregan nunca"]
+
+    DLQ --> H["Un humano la abre,<br/>lee la causa y decide"]
+
+    classDef malo fill:#7f1d1d,stroke:#ef4444,color:#fff
+    classDef bueno fill:#14532d,stroke:#22c55e,color:#fff
+    class ATASCO malo
+    class OK,H bueno

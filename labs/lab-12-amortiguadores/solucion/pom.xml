@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  dgt-tramites-api — el backend de la Dirección General de Tributación.
+
+  Tronco de referencia del curso (SPEC-005). Los labs tallan de aquí sus
+  starter/ y solucion/. Sin Lombok y sin Kotlin a propósito (D-003): los
+  constructores y los accessors escritos a mano también son contenido.
+
+  Las versiones NO se declaran cuando el BOM de Boot 4.1.0 ya las gestiona.
+  Verificado contra spring-boot-dependencies-4.1.0.pom, no de memoria:
+    flyway 12.4.0 · testcontainers 2.0.5 · junit-jupiter 6.0.3
+    postgresql 42.7.11 · awaitility 4.3.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>dgt-tramites-api</artifactId>
+  <version>0.1.0</version>
+  <name>dgt-tramites-api</name>
+  <description>API de trámites de la Dirección General de Tributación</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <!-- ArchUnit CORE, no archunit-junit5: las reglas son @Test Jupiter comunes
+         con ClassFileImporter, inmunes a la versión del runner (SPEC-000 §6,
+         nota 1; validado por el spike S-1). -->
+    <archunit.version>1.4.2</archunit.version>
+    <!-- Resilience4j NO está en el BOM de Boot 4.1.0 (verificado, count 0): se fija aquí. -->
+    <resilience4j.version>2.3.0</resilience4j.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <!-- Boot 4 sacó las autoconfiguraciones a módulos: `flyway-core` por sí solo
+         NO enciende Flyway al arrancar. Sin esto, Hibernate valida contra una base
+         vacía y muere con "missing table [adjunto]". Verificado, no supuesto. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-flyway</artifactId>
+    </dependency>
+
+    <!-- Flyway 12 separa el soporte por motor: core + el módulo de PostgreSQL. -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- El alumno jamás escribe una cadena de conexión: Boot levanta el compose. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-docker-compose</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- OpenAPI 3 + Swagger UI. springdoc 3.x es la línea para Spring Boot 4
+         (la 2.x era para Boot 3). Verificado contra Maven Central, no de memoria. -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>3.0.3</version>
+    </dependency>
+
+    <!-- ======================== seguridad (M9) ======================== -->
+    <!-- El portero: la cadena de filtros, BCrypt, @PreAuthorize. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- ===================== observabilidad (M11) ===================== -->
+    <!-- AOP: el aspecto de auditoría transversal, sin ensuciar el negocio.
+         Boot 4 NO trae `spring-boot-starter-aop` (no está en el BOM 4.1.0, verificado).
+         spring-aop ya viene transitivo con spring-context; lo único que falta para @Aspect es
+         aspectjweaver, cuya versión SÍ gestiona el BOM. AopAutoConfiguration lo enciende solo. -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+    </dependency>
+    <!-- Resource Server + JOSE (Nimbus): decodifica y VALIDA el JWT (la firma), y
+         trae el JwtEncoder para emitirlo. Un starter, las dos mitades. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+
+    <!-- ============== monitoreo, observabilidad y caché (M12) ============== -->
+    <!-- Micrometer ya viaja dentro de spring-boot-starter-actuator (es su fachada de
+         métricas). Lo que falta es el REGISTRO que las publica en formato Prometheus:
+         sin él, /actuator/prometheus sencillamente no existe (404), aunque las métricas
+         estén ahí y /actuator/metrics las muestre.
+
+         La versión la gestiona el micrometer-bom 1.17.0, importado por el BOM de Boot
+         4.1.0. Verificado contra micrometer-bom-1.17.0.pom, no de memoria: el artefacto
+         es `micrometer-registry-prometheus` (el viejo cliente vive aparte, como
+         `micrometer-registry-prometheus-simpleclient`; no es el que queremos). -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
+    <!-- La ABSTRACCIÓN de caché de Spring: @Cacheable/@CacheEvict y el CacheManager.
+         Es una abstracción, no una implementación: sin un proveedor detrás, Boot cae en
+         un mapa concurrente simple, sin TTL ni estadísticas. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+
+    <!-- El proveedor: Caffeine. Trae lo que el mapa simple no tiene y este lab necesita
+         medir: expiración por TTL, tope de tamaño y ESTADÍSTICAS (hit/miss). Sin stats
+         no hay hit-rate, y sin hit-rate el TODO_4 sería un acto de fe.
+         Versión gestionada por el BOM de Boot 4.1.0 (caffeine.version = 3.2.4). -->
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+
+    <!-- ================= mensajería y resiliencia (M11) ================= -->
+    <!-- AMQP: RabbitTemplate (productor) y @RabbitListener (consumidor).
+         Versión gestionada por el BOM de Boot 4.1.0 (spring-amqp.version = 4.1.0). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+
+    <!-- Circuit breaker: el NÚCLEO de Resilience4j, sin su starter de Spring Boot.
+         Decisión declarada (SPEC-018 §9), y no es capricho:
+
+         · `resilience4j-spring-boot3` es, como dice su nombre, el starter de BOOT 3. Su
+           autoconfiguración está escrita contra APIs que Boot 4 reorganizó — el mismo tipo de
+           renombre que ya nos mordió con spring-boot-starter-aop, webmvc-test, flyway y
+           testcontainers-postgresql. Montar una app Boot 4 sobre una autoconfiguración de Boot 3
+           es apostar; el curso verifica, no apuesta.
+         · El núcleo NO depende de Spring en absoluto: es una librería Java pura, así que no hay
+           versión de framework que pueda desalinearse.
+         · Y pedagógicamente es mejor: el CircuitBreaker se declara a mano, sus estados
+           (CLOSED / OPEN / HALF_OPEN) quedan a la vista y el test los puede afirmar. Es la misma
+           doctrina del HealthIndicator del Lab 10 — escribirlo una vez para ver el contrato.
+
+         Sin versión gestionada: Resilience4j NO está en el BOM de Boot 4.1.0 (verificado, count 0),
+         así que se fija explícita. -->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+      <version>${resilience4j.version}</version>
+    </dependency>
+
+    <!-- RabbitMQ real en los tests, no un doble: lo que se prueba es el comportamiento del
+         BROKER (reintentos, DLQ, entrega duplicada), y eso un mock no lo puede demostrar.
+         Coordenada de Testcontainers 2.x (renombrada, como postgresql). -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-rabbitmq</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- ============================ test ============================ -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Boot 4 sacó los slices de test a módulos propios: @WebMvcTest ya no viaja
+         dentro de spring-boot-starter-test. Verificado: ningún jar del starter lo
+         contiene; vive en spring-boot-webmvc-test (versión gestionada por el BOM). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- @WithMockUser y utilidades de seguridad para los tests (rebanadas). -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Testcontainers 2.x RENOMBRÓ sus coordenadas: el viejo
+         org.testcontainers:postgresql ya no existe (404 en Central).
+         La advertencia al alumno es contenido del Módulo 6. -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Los @DisplayName narrativos se leen como especificación: que surefire los
+           muestre en la consola, no el nombre del método. La suite en rojo debe leerse
+           como una lista de compromisos (SPEC-009 §2). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <statelessTestsetReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+            <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+          </statelessTestsetReporter>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <!-- Los *IT son pruebas de integración: las corre `verify`, no `test`.
+           El parent gestiona la versión, pero no engancha las ejecuciones. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
