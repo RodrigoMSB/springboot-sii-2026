@@ -2,6 +2,9 @@
 
 Material del curso de Spring Boot para el SII: teoría, labs y su tooling de validación.
 
+> 📌 **Por qué este curso se enseña así → [`MANIFIESTO.md`](MANIFIESTO.md)**
+> Léelo antes de dictar una sola sesión.
+
 ## Protocolo SPEC
 
 El arquitecto emite especificaciones numeradas, versionadas en `docs/specs/`. Si la
