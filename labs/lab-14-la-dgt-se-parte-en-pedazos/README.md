@@ -3,8 +3,13 @@
 > *«Funciona precioso. Ahora apaga el servicio de contribuyentes.»*
 > — Carolina, Jefa de la Plataforma de Trámites
 
-**Sesión 14 · 3 h · Módulo 15 — Arquitectura de microservicios, despliegue e
-interoperabilidad.**
+**Sesión 14 · 3 h · Arquitectura de microservicios, despliegue e interoperabilidad.**
+
+> ⚠️ **Este laboratorio está CONGELADO y no tiene módulo contractual asignado.** La
+> auditoría SPEC-AUDIT-01 constató que el temario contratado no incluye un módulo de
+> microservicios —su M15 es «Contenedores, Arranque Acelerado y Proyecto Final», que cubre
+> el Lab 13— ni una sesión 14. El material se conserva íntegro; su encaje con el SII lo
+> decide el PO. Hasta entonces, no se dicta como parte del programa contratado.
 
 ---
 

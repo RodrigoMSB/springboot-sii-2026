@@ -12,7 +12,7 @@
 8. [Por qué una suite es una red y un test es un hilo](#8-por-qué-una-suite-es-una-red-y-un-test-es-un-hilo)
 9. [AU-05: los tests no duermen](#9-au-05-los-tests-no-duermen)
 10. [Tabla DO / DON'T · Glosario](#10-tabla-do--dont--glosario)
-11. [Conclusiones y siembra del Módulo 4](#11-conclusiones-y-siembra-del-módulo-4)
+11. [Conclusiones y siembra del Módulo 5](#11-conclusiones-y-siembra-del-módulo-5)
 
 ---
 
@@ -176,14 +176,14 @@ prueba mordiendo a una clase que duerme a propósito.
 
 ---
 
-## 11. Conclusiones y siembra del Módulo 4
+## 11. Conclusiones y siembra del Módulo 5
 
 Hoy invertiste tu relación con los tests: dejaron de ser algo que escribes *después* para
 convertirse en el **enunciado** que lees *antes*. Y escribiste los tuyos, con Mockito.
 
 La red ya existe. Valida, atrapa errores, verifica comportamiento.
 
-🌱 **Siembra del Módulo 4 — "Persistencia con JPA e Hibernate".**
+🌱 **Siembra del Módulo 5 — "Persistencia con Spring Data JPA e Hibernate 7".**
 
 Y aquí está lo que no ves venir. La próxima semana vas a trabajar con la base de datos de
 verdad: entidades, relaciones, consultas. La app vendrá configurada **"como siempre
@@ -197,5 +197,5 @@ contribuyentes— nadie notará nada.
 `AU-04` exige que cada relación declare `LAZY` a mano. Todavía no entiendes por qué. La
 próxima semana, con la base llena, lo vas a entender de golpe.
 
-El Módulo 4 se llama *«El árbol de trámites»*. Trae paciencia: va a cargar más de lo que
+El laboratorio del Módulo 5 se llama *«El árbol de trámites»*. Trae paciencia: va a cargar más de lo que
 pediste.

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-020.*
+*Última actualización: SPEC-FIX-02.*
 
 ---
 
@@ -69,8 +69,8 @@
   que **declara quién mide cada uno** y **no puede aprobar a nadie** — el eje Criterio es humano y
   el umbral es núcleo verde *y* criterio ≥ Suficiente. Trae rúbrica, guía de defensa con respuestas
   calibradas por nivel, y una `solucion-referencia/` que dice de entrada que es UNA solución.
-- **Lab 14** (`labs/lab-14-la-dgt-se-parte-en-pedazos/`): el lab de **microservicios**, que cierra
-  el alcance del título oficial del contrato. Y es el único que no se teclea: se levanta un sistema
+- **Lab 14** (`labs/lab-14-la-dgt-se-parte-en-pedazos/`) — ⚠️ **CONGELADO, sin módulo contractual**:
+  el lab de **microservicios**. Y es el único que no se teclea: se levanta un sistema
   de **seis piezas** —registro Eureka, Config Server, gateway, dos instancias del proveedor y el
   consumidor—, se rompe y se mira. Los seis patrones funcionando (discovery, gateway, configuración
   centralizada, Feign, balanceo, circuit breaker con fallback) sobre Spring Cloud **2025.1.2** y
@@ -80,6 +80,8 @@
   llamadas para que el circuito opine, así que en la sesión no abre nunca. La teoría dedica una
   sección entera a **cuándo NO usar microservicios**, con los costos medidos de este mismo lab
   (1,54 GiB de RAM y 56 s de arranque, frente a una sola pieza).
+  **Está construido y verificado, y NO se dicta**: la auditoría SPEC-AUDIT-01 constató que el
+  temario contratado no tiene módulo de microservicios ni sesión 14. Su destino lo decide el PO.
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los
@@ -95,6 +97,22 @@
   correctos, que la aplicación pasa su suite completa (106 tests en el Lab 13) y que el sistema de
   microservicios del Lab 14 compila **y que su gate muerde** — el CI exige que el starter FALLE, no
   solo que la solución pase.
+
+## 1.b · Alcance contra el contrato (SPEC-AUDIT-01 y SPEC-FIX-02)
+
+El mapa **lab ↔ módulo del temario** vive en `docs/temario/MAPA-LAB-MODULO.md`. Es el documento
+de trazabilidad para la entrega al SII, y dice tres cosas que conviene tener presentes:
+
+- **Los 15 módulos contratados tienen laboratorio.** La numeración del material ya cuadra con
+  la del temario (se corrigió en los labs 03, 09, 10, 11, 12 y 13).
+- **Dos discrepancias estructurales siguen abiertas y son del PO**, no del material: los labs
+  10 a 13 ocupan cuatro sesiones donde el contrato compromete tres (S10–S12) y en otro orden;
+  y el temario compromete **12 sesiones**, mientras el material llega a la 14.
+- **El Lab 14 está congelado**: no mapea a ningún módulo contratado.
+
+Git salió del Lab 01 y Python de las guías del Lab 14: ninguno de los dos es materia de un
+curso de Spring Boot. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
+contratado lo promete y no estaba.
 
 ## 2 · Qué falta
 

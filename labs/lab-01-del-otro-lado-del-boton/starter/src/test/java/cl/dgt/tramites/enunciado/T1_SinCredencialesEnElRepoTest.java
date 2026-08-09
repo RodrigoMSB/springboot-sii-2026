@@ -20,8 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * y no puede correr en el CI del alumno. El anti-patrón A-01 del proyecto.
  *
  * <p>Aquí no se busca "una contraseña" (imposible), sino <em>exactamente</em> la de
- * utilería que el practicante dejó en el historial. Si vuelve a aparecer en un archivo
- * versionado, esto se pone rojo antes de que llegue a un servidor.
+ * utilería que el practicante dejó escrita en {@code application.yml}. Mientras siga en un
+ * archivo versionado, esto se pone rojo — y se pondrá rojo otra vez el día que alguien la
+ * vuelva a escribir, antes de que llegue a un servidor.
  *
  * <p>Nota: el {@code compose.yaml} sí lleva credencial, y está bien. Es una clave de
  * laboratorio para una base desechable. La diferencia no es el archivo: es qué protege el
@@ -54,8 +55,9 @@ class T1_SinCredencialesEnElRepoTest {
         }
 
         assertThat(culpables)
-                .as("Borrar la credencial de un archivo no la quita del historial de git, "
-                    + "pero volver a escribirla sí la pone otra vez en producción.")
+                .as("Un secreto escrito en un archivo versionado deja de ser un secreto: "
+                    + "sácalo de aquí y pídelo al entorno. Y recuerda que sacarlo es el "
+                    + "segundo paso; el primero es rotarlo.")
                 .isEmpty();
     }
 

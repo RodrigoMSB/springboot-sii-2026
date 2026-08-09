@@ -13,7 +13,7 @@ Java respire, aunque PostgreSQL lleve una hora muerto y todos los endpoints devu
 Un health que solo confirma que el proceso existe es un adorno. **Readiness es poder atender, no
 estar encendido.**
 
-**Sesión 10** · Módulo 12 (monitoreo, observabilidad y caché, 3 h) · **3 horas**
+**Sesión 10** · Módulo 14 — Observabilidad sobre OpenTelemetry, Métricas y Caché · **3 horas**
 
 ---
 

@@ -1,0 +1,39 @@
+// =============================================================================
+//  teso.proto — EL CONTRATO. Aquí está toda la diferencia con REST.
+// -----------------------------------------------------------------------------
+//  En el laboratorio, el contrato con TESO vive en una interfaz Java con
+//  @HttpExchange, y el otro extremo tiene que estar de acuerdo por convención:
+//  si allá cambian la URL o el nombre de un campo, aquí nadie se entera hasta
+//  producción.
+//
+//  Aquí el contrato es ESTE ARCHIVO, y es lo primero que existe. De él se generan
+//  las clases Java del servidor y del cliente — y también las de Go, Python o
+//  C# si el otro equipo no usa Java. Nadie escribe a mano el cliente, y nadie
+//  puede desalinearse en silencio: si cambias este archivo, deja de compilar.
+//
+//  ⚠️  Los números (= 1, = 2) NO son decoración: son la identidad del campo en el
+//  formato binario. El nombre `folio` no viaja por la red; viaja el número 1.
+//  Por eso se puede renombrar un campo sin romper nada, y por eso cambiar su
+//  número rompe TODO. Reordenar campos es gratis; renumerarlos es un incidente.
+// =============================================================================
+syntax = "proto3";
+
+package dgt;
+
+option java_multiple_files = true;
+option java_package = "cl.dgt.grpc.teso";
+
+// El mismo TESO del laboratorio, hablando el otro protocolo.
+service Tesoreria {
+  rpc Confirmar (ConfirmacionRequest) returns (ConfirmacionResponse);
+}
+
+message ConfirmacionRequest {
+  string folio = 1;
+  int64  monto = 2;
+}
+
+message ConfirmacionResponse {
+  bool   pagado      = 1;
+  string comprobante = 2;
+}

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   demo-grpc — el segundo protocolo del Módulo 10, para la demo del relator
+  .............................................................................
+   NO es parte del laboratorio del alumno. No tiene TODOs, no lo mira el
+   validador, y no deriva de ningún starter. Es un proyecto aparte, mínimo y
+   ejecutable, para los ~8 minutos de gRPC de la sesión 8.
+
+   Por qué existe: el Módulo 10 del temario se llama «Comunicación entre
+   Servicios: HTTP Declarativo Y gRPC». El laboratorio construye el lado HTTP
+   (RestClient -> timeouts -> @HttpExchange); esto muestra el otro, funcionando,
+   sin gastar el presupuesto de tecleo del alumno.
+
+   Cómo se corre:
+       cd demo-grpc
+       ./mvnw test                # la prueba llama al servicio por gRPC de verdad
+       ./mvnw spring-boot:run     # levanta el servidor en el 9090
+
+   ⚠️  La única pieza que no es Java puro: el compilador de Protocol Buffers.
+   El plugin lo descarga solo (protoc, binario nativo del sistema operativo) y
+   genera los stubs en target/generated-sources/. La primera vez tarda; después
+   va con caché. Todas las versiones —protoc, grpc-java y el propio plugin—
+   las gestiona el BOM de Spring Boot 4.1.0: aquí no se escribe ni una.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>cl.dgt</groupId>
+    <artifactId>demo-grpc</artifactId>
+    <version>1.0.0</version>
+    <name>demo-grpc</name>
+    <description>TESO por gRPC — demo del relator, Lab 08</description>
+
+    <properties>
+        <java.version>25</java.version>
+    </properties>
+
+    <dependencies>
+        <!--
+          gRPC es soporte de PRIMERA CLASE en Boot 4: estos starters están en el
+          BOM, no vienen de un tercero. Es uno de los cambios estructurales que
+          justificaron construir el curso sobre la línea 4.x.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-grpc-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-grpc-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+              El generador de stubs. Lee src/main/proto/*.proto y escribe Java en
+              target/generated-sources/protobuf/, que Maven añade al classpath
+              solo. Ese código NO se versiona: se regenera en cada build, que es
+              justo el punto del contrato en .proto.
+            -->
+            <plugin>
+                <groupId>io.github.ascopes</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <configuration>
+                    <protocVersion>${protobuf-java.version}</protocVersion>
+                    <binaryMavenPlugins>
+                        <binaryMavenPlugin>
+                            <groupId>io.grpc</groupId>
+                            <artifactId>protoc-gen-grpc-java</artifactId>
+                            <version>${grpc-java.version}</version>
+                            <options>jakarta_omit,@generated=omit</options>
+                        </binaryMavenPlugin>
+                    </binaryMavenPlugins>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -9,11 +9,12 @@
 5. [Los clientes HTTP: RestClient, WebClient, RestTemplate](#5-los-clientes-http-restclient-webclient-resttemplate)
 6. [HTTP Interfaces y la escalera colapsada](#6-http-interfaces-y-la-escalera-colapsada)
 7. [Feign, y cuándo](#7-feign-y-cuándo)
-8. [SSRF: cuando la URL la elige el atacante](#8-ssrf-cuando-la-url-la-elige-el-atacante)
-9. [La hora de M9: CORS, CSRF y cabeceras](#9-la-hora-de-m9-cors-csrf-y-cabeceras)
-10. [Tabla DO / DON'T · Glosario](#10-tabla-do--dont--glosario)
-11. [Conclusiones](#11-conclusiones)
-12. [Siembra del Lab 09](#12-siembra-del-lab-09)
+8. [gRPC: el otro protocolo del M10](#8-grpc-el-otro-protocolo-del-m10)
+9. [SSRF: cuando la URL la elige el atacante](#9-ssrf-cuando-la-url-la-elige-el-atacante)
+10. [La hora de M9: CORS, CSRF y cabeceras](#10-la-hora-de-m9-cors-csrf-y-cabeceras)
+11. [Tabla DO / DON'T · Glosario](#11-tabla-do--dont--glosario)
+12. [Conclusiones](#12-conclusiones)
+13. [Siembra del Lab 09](#13-siembra-del-lab-09)
 
 ---
 
@@ -124,7 +125,82 @@ es demo del relator — ver `INSTRUCTOR.md`.)
 
 ---
 
-## 8. SSRF: cuando la URL la elige el atacante
+## 8. gRPC: el otro protocolo del M10
+
+Todo lo anterior habla de HTTP con JSON. Hay otra forma de comunicar servicios, y el módulo
+la nombra explícitamente: **gRPC**. No se teclea hoy —hay una demo del relator— pero sí hay
+que saber qué es y, sobre todo, **cuándo NO elegirlo**.
+
+### La diferencia real: el contrato existe antes que el código
+
+En REST, el contrato es un acuerdo. Tú escribes tu `@HttpExchange`, el otro equipo escribe
+su `@RestController`, y **nada comprueba que digan lo mismo**. Si allá renombran un campo,
+aquí te enteras en producción. Es lo que el Lab 14 llama *acoplamiento por contrato*.
+
+En gRPC, el contrato es un **archivo**, y es lo primero que existe:
+
+```protobuf
+service Tesoreria {
+  rpc Confirmar (ConfirmacionRequest) returns (ConfirmacionResponse);
+}
+
+message ConfirmacionRequest {
+  string folio = 1;
+  int64  monto = 2;
+}
+```
+
+De ahí, un compilador genera las clases del servidor **y** las del cliente — en Java, y
+también en Go, Python o C# si el otro equipo no usa Java. Nadie escribe el cliente a mano y
+nadie puede desalinearse en silencio: si cambias el `.proto`, deja de compilar.
+
+Fíjate en los números (`= 1`, `= 2`). No son decoración: son la identidad del campo **en el
+formato binario**. El nombre `folio` no viaja por la red; viaja el número 1. Por eso puedes
+renombrar un campo sin romper nada, y por eso cambiar su número lo rompe todo.
+
+### La tabla que hay que tener en la cabeza
+
+| | REST + JSON | gRPC |
+|---|---|---|
+| Contrato | acuerdo (OpenAPI, si hay suerte) | **archivo `.proto`, obligatorio** |
+| Formato | texto, legible | **binario, compacto y rápido** |
+| Transporte | HTTP/1.1 o 2 | **HTTP/2 siempre** |
+| Depurar con `curl` | sí | **no** |
+| Streaming | no, de fábrica | **sí, en los dos sentidos** |
+| Cliente | lo escribes tú | **se genera** |
+| Desde un navegador | directo | **no** (necesita gRPC-Web y un proxy) |
+
+### Cuándo elegirlo, y cuándo no
+
+**Sí, cuando:** hablan dos servicios **tuyos**, el volumen de llamadas es alto y la latencia
+importa, o necesitas *streaming* (un flujo de eventos, una carga larga). Ahí lo binario y el
+HTTP/2 se notan de verdad.
+
+**No, cuando:** el consumidor es un **navegador** o un tercero al que no controlas — la API
+pública de la DGT tiene que ser REST, porque un contribuyente no va a generar stubs para
+consultar su folio. Tampoco cuando el equipo no está listo para operar un protocolo que **no
+se depura con `curl`**: si tu forma de investigar una incidencia es repetir la petición a
+mano, gRPC te quita esa herramienta y tienes que reemplazarla antes, no después.
+
+Y el criterio de siempre, el mismo del Lab 14 §5: *el rendimiento que ganas tiene que
+compensar la herramienta que pierdes*. En la mayoría de las APIs de una institución pública,
+no compensa. En la comunicación interna entre dos servicios que se llaman diez mil veces por
+minuto, sí.
+
+### En Spring Boot 4
+
+Es soporte de **primera clase**, dentro del BOM: `spring-boot-starter-grpc-server` y
+`spring-boot-starter-grpc-client`. No hay que buscar una librería de terceros ni fijar
+versiones a mano — es uno de los cambios estructurales que justificaron construir este curso
+sobre la línea 4.x en vez de la 3.x.
+
+La demo está en `demo-grpc/`, se levanta con `./mvnw spring-boot:run` y trae una prueba que
+llama al servicio de verdad (`./mvnw test`). El relator la ejecuta; tú no tienes que teclear
+nada.
+
+---
+
+## 9. SSRF: cuando la URL la elige el atacante
 
 **Server-Side Request Forgery**: si tu servidor hace una petición HTTP a una URL que viene de
 datos del usuario, un atacante puede hacer que tu servidor llame a donde él quiera —la red
@@ -137,7 +213,7 @@ que habría que activar. Se nombra, se señala en la config; no se teclea hoy.
 
 ---
 
-## 9. La hora de M9: CORS, CSRF y cabeceras
+## 10. La hora de M9: CORS, CSRF y cabeceras
 
 El Lab 07 dejó esto anotado; aquí se cobra.
 
@@ -157,7 +233,7 @@ El Lab 07 dejó esto anotado; aquí se cobra.
 
 ---
 
-## 10. Tabla DO / DON'T · Glosario
+## 11. Tabla DO / DON'T · Glosario
 
 | ✅ DO | ❌ DON'T |
 |---|---|
@@ -176,7 +252,7 @@ El Lab 07 dejó esto anotado; aquí se cobra.
 
 ---
 
-## 11. Conclusiones
+## 12. Conclusiones
 
 Hoy la DGT dejó de ser rehén de Tesorería. Un timeout corto y dirigido corta la espera; una
 degradación elegante da la mala noticia rápido y deja el trámite intacto; un cliente
@@ -185,7 +261,7 @@ cierra el resto del edificio. TESO se cae, y nosotros no.
 
 ---
 
-## 12. Siembra del Lab 09
+## 13. Siembra del Lab 09
 
 🌱 **Siembra del Módulo 10 (que abre el M11) — "La caja negra".**
 

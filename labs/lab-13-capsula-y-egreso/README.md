@@ -12,7 +12,7 @@
 Los doce labs anteriores abrieron con un incendio porque necesitabas que te mostraran el problema.
 Hoy el que tiene que verlo eres tú.
 
-**Sesión 13** · Módulo 14 (empaquetado, despliegue y proyecto final) · **3 horas** · **Es el examen**
+**Sesión 13** · Módulo 15 — Contenedores, Arranque Acelerado y Proyecto Final · **3 horas** · **Es el examen**
 
 ---
 

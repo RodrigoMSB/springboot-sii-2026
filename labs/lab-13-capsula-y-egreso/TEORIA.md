@@ -1,4 +1,4 @@
-# Teoría · Módulo 14 (empaquetado y despliegue) + cierre del curso
+# Teoría · Módulo 15 (Contenedores, Arranque Acelerado y Proyecto Final) + cierre del curso
 
 ## Índice
 

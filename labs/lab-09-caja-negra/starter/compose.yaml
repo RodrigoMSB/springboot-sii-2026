@@ -12,8 +12,9 @@
 #  correcto: hace el entorno reproducible y no protege nada que valga proteger.
 #
 #  El crimen del Lab 01 es OTRO: credenciales de PRODUCCIÓN en `application.yml`,
-#  que viajan al repo, al CI y al historial de git para siempre. Por eso
-#  `application.yml` no contiene ninguna credencial (D-012).
+#  que quedan al alcance de cualquiera con acceso al proyecto y de todo servidor
+#  que lo descargue. Por eso `application.yml` no contiene ninguna credencial
+#  (D-012).
 #
 #  La diferencia no es el archivo. Es qué protege el secreto y qué pasa si se
 #  filtra. Enseñar esa distinción es el punto del Lab 01.

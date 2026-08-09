@@ -12,7 +12,7 @@ marcaba **2** donde debía marcar 1.
 `@Scheduled` es local a la JVM. En un mundo de muchas instancias, **«una vez al día» no significa
 nada hasta que alguien lo garantice** — y ese alguien no puede ser un archivo de configuración.
 
-**Sesión 11** · Módulo 10 (procesamiento asíncrono, tareas programadas y eventos, 3 h) · **3 horas**
+**Sesión 11** · Módulo 12 — Asincronía con Hilos Virtuales, Scheduling y Eventos · **3 horas**
 
 ---
 

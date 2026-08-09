@@ -188,28 +188,73 @@ accionar.** Esa diferencia es tuya, no del framework.
 
 ---
 
-## 7. Un secreto filtrado no se borra: se rota
+## 7. Dónde viven los secretos, y por qué uno expuesto se rota
 
-El crimen de hoy no es que hubiera una contraseña en `application.yml`. Es que **alguien la
-borró y creyó que eso bastaba**.
+Las secciones anteriores dijeron **cómo** se externaliza la configuración. Esta dice **qué
+no puede estar dentro del repositorio jamás**, y qué se hace cuando ya lo estuvo.
 
-```bash
-git log --oneline -- src/main/resources/application.yml
-git show <el commit>          # ahí está, para siempre
+### La regla, y su criterio
+
+No es «no pongas contraseñas en el código». Es más útil formularlo así:
+
+> **Un valor va fuera del repositorio cuando, si se filtrara, habría que cambiarlo.**
+
+Ese criterio se aplica solo y explica los dos casos de este laboratorio:
+
+| Valor | ¿Versionado? | Por qué |
+|---|---|---|
+| `dgt.folio.prefijo: DGT` | **Sí** | Es una decisión de negocio. Si se filtra, no pasa nada. |
+| La clave de `compose.yaml` (`dgt-dev`) | **Sí** | Abre una base desechable que vive en tu portátil y muere con `docker compose down -v`. Si se filtra, no protege nada. |
+| La clave de `prod-db.dgt.gob.cl` | **JAMÁS** | Abre la base de producción de un servicio tributario. |
+
+**La diferencia no es el archivo. Es qué protege el secreto y qué pasa si se filtra.**
+
+### Dónde vive entonces
+
+En el **entorno del proceso**, no en el proyecto. El repositorio solo dice **cómo se llama**
+la variable; quién la rellena es el sistema que despliega:
+
+```yaml
+# application-prod.yml — esto SÍ se versiona: no es el secreto, es su nombre
+spring:
+  datasource:
+    url: ${DGT_DB_URL}
+    username: ${DGT_DB_USER}
+    password: ${DGT_DB_PASSWORD}
 ```
 
-Un `git commit` que borra una línea no borra la línea: la deja en el commit anterior, en
-cada clon, en cada fork, en la caché de tu proveedor de git, en el portátil del practicante
-que se fue. Reescribir el historial (`filter-repo`) es cirugía mayor: cambia todos los
-SHA, rompe cada rama abierta, obliga a que dieciocho personas vuelvan a clonar. Y la
-credencial ya está en la máquina de quien clonó ayer.
+De menos a más maduro, quién define esas variables: un archivo `.env` fuera del repositorio
+→ variables del servidor de despliegue → un gestor de secretos (Vault, AWS Secrets Manager,
+Azure Key Vault) que además **rota solo** y deja registro de quién leyó qué. Spring Boot lee
+las tres igual: para la aplicación, un secreto siempre es una variable de entorno.
 
-**La respuesta profesional es rotar.** Cambias la contraseña en el servidor de base de
-datos. Lo que esté en el historial deja de abrir nada. Después —y solo después— decides si
-vale la pena reescribir la historia.
+Y fíjate en lo que **no** lleva ese YAML: valores por defecto. Un
+`${DGT_DB_PASSWORD:cambiame}` arrancaría en silencio contra la base equivocada. Los dos
+puntos parecen amables; son un desastre.
 
-En este laboratorio, "rotar" es cambiar la clave del `compose.yaml`. En la DGT real, es una
-llamada al DBA y un incidente registrado.
+### Y si ya estuvo escrito: se rota
+
+Aquí está la lección que casi todo el mundo aprende tarde.
+
+Quitar la contraseña del archivo protege lo que venga **después**. No deshace nada de lo
+anterior: mientras estuvo escrita, cualquiera con acceso al proyecto pudo copiarla —una
+copia local, una descarga del servidor de integración, una captura de pantalla— y **no
+existe forma de saber quién lo hizo**. Un secreto expuesto no se «desexpone».
+
+> **La única acción que restablece la seguridad es cambiar el secreto.**
+
+Rotar significa pedir una credencial nueva para ese usuario de base de datos. En ese
+instante, la vieja deja de abrir nada, esté donde esté y la tenga quien la tenga. La
+credencial filtrada no desaparece: se vuelve **inútil**, que es lo único que se puede
+conseguir.
+
+En este laboratorio, rotar es cambiar la clave del `compose.yaml` y recrear la base. En la
+DGT real es una llamada al DBA, un despliegue con la variable nueva, y un incidente
+registrado — porque alguien va a preguntar cuánto tiempo estuvo expuesta y quién pudo verla.
+
+**El orden importa, y es el que va a evaluarse:** primero rotar (corta el acceso), después
+limpiar el archivo (evita que se repita). Al revés, pasas el rato limpiando mientras la
+credencial sigue abriendo la puerta.
 
 ---
 

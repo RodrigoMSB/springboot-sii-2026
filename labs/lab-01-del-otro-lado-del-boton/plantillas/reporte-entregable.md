@@ -11,7 +11,7 @@ curso, y se lee entero.
 
 | Pregunta | Tu respuesta |
 |---|---|
-| SHA del commit que introdujo la credencial | |
+| Las tres líneas exactas que sacaste de `application.yml` | |
 | ¿Está la contraseña en el `application.yml` de hoy? | |
 | ¿Sigue estando en el repositorio? Explica en una frase. | |
 | ¿Por qué borrarla no arregló nada? | |
@@ -44,8 +44,8 @@ entorno. No lo resumas, no lo interpretes: cópialo tal cual, con sus corchetes.
 | Pregunta | Tu respuesta |
 |---|---|
 | Comando exacto con que rotaste la clave | |
-| Después de rotar, ¿la credencial del historial abre algo? | |
-| ¿Por qué no basta con reescribir el historial de git? | |
+| Después de rotar, ¿la credencial vieja abre algo? | |
+| ¿Por qué borrarla del archivo no bastaba? | |
 
 ## 5 · Tipos y contrato
 

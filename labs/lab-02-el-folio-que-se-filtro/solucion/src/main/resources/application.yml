@@ -6,9 +6,9 @@
 #  Lo que cambia entre entornos vive en `application-<perfil>.yml`, y lo que es
 #  secreto vive FUERA del repositorio: en variables de entorno.
 #
-#  Si algún día vuelves a ver una contraseña en este archivo, mira antes de
-#  borrarla: `git log -- src/main/resources/application.yml`. Borrarla no la
-#  quita del historial. Hay que ROTARLA.
+#  Si algún día vuelves a ver una contraseña aquí, borrarla es el primer paso y
+#  no es el importante: mientras estuvo escrita, cualquiera con acceso al
+#  repositorio pudo copiarla, y nadie sabe quién lo hizo. Hay que ROTARLA.
 # =============================================================================
 spring:
   application:

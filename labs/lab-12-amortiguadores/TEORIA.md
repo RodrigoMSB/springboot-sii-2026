@@ -1,4 +1,4 @@
-# Teoría · Módulo 11 (mensajería y resiliencia)
+# Teoría · Módulo 13 (Mensajería y Resiliencia)
 
 ## Índice
 

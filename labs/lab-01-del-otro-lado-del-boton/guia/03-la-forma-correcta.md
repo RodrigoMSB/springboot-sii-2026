@@ -60,15 +60,17 @@ reporte entregable, y no vale resumirlo.
 
 ---
 
-## ¿Y el historial? La credencial se **rota**, no se borra
+## Sacarla del archivo no basta: la credencial se **rota**
 
-Ya lo viste en la Guía 01: borrar el commit no sirve, y reescribir el historial es cirugía
-mayor —cambia todos los SHA, rompe cada rama abierta, obliga a dieciocho personas a volver a
-clonar— y aun así la credencial ya está en la máquina de quien clonó ayer.
+Acabas de quitar la contraseña de `application.yml`. Eso protege lo que venga **después**, y
+no deshace nada de lo anterior: mientras estuvo escrita, cualquiera con acceso al proyecto
+pudo copiarla, y **no hay forma de saber quién lo hizo**.
 
-**La respuesta profesional es rotar:** cambias la contraseña en el servidor de base de
-datos, y lo que quedó en el historial deja de abrir nada. Después, y solo después, decides
-si vale la pena reescribir la historia.
+Un secreto no se «desfiltra». Se cambia.
+
+**La respuesta profesional es rotar:** pides al DBA una contraseña nueva para ese usuario, y
+en ese instante la vieja —la que pueda tener guardada quien sea— deja de abrir nada. La
+credencial expuesta no desaparece; se vuelve inútil, que es lo único que se puede conseguir.
 
 En este laboratorio, rotar es esto:
 
@@ -86,7 +88,7 @@ En la DGT real, es una llamada al DBA y un incidente registrado. El comando es l
 | Pregunta | Tu respuesta |
 |---|---|
 | ¿Qué comando exacto usaste para rotar? | |
-| Tras rotar, ¿la credencial del historial abre algo? | |
-| ¿Por qué no basta con `git filter-repo`? | |
+| Tras rotar, ¿la credencial vieja abre algo? | |
+| ¿Por qué borrarla del archivo no era suficiente? | |
 
 ➡️ Siguiente: [`04-configuracion-con-tipos.md`](04-configuracion-con-tipos.md)

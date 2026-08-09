@@ -107,7 +107,7 @@ aviso: todo 404, y parece que el problema está en otro sitio.
 Comprueba qué configuración le llegó de verdad al portal:
 
 ```bash
-curl -s http://localhost:8888/dgt-portal/default | python3 -m json.tool
+curl -s http://localhost:8888/dgt-portal/default
 ```
 
 ---
@@ -149,8 +149,7 @@ Comprueba qué cargó de verdad:
 
 ```bash
 cd sistema
-docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers \
-  | python3 -m json.tool
+docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers
 ```
 
 Si `failureRateThreshold` sigue en `50.0%` y no pusiste 50, o si el circuito no abre nunca,
