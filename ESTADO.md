@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-02.*
+*Última actualización: SPEC-FIX-03.*
 
 ---
 
@@ -111,7 +111,9 @@ de trazabilidad para la entrega al SII, y dice tres cosas que conviene tener pre
 - **El Lab 14 está congelado**: no mapea a ningún módulo contratado.
 
 Git salió del Lab 01 y Python de las guías del Lab 14: ninguno de los dos es materia de un
-curso de Spring Boot. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
+curso de Spring Boot. Y la teoría del Lab 01 se reordenó (SPEC-FIX-03) para que **responda al
+crimen en su sección 1** en vez de en la 7: el bloque fundacional —contenedor y
+autoconfiguración— entra después, por una puerta declarada. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
 contratado lo promete y no estaba.
 
 ## 2 · Qué falta

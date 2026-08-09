@@ -19,7 +19,7 @@ la sala se va a quedar en silencio.
 | | Actividad | Tiempo |
 |---|---|---|
 | 🔪 | **La escena del crimen** — la vives, no te la cuentan | 10 min |
-| 📚 | Teoría: el contenedor, la autoconfiguración, la configuración externalizada | ~40 min |
+| 📚 | Teoría: dónde viven los secretos, la configuración externalizada, los perfiles — y después, cómo funciona Spring por dentro | ~40 min |
 | ☕ | Descanso | 10 min |
 | 🔧 | **Laboratorio: 4 TODOs** | ~110 min |
 | ✅ | Validar, reporte, y la siembra del Lab 02 | 10 min |
