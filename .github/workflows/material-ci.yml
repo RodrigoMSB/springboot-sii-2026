@@ -312,6 +312,52 @@ jobs:
           echo "[OK] Sin Hystrix, Ribbon, Zuul ni Archaius."
 
   # ---------------------------------------------------------------------------
+  #  La demo de gRPC del Lab 08 (M10 del temario: «HTTP Declarativo Y gRPC»).
+  #
+  #  Es una demo del relator, no material del alumno: no tiene TODOs y no la mira
+  #  ningún validador. Precisamente por eso necesita CI — nadie la corre en el día
+  #  a día, así que se pudriría en silencio y el relator lo descubriría delante de
+  #  la sala. Un `./mvnw test` aquí cuesta un minuto y lo hace imposible.
+  #
+  #  Genera stubs con `protoc` (binario nativo que descarga el plugin), así que es
+  #  el único job que depende de una herramienta fuera del mundo Java. Si algún día
+  #  esa descarga se vuelve inestable en el runner, el arreglo NO es borrar el job:
+  #  es cachear el binario.
+  # ---------------------------------------------------------------------------
+  grpc:
+    name: grpc · la demo del Lab 08 compila y responde
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: labs/lab-08-diplomacia-con-tesoreria/demo-grpc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guarda de activación
+        id: guarda
+        shell: bash
+        working-directory: .
+        run: |
+          set -euo pipefail
+          if [ -f labs/lab-08-diplomacia-con-tesoreria/demo-grpc/pom.xml ]; then
+            echo "hay=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "[INFO] La demo de gRPC aún no existe: el job queda armado, no activo."
+            echo "hay=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.guarda.outputs.hay == 'si'
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Los stubs se generan y el servicio responde a una llamada real
+        if: steps.guarda.outputs.hay == 'si'
+        run: ./mvnw -B test
+
+  # ---------------------------------------------------------------------------
   #  El andamiaje de los labs: los scripts que el ALUMNO ejecuta.
   #
   #  Dos mitades, y la segunda importa tanto como la primera:

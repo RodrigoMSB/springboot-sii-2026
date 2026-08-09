@@ -50,7 +50,7 @@ sube. `9/14… 12/14…`.
 
 ### ✅ 02:50 – 03:00 · Cierre
 
-`90`, reporte, y la **siembra del Módulo 4**:
+`90`, reporte, y la **siembra del Módulo 5**:
 
 > *«La red ya existe. La próxima semana trabajan con la base de datos de verdad, y va a venir
 > configurada "como siempre funcionó": todo EAGER. Y va a funcionar, con tres trámites de

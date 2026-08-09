@@ -23,27 +23,46 @@ cd labs/lab-01-del-otro-lado-del-boton/starter
 
 1. *«Esto lo dejó el practicante el viernes. Compila, arranca, responde.»*
    ```bash
-   cat src/main/resources/application.yml
+   ./mvnw -q spring-boot:run
    ```
-   Déjalo en pantalla tres segundos. *«Limpio. Ni una contraseña.»*
+   Deja que arranque y que responda. *«Funciona. Los tests pasan. ¿Lo subimos?»*
+   Espera a que alguien diga que sí.
 
-2. *«Pero yo soy Carolina, y llevo veinte años en esto.»*
-   ```bash
-   git log --oneline -- src/main/resources/application.yml
+2. *«Antes de subir nada, yo abro el archivo de configuración. Siempre.»*
+
+   Abre `src/main/resources/application.yml` **en el editor, proyectado**, y desplázate
+   despacio hasta el final. No uses `cat`: que la sala vea el archivo scrollear y llegar
+   al último bloque es la mitad del efecto.
+
+3. **Pausa en el bloque de abajo.** Nada de leerlo tú: subráyalo con el cursor y
+   **cállate cinco segundos.** El silencio es la clase.
+
+   ```yaml
+   ---
+   spring:
+     config:
+       activate:
+         on-profile: prod
+     datasource:
+       url: jdbc:postgresql://prod-db.dgt.gob.cl:5432/dgt
+       username: dgt_app
+       password: Dgt2026Pr0d!
    ```
-   Dos commits. Lee en voz alta el nombre del segundo: **"ajustes de conexión"**.
 
-3. **Pausa.** Deja que alguien de la sala diga *"muéstralo"*.
-   ```bash
-   git show dc70ed6 -- src/main/resources/application.yml
-   ```
-   La contraseña, proyectada. **Cállate cinco segundos.** El silencio es la clase.
+4. Cuando alguien reaccione, señala **por qué nadie lo vio**: ese `---` abre un segundo
+   documento YAML, y `on-profile: prod` hace que solo se aplique en producción. *«En vuestro
+   portátil este bloque no se activa nunca. El archivo funciona. El archivo está mal.»*
 
-4. Cierra con la frase, sin adornos:
+5. Cierra con la frase, sin adornos:
 
-   > *«Alguien ya la "borró". Muéstrame que entiendes por qué eso no arregló nada.»*
+   > *«Esa es la clave de la base de producción, y está dentro del repositorio que clonaron
+   > dieciocho personas. Sácala de ahí — y después dime qué más hay que hacer, porque
+   > sacarla del archivo no es suficiente.»*
 
 Y solo entonces: *«En tres horas vas a saber qué se hace de verdad. Se llama rotar.»*
+
+> **No adelantes la respuesta.** La pregunta *«¿y por qué no basta con borrarla?»* es el
+> motor de la teoría §7. Si la contestas aquí, la sección se queda sin tensión.
 
 > ⚠️ Aclara **una vez, ahora**, que la credencial es de utilería y el host no existe. Si no
 > lo dices, alguien va a levantar la mano en el minuto 40 y perderás el hilo.
@@ -107,9 +126,9 @@ Léelos en este orden. El código, al final.
 2. **§7, la honestidad.** Un *"consulté la solución en el TODO_2 porque no entendía qué era
    un BeanFactoryPostProcessor"* vale más que un lab perfecto y mudo. **Nunca penalices un
    sí.** Si penalizas uno, no vuelves a leer un sí honesto en trece semanas.
-3. **§1 y §4, el crimen y la rotación.** Busca la frase clave: *la credencial sigue en el
-   historial y por eso se rota*. Si alguien escribe *"la borré del archivo"*, no aprobó el
-   módulo aunque el validador diga 🏆.
+3. **§1 y §4, el crimen y la rotación.** Busca la idea clave: *mientras estuvo escrita
+   cualquiera pudo copiarla, y por eso se rota*. Si alguien escribe *"la borré del archivo"*
+   y se queda ahí, no aprobó el módulo aunque el validador diga 🏆.
 4. **§8, la siembra.** Si predijo el crimen del Lab 02, ya está pensando como ingeniero.
 
 ## Feedback que forma

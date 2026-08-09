@@ -1,4 +1,4 @@
-# Teoría · Módulo 10 (procesamiento asíncrono, tareas programadas y eventos)
+# Teoría · Módulo 12 (Asincronía con Hilos Virtuales, Scheduling y Eventos)
 
 ## Índice
 

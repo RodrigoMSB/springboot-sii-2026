@@ -208,8 +208,7 @@ El estado del circuito no hay que adivinarlo — Actuator lo publica:
 
 ```bash
 cd sistema
-docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers \
-  | python3 -m json.tool
+docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers
 ```
 
 ```json
@@ -233,7 +232,7 @@ Y el historial completo de transiciones, que vale su peso en oro cuando algo va 
 
 ```bash
 docker compose exec -T dgt-tramites curl -s \
-  http://localhost:8081/actuator/circuitbreakerevents/contribuyentes | python3 -m json.tool | head -40
+  http://localhost:8081/actuator/circuitbreakerevents/contribuyentes | head -40
 ```
 
 ---

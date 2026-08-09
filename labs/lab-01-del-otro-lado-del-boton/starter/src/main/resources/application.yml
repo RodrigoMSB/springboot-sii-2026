@@ -1,14 +1,9 @@
 # =============================================================================
 #  application.yml — configuración común de dgt-tramites-api
 # -----------------------------------------------------------------------------
-#  Este archivo está "limpio". No hay ninguna contraseña aquí.
+#  Lo dejó el practicante el viernes. Compila, arranca y responde.
 #
-#  Antes sí la había. Alguien la borró en un commit. Míralo tú:
-#      git log --oneline -- src/main/resources/application.yml
-#      git show <el commit "ajustes de conexión">
-#
-#  Y ahora pregúntate lo que te va a preguntar Carolina:
-#  ¿borrarla arregló algo?
+#  Baja hasta el final del archivo antes de seguir leyendo.
 # =============================================================================
 spring:
   application:
@@ -51,3 +46,33 @@ management:
 logging:
   level:
     cl.dgt.tramites: INFO
+
+# =============================================================================
+#  ⬇️  EL CRIMEN
+# -----------------------------------------------------------------------------
+#  Esto es un segundo documento YAML dentro del mismo archivo: el `---` de abajo
+#  lo separa, y `spring.config.activate.on-profile` hace que solo se aplique en
+#  el perfil `prod`. Por eso tu `dev` arranca sin enterarse — y por eso nadie lo
+#  vio en la revisión.
+#
+#  Léelo despacio. Eso es la URL, el usuario y la contraseña de la base de datos
+#  de PRODUCCIÓN de la DGT, escritas a mano, en un archivo que está dentro del
+#  repositorio que clonaron dieciocho personas.
+#
+#  TODO_1 — sácalas de aquí. Este bloque entero se va a `application-prod.yml`,
+#  y los tres valores se piden al ENTORNO con `${...}` y sin valor por defecto.
+#  El test T1 vigila las dos mitades: que no quede la credencial en ningún
+#  recurso versionado, y que el perfil prod use marcadores sin defecto.
+#
+#  ⚠️  Es una credencial DE UTILERÍA: `prod-db.dgt.gob.cl` no existe y esa clave
+#  no abre nada. Está plantada para que aprendas a reconocer el problema.
+# =============================================================================
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://prod-db.dgt.gob.cl:5432/dgt
+    username: dgt_app
+    password: Dgt2026Pr0d!

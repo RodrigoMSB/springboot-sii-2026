@@ -13,7 +13,7 @@ guardar**, y la memoria de un proceso se va con el proceso.
 
 Hoy el aviso deja de perderse: espera en una cola que sobrevive a los reinicios.
 
-**Sesión 12** · Módulo 11 (mensajería y resiliencia, 3 h) · **3 horas**
+**Sesión 12** · Módulo 13 — Mensajería y Resiliencia · **3 horas**
 
 ---
 

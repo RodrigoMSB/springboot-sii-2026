@@ -1,4 +1,4 @@
-# Teoría · Módulo 12 (monitoreo, observabilidad y caché)
+# Teoría · Módulo 14 (Observabilidad sobre OpenTelemetry, Métricas y Caché)
 
 ## Índice
 

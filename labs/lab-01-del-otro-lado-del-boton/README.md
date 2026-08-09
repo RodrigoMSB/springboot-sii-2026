@@ -65,7 +65,7 @@ No hay dos verdades: si la solución no pasara este validador, el validador esta
 
 ## Una aclaración necesaria
 
-La contraseña que vas a ver en el historial de `starter/` (`Dgt2026Pr0d!`, hacia un host
+La contraseña que vas a ver en `starter/src/main/resources/application.yml` (`Dgt2026Pr0d!`, hacia un host
 `prod-db.dgt.gob.cl`) es **de utilería**. El dominio no existe, la clave no abre nada, y
 está ahí a propósito para que aprendas a reconocer el problema. No es una filtración real
 de nadie.

@@ -56,7 +56,7 @@ despliegue, su log y su ciclo de vida. Esto es lo que la industria llama microse
 **2.** Lanza una petición y proyéctala:
 
 ```bash
-curl -s http://localhost:8099/api/v1/tramites/1 | python3 -m json.tool
+curl -s http://localhost:8099/api/v1/tramites/1
 ```
 
 Señala `nombreContribuyente: "Valentina Rojas"`. *«Este nombre no está en la base de
@@ -141,7 +141,7 @@ Enséñales el comando que lo destapa, y hazlo tú primero en pantalla:
 
 ```bash
 cd sistema
-docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers | python3 -m json.tool
+docker compose exec -T dgt-tramites curl -s http://localhost:8081/actuator/circuitbreakers
 ```
 
 Es T-7 del troubleshooting. Vale la pena proyectarlo antes de que empiecen a editar.

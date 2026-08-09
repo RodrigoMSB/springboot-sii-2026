@@ -9,61 +9,64 @@ Carolina te pide que lo revises antes de subirlo.
 
 ```bash
 cd starter
-cat src/main/resources/application.yml
+./mvnw -q spring-boot:run
 ```
 
-Está limpio. No hay ninguna contraseña. Bien.
+Arranca. Responde. Los tests pasan. No hay nada roto.
 
 ## Lo que Carolina ve
 
-```bash
-git log --oneline -- src/main/resources/application.yml
-```
+Abre el archivo de configuración y **baja hasta el final**:
 
 ```
-e213fa0 quita credenciales del yml
-dc70ed6 ajustes de conexión
-```
-
-Dos commits. Uno dice "quita credenciales". El otro se llama *ajustes de conexión*.
-
-```bash
-git show dc70ed6 -- src/main/resources/application.yml
+starter/src/main/resources/application.yml
 ```
 
 ```yaml
-+  datasource:
-+    url: jdbc:postgresql://prod-db.dgt.gob.cl:5432/dgt
-+    username: dgt_app
-+    password: Dgt2026Pr0d!
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://prod-db.dgt.gob.cl:5432/dgt
+    username: dgt_app
+    password: Dgt2026Pr0d!
 ```
 
 Ahí está. En la pantalla. Proyectada.
 
-> *«Alguien ya la "borró". Muéstrame que entiendes por qué eso no arregló nada.»*
+Y fíjate en **por qué nadie lo vio**: ese `---` abre un segundo documento YAML dentro del
+mismo archivo, y `on-profile: prod` hace que solo se aplique en producción. Tu `dev` arranca
+igual de bien, sin tocarlo. El archivo funciona. El archivo está mal.
+
+> *«Esa es la clave de la base de producción, y está dentro del repositorio que clonaron
+> dieciocho personas. Sácala de ahí — y después dime qué más hay que hacer, porque sacarla
+> del archivo no es suficiente.»*
 
 ## Responde antes de seguir
 
 | Pregunta | Tu respuesta |
 |---|---|
-| ¿La contraseña está en el archivo de hoy? | |
-| ¿Está en el repositorio? | |
-| ¿Cuántas personas clonaron este repo desde el viernes? | |
-| Si borras el commit, ¿desaparece del portátil de quien clonó ayer? | |
+| ¿Qué tres valores quedaron escritos en el repositorio? | |
+| ¿Por qué la aplicación arrancaba bien en tu portátil aunque esto estuviera ahí? | |
+| ¿Cuántas personas tienen hoy una copia de este archivo? | |
+| Si la borras ahora mismo del archivo, ¿deja de servirle a quien ya la copió? | |
 
 <details>
 <summary>💡 La respuesta que duele</summary>
 
-Un `git commit` que borra una línea no borra la línea: la deja en el commit anterior. En
-cada clon. En cada fork. En la caché de tu proveedor de git. En el portátil del practicante
-que ya no trabaja aquí.
+Un secreto escrito en un archivo del repositorio **deja de ser un secreto en el momento en
+que se escribe**, no en el momento en que alguien lo usa. Está en el portátil de cada
+persona que trabajó en el proyecto, en el servidor de integración que lo descarga en cada
+compilación, y en cualquier copia que alguien hiciera del proyecto.
 
-**El archivo está limpio. El secreto no.**
+Borrarla del archivo protege lo que venga **después**. No deshace nada de lo anterior, y
+nadie puede decirte quién ya la tiene.
 
-Y ojo con el reflejo: *"pues reescribo el historial"*. Eso cambia todos los SHA, rompe cada
-rama abierta, y obliga a que dieciocho personas vuelvan a clonar. La credencial ya está en
-la máquina de quien clonó ayer, de todas formas. La respuesta profesional es otra, y llega
-en la Guía 03.
+**El archivo se limpia. El secreto sigue comprometido.**
+
+La respuesta profesional es otra, y llega en la Guía 03.
 </details>
 
 > La contraseña es **de utilería**: el host `prod-db.dgt.gob.cl` no existe y la clave no

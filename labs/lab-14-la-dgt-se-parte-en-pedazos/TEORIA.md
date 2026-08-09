@@ -1,6 +1,7 @@
 # Teoría · Lab 14 — La DGT se parte en pedazos
 
-*Módulo 15 · Arquitectura de microservicios, despliegue e interoperabilidad.*
+*Arquitectura de microservicios, despliegue e interoperabilidad.*
+*Sin módulo contractual asignado — laboratorio congelado (ver el README).*
 *Última sesión. Aquí no se construye: se mira lo construido desde arriba y se decide.*
 
 ---

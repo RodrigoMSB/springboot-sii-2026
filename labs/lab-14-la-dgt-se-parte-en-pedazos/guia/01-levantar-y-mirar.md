@@ -56,7 +56,7 @@ llamando por teléfono a decir que siguen vivas.
 ## 3 · Cruza el portal
 
 ```bash
-curl -s http://localhost:8099/api/v1/tramites | python3 -m json.tool
+curl -s http://localhost:8099/api/v1/tramites
 ```
 
 ```json
@@ -72,6 +72,10 @@ curl -s http://localhost:8099/api/v1/tramites | python3 -m json.tool
   ...
 ]
 ```
+
+> `curl` lo devuelve **en una sola línea**; aquí está indentado para que se lea. Si quieres
+> verlo así en tu máquina, pega la URL en el navegador o abre la respuesta en tu IDE — no
+> hace falta instalar nada.
 
 Ahora mira ese JSON con cuidado, porque **hay dos servicios ahí dentro**:
 
@@ -122,7 +126,7 @@ Y el propio Config Server te lo sirve por HTTP, que es exactamente lo que hacen 
 servicios al arrancar:
 
 ```bash
-curl -s http://localhost:8888/dgt-portal/default | python3 -m json.tool | head -30
+curl -s http://localhost:8888/dgt-portal/default | head -30
 ```
 
 Cambiar una ruta del gateway es **editar un archivo de texto y reiniciar el portal**. No se

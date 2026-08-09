@@ -169,7 +169,7 @@ Hoy el sistema dejó de ser mudo: sabe contar lo que hizo, en JSON, correlaciona
 auditado sin ensuciar el negocio, y desconfía de los archivos que le suben. Ante un fiscalizador,
 ahora hay una respuesta en cinco minutos, no en cinco horas.
 
-🌱 **Siembra del Lab 10 (Módulo 12) — "El tablero que mentía".**
+🌱 **Siembra del Lab 10 (Módulo 14) — "El tablero que mentía".**
 
 Ahora el sistema sabe contar lo que **hizo**. Lo que todavía no sabe decir es cómo **está**.
 
