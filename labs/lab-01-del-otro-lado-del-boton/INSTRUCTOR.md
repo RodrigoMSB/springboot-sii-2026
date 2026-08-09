@@ -62,7 +62,7 @@ cd labs/lab-01-del-otro-lado-del-boton/starter
 Y solo entonces: *«En tres horas vas a saber qué se hace de verdad. Se llama rotar.»*
 
 > **No adelantes la respuesta.** La pregunta *«¿y por qué no basta con borrarla?»* es el
-> motor de la teoría §7. Si la contestas aquí, la sección se queda sin tensión.
+> motor de la teoría §1. Si la contestas aquí, la sección se queda sin tensión.
 
 > ⚠️ Aclara **una vez, ahora**, que la credencial es de utilería y el host no existe. Si no
 > lo dices, alguien va a levantar la mano en el minuto 40 y perderás el hilo.
@@ -71,11 +71,12 @@ Y solo entonces: *«En tres horas vas a saber qué se hace de verdad. Se llama r
 
 Sigue `TEORIA.md`. Los momentos que no puedes saltarte:
 
-- **§2, la autoconfiguración.** Corre `--debug` en vivo y muestra los *Negative matches*.
-  Es lo que convierte la magia en ingeniería.
-- **§6, fallar rápido y claro.** Muestra el mensaje de Hikari (`'url' must start with
+- **§1, rotar.** Va primero a propósito: responde el crimen que la sala acaba de ver. Es lo
+  único que se van a llevar a casa aunque olviden todo lo demás.
+- **§5, fallar rápido y claro.** Muestra el mensaje de Hikari (`'url' must start with
   "jdbc"`) y pregunta a la sala: *«¿qué variable falta?»*. Nadie lo sabrá. Ese es el punto.
-- **§7, rotar.** Es lo único que se van a llevar a casa aunque olviden todo lo demás.
+- **§7, la autoconfiguración.** Corre `--debug` en vivo y muestra los *Negative matches*.
+  Es lo que convierte la magia en ingeniería.
 
 ### ☕ 00:50 – 01:00 · Descanso
 
