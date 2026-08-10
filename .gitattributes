@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Normalización de finales de línea.
+#
+#  Sin esto, Git para Windows (core.autocrlf=true por defecto) convierte los
+#  .sh a CRLF al clonar, y bash deja de poder ejecutarlos:
+#      bash: ./bin/00-verificar.sh: /usr/bin/env: bad interpreter
+#  El material del alumno tiene que llegar ejecutable a las tres plataformas.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Por defecto: Git normaliza a LF en el repositorio.
+* text=auto eol=lf
+
+# Scripts de shell: SIEMPRE LF, incluso en Windows (los corre Git Bash).
+*.sh      text eol=lf
+mvnw      text eol=lf
+
+# Scripts nativos de Windows: SIEMPRE CRLF (cmd.exe los necesita así).
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+mvnw.cmd  text eol=crlf
+
+# Binarios: que Git no toque nada.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.pdf     binary
+*.zip     binary
+*.jar     binary
+*.docx    binary
+*.pptx    binary
+*.xlsx    binary
+*.class   binary
