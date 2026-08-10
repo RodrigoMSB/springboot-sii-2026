@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-03.*
+*Última actualización: SPEC-FIX-04.*
 
 ---
 
@@ -82,6 +82,10 @@
   (1,54 GiB de RAM y 56 s de arranque, frente a una sola pieza).
   **Está construido y verificado, y NO se dicta**: la auditoría SPEC-AUDIT-01 constató que el
   temario contratado no tiene módulo de microservicios ni sesión 14. Su destino lo decide el PO.
+- **La portabilidad, blindada**: `.gitattributes` en la raíz fija los finales de línea (LF
+  para los `.sh`, CRLF para los `.cmd`). Sin él, Git para Windows convertía los scripts al
+  clonar y bash dejaba de ejecutarlos con un `bad interpreter` incomprensible — un bloqueo
+  total del alumno de Windows el día 1. El CI vigila que no se degrade.
 - **El toolchain, fijado**: `.sdkmanrc` en la raíz (`java=25-tem`). Quien clone el repo con SDKMAN
   cae solo en la versión correcta; sin él, el pom compila contra Java 25 y nada lo declaraba.
 - **La caja de herramientas** de los scripts: `labs/lib/lib-comunes.sh`. La comparten los

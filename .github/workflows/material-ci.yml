@@ -434,6 +434,40 @@ jobs:
           echo "[OK] Todo el andamiaje parsea en el bash del alumno Windows."
           echo "[INFO] Recuerda: aquí NO se ejecutan. Ver entorno-alumno.md §3."
 
+      # -----------------------------------------------------------------------
+      #  Ningún .sh puede llevar finales de línea de Windows.
+      #
+      #  Un script con CRLF NO SE EJECUTA: el intérprete lee `#!/usr/bin/env bash\r`
+      #  y busca un programa llamado `bash\r`. El alumno ve esto:
+      #      bash: ./bin/00-verificar.sh: /usr/bin/env: bad interpreter
+      #  y se queda bloqueado el día 1, sin una pista de qué hacer.
+      #
+      #  El `.gitattributes` de la raíz lo previene al clonar. Este paso vigila que
+      #  nadie lo degrade después — un archivo añadido desde Windows con la
+      #  configuración equivocada, o un `.gitattributes` que alguien recorte.
+      #
+      #  Solo en ubuntu: `file` no está garantizado en el runner de Windows, y una
+      #  comprobación que no corre igual en los dos sitios confunde más de lo que
+      #  protege.
+      # -----------------------------------------------------------------------
+      - name: CRLF · ningún script puede tener finales de Windows
+        if: matrix.os == 'ubuntu-latest' && steps.guarda.outputs.hay == 'si'
+        shell: bash
+        run: |
+          set -uo pipefail
+          # `grep -c` sale con 1 cuando no hay coincidencias: el `|| true` evita que
+          # `set -e` mate el paso justo en el caso bueno.
+          malos=$(find labs -name '*.sh' -exec file {} \; | grep -c CRLF || true)
+          if [ "${malos:-0}" -gt 0 ]; then
+            echo "[ERROR] Hay $malos script(s) con finales CRLF."
+            echo "        En Windows, bash no puede ejecutarlos:"
+            echo "        'bad interpreter: No such file or directory'."
+            echo "        Revisa el .gitattributes y ejecuta: git add --renormalize ."
+            find labs -name '*.sh' -exec file {} \; | grep CRLF
+            exit 1
+          fi
+          echo "[OK] Los scripts tienen finales LF."
+
   # ---------------------------------------------------------------------------
   #  Deriva: que los labs no se desincronicen de su base EN SILENCIO.
   #
