@@ -1,4 +1,4 @@
-fe4af243cebf00c5c4d37cebd971ddb885a0d80b54e76a5237c0c40932a4a240  src/test/java/cl/dgt/tramites/enunciado/T1_FichaSinDatosSensiblesIT.java
+18dc9d27d58436ee9ca51923ab6b63169da6a7469512d5b5a38e332392b355f8  src/test/java/cl/dgt/tramites/enunciado/T1_FichaSinDatosSensiblesIT.java
 953449b5ceba6dc1acf5969756c577663ec9ef5c30f22c3d89e967316925c31d  src/test/java/cl/dgt/tramites/enunciado/T2_LaCapaDeServicioTest.java
 096b945d80e33ec97468e30d4d8c87fbdad843c5ee41f1d9d86f6841adb8bb56  src/test/java/cl/dgt/tramites/enunciado/T3_GuardianesInstaladosTest.java
-ed6b08bf5d070834f4f567b3b5d964404a7b2d383bd70ac4c43d81309e753cc1  src/test/java/cl/dgt/tramites/enunciado/T4_ContratoOpenApiIT.java
+380ea346d48454202308610a6ee5bb7728bacf6ea1eb29b5e339ff4319a478ec  src/test/java/cl/dgt/tramites/enunciado/T4_ContratoOpenApiIT.java

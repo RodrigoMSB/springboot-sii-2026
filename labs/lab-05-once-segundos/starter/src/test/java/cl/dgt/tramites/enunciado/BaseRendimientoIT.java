@@ -1,14 +1,14 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.stat.Statistics;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import javax.sql.DataSource;
 
 /**
- * Config compartida: PostgreSQL real (Testcontainers) + el CONTADOR DE CONSULTAS ya construido.
+ * Config compartida: PostgreSQL real (embebido) + el CONTADOR DE CONSULTAS ya construido.
  *
  * <p>El contador usa las {@link Statistics} de Hibernate: cuenta las sentencias JDBC preparadas
  * alrededor de un bloque de código. Es la herramienta que convierte "va lento" en un número.
@@ -17,10 +17,14 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @TestConfiguration(proxyBeanMethods = false)
 class BaseRendimientoIT {
 
+    /**
+     * El {@code DataSource} del PostgreSQL embebido, arrancado una sola vez por JVM. Antes esto
+     * era un contenedor con {@code @ServiceConnection}; el motor es el mismo, lo que cambia es
+     * que llega como dependencia Maven y no como imagen Docker (SPEC-022).
+     */
     @Bean
-    @ServiceConnection
-    PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer("postgres:16-alpine3.24");
+    DataSource dataSource() {
+        return PostgresEmbebido.nuevoDataSource();
     }
 
     /** Cuenta las consultas SQL que dispara `bloque`. Determinista: mismo código, mismo número. */

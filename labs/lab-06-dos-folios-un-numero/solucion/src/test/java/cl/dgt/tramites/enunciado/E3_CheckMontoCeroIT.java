@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * en el motor. Si la V3 no está (o está mal), la base ACEPTA el 0 y este test se pone rojo: el
  * contrato no existe.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BaseConcurrenciaIT.class)
 class E3_CheckMontoCeroIT {
 

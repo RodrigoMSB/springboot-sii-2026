@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * relación LAZY recién traída y aún no accedida: {@code false}. Para una EAGER: {@code true}
  * — porque viajó junto con el trámite, la pidieras o no.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BasePersistenciaIT.class)
 @Transactional
 class E1_RelacionesLazyIT {

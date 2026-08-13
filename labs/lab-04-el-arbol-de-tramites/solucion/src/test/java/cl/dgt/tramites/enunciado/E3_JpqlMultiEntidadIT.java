@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** TODO_3 · JPQL multi-entidad. Y la prohibición del JOIN FETCH, verificada como test. */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BasePersistenciaIT.class)
 class E3_JpqlMultiEntidadIT {
 

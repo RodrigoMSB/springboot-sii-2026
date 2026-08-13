@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * prueban: E2 dice "hace lo mismo", E1 dice "cuesta menos".
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @Import(BaseRendimientoIT.class)
 class E2_ListadoFuncionalIT {
 

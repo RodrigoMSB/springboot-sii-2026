@@ -55,11 +55,9 @@ if puerto_ocupado "$PUERTO"; then
     printf '\n'; exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" "Abre Docker Desktop y espera a que arranque (T-03 del Lab 00)."
-    printf '\n'; exit 1
-fi
-
+# Ya no hay guard de Docker: este lab no lo usa. PostgreSQL viaja como
+# dependencia Maven y arranca como proceso hijo de la app. La primera vez tarda
+# unos segundos más, porque tiene que extraer los binarios del motor.
 log_info "Arrancando… (log en $LOG)"
 ( cd "$APP" && exec nohup ./mvnw -q spring-boot:run \
       -Dspring-boot.run.arguments="--server.port=$PUERTO" \

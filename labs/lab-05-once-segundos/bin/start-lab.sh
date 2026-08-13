@@ -54,14 +54,14 @@ if puerto_ocupado "$PUERTO"; then
     printf '\n'; exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" "Abre Docker Desktop y espera a que arranque (T-03 del Lab 00)."
-    printf '\n'; exit 1
-fi
-
+# Ya no hay guard de Docker: este lab no lo usa. PostgreSQL viaja como
+# dependencia Maven y arranca como proceso hijo de la app. La primera vez tarda
+# unos segundos más, porque tiene que extraer los binarios del motor.
 log_info "Arrancando… (log en $LOG)"
+ARGS="--server.port=$PUERTO"
+[ "$LOTES" -gt 0 ] && ARGS="$ARGS --dgt.lotes=$LOTES"
 ( cd "$APP" && exec nohup ./mvnw -q spring-boot:run \
-      -Dspring-boot.run.arguments="--server.port=$PUERTO" \
+      -Dspring-boot.run.arguments="$ARGS" \
       </dev/null >"$LOG" 2>&1 ) &
 echo $! > "$PID"
 
@@ -78,18 +78,14 @@ if [ "$LOTES" -gt 0 ]; then
         paso_warn "Con $LOTES lotes, el listado ingenuo hará miles de consultas." \
                   "Es el escenario de la Guía 02. Prepárate para contar los segundos."
     fi
-    log_info "Sembrando $LOTES contribuyentes y trámites (puede tardar)…"
-    # Se siembra por SQL dentro del contenedor: rápido, sin pasar por la app.
-    if ( cd "$APP" && docker compose exec -T postgres psql -U dgt -d dgt -q -c "
-        INSERT INTO contribuyente (rut, razon_social, puntaje_riesgo_interno)
-          SELECT 'L' || g || '-0', 'Lote ' || g, 0 FROM generate_series(1, $LOTES) g;
-        INSERT INTO tramite (contribuyente_id, tipo, estado)
-          SELECT c.id, 'DECLARACION_F29', 'BORRADOR' FROM contribuyente c WHERE c.rut LIKE 'L%-0';
-      " >/dev/null 2>&1 ); then
-        paso_ok "Sembrados $LOTES lotes"
-    else
-        paso_warn "No pude sembrar (¿psql en el contenedor?)"
-    fi
+    # La siembra la hace la propia app al arrancar (SembradorDeLotes), porque el
+    # paquete de binarios embebidos trae el servidor pero NO el cliente psql:
+    # solo initdb, pg_ctl y postgres. Ya no hay contenedor al que entrar.
+    #
+    # No hace falta comprobar nada aparte: el sembrador es un ApplicationRunner,
+    # así que si el INSERT hubiera fallado la app no habría llegado a estar viva
+    # y ya habríamos salido por el `paso_fail` de arriba.
+    paso_ok "Sembrados $LOTES lotes (los insertó la app al arrancar)"
 fi
 
 printf '\n'

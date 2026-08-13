@@ -1,16 +1,16 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import javax.sql.DataSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.Map;
 
 /**
- * Config compartida de los tests de seguridad: PostgreSQL real (Testcontainers) y el helper de
+ * Config compartida de los tests de seguridad: PostgreSQL real (embebido) y el helper de
  * login. La clave de los tres usuarios semilla es {@code dgt-2026} (ver docs/clave-de-laboratorio).
  */
 @TestConfiguration(proxyBeanMethods = false)
@@ -21,10 +21,14 @@ class BaseSeguridadIT {
     static final String VALENTINA = "11111111-1";  // CONTRIBUYENTE
     static final String IGNACIO = "8765432-1";     // FISCALIZADOR
 
+    /**
+     * El {@code DataSource} del PostgreSQL embebido, arrancado una sola vez por JVM. Antes esto
+     * era un contenedor con {@code @ServiceConnection}; el motor es el mismo, lo que cambia es
+     * que llega como dependencia Maven y no como imagen Docker (SPEC-022).
+     */
     @Bean
-    @ServiceConnection
-    PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer("postgres:16-alpine3.24");
+    DataSource dataSource() {
+        return PostgresEmbebido.nuevoDataSource();
     }
 
     /** Hace login y devuelve el JWT. Falla el test si el login no da 200. */

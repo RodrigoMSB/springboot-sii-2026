@@ -1,5 +1,5 @@
-75fdf3062ed5a61875045a1f2815cf1c2c953a817a9a45adc649503024436c5f  src/test/java/cl/dgt/tramites/enunciado/BaseSeguridadIT.java
-8c06983b3201ba7b928db59bb48e41ad0b73f8e3749c7f330cf8b1e21f55a6f6  src/test/java/cl/dgt/tramites/enunciado/E1_PuertaCerradaIT.java
-c4769bcd073365f1162eb27de4657a55b73e1401fe587aaaf731cbead003d304  src/test/java/cl/dgt/tramites/enunciado/E2_LoginIT.java
-36710e6a973a026e8ad2487c8fe7f9a22fc96663221d544cef4e2758e6056910  src/test/java/cl/dgt/tramites/enunciado/E3_TokenFirmadoIT.java
-231c0712f5bfa8e45213fa16b3852880d119a3ee8852cdec509c720a8c81573b  src/test/java/cl/dgt/tramites/enunciado/E4_RolesIT.java
+28cc6ff2f883bec2f7b2c1a3b47e82b706d4bd66768dc8df575c7e65ffe06cdc  src/test/java/cl/dgt/tramites/enunciado/BaseSeguridadIT.java
+29335de2ed1cca9d9f4cf8402bdf88c53654736bc415a288647089e2e9e7b192  src/test/java/cl/dgt/tramites/enunciado/E1_PuertaCerradaIT.java
+cff65243d2e87feec8d20b3d41f46d5c922a14e158a4446bedee3ac2aa8fb0e8  src/test/java/cl/dgt/tramites/enunciado/E2_LoginIT.java
+a4a1c3168d706e1d51a78a6440cfd406f19902fdaf6838add3fa171a4a3eae15  src/test/java/cl/dgt/tramites/enunciado/E3_TokenFirmadoIT.java
+51de8e3209e9e63c2c94fc8f2fbf4b1093bd1bbd9af15f0e37a654c5cf7a0bf6  src/test/java/cl/dgt/tramites/enunciado/E4_RolesIT.java

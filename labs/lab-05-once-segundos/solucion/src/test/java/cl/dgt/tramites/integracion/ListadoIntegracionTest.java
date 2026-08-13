@@ -1,16 +1,14 @@
 package cl.dgt.tramites.integracion;
 
+import cl.dgt.tramites.PostgresEmbebido;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,20 +17,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>Este archivo es TUYO: fuera de {@code enunciado/}, el manifiesto no lo toca. El {@code 90}
  * comprueba que existe y pasa. Es tu primera IT completa: servidor real + PostgreSQL real
- * (Testcontainers) + RestTestClient pegándole por HTTP.
+ * (embebido) + RestTestClient pegándole por HTTP.
  *
  * <p>Prueba, como mínimo, que el listado pagina de verdad: pide dos páginas distintas y verifica
  * que el contenido cambia y que los totales son coherentes.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
-@Import(ListadoIntegracionTest.BaseDatos.class)
+        properties = "dgt.base-embebida.enabled=false")
 class ListadoIntegracionTest {
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class BaseDatos {
-        @Bean @ServiceConnection
-        PostgreSQLContainer postgres() { return new PostgreSQLContainer("postgres:16-alpine3.24"); }
+    @DynamicPropertySource
+    static void baseDeDatos(DynamicPropertyRegistry registro) {
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort int puerto;

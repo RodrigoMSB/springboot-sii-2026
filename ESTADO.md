@@ -143,8 +143,8 @@ La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. 
 - **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
 - **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
   offline. Para el alumno no cambia una sola letra: sigue siendo `./mvnw test`.
-- **La prueba reina, pasada:** suite completa verde con **el cable de red desenchufado y el
-  Wi-Fi apagado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
+- **La prueba reina, pasada dos veces:** suite completa verde con **el cable de red
+  desenchufado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
   funciona en modo avión, funciona detrás de cualquier firewall — porque para el material son
   la misma cosa.
 
@@ -153,9 +153,31 @@ credenciales, con su encabezado pedagógico. Ya no está en el camino crítico d
 podía correrse el día de clase, y eso era una ruleta, no un plan. La SPEC-021 lo intentó y se
 quedó en `NXDOMAIN`; su informe se conserva como registro de por qué se cambió de estrategia.
 
-**Lo que falta (Fase 1):** los labs 03 a 14 con la misma receta, y los diferidos que ya están
-anotados — el rediseño de los `TODO_1`/`TODO_2` del perfil `dev`, el WireMock in-process del Lab
-08 en adelante, Jib en el Lab 13, y la reconciliación global de manifiestos y derivación.
+**Fase 1 hecha (SPEC-023): el tronco y los labs 03 a 07 también.** Con eso **la primera mitad
+del curso completa corre sin internet y sin Docker** — doce proyectos más, suites verdes,
+`90-validar` en verde corriendo offline, y los quince eslabones de la derivación en sincronía
+desde el tronco hasta el Lab 07. Informe en `docs/specs/informes/INFORME-SPEC-023.md`.
+
+Los dos números pedagógicos que no podían romperse, medidos y sanos: el contador del Lab 05
+sigue marcando **13 consultas** en la versión con N+1 contra un presupuesto de 3, y los cuatro
+tests de concurrencia del Lab 06 pasan sin un solo reintento.
+
+El peso apenas se movió: `repo-maven/` pasó de 225 a **230 MB** al sumar cinco labs. Los labs
+comparten casi todas sus dependencias.
+
+**Lo que falta (Fase 2):** los labs 08 a 14. El salto real está en el 08–11, que hoy levantan
+WireMock en contenedor y habría que pasar a in-process; y en el 13, que es un lab de
+contenedores en un curso sin Docker — eso es decisión del Arquitecto antes que técnica. Siguen
+anotados el rediseño de los `TODO_1`/`TODO_2` del perfil `dev` y la reconciliación de la
+frontera Lab 07 → Lab 08.
+
+**Verificado en modo avión, con el cable fuera** (vuelo 3, 13 de agosto): los **siete** labs,
+quince suites, **cero descargas intentadas**, `90-validar` APROBADO en las siete soluciones y
+cero procesos huérfanos. El número que importa para la sala: **34 segundos** desde el
+`git clone` hasta la aplicación sirviendo, con la caché de binarios borrada y sin una sola
+conexión de red.
+
+Con eso quedan cerradas también las dos verificaciones que la SPEC-022 tenía diferidas.
 
 ## 2 · Qué falta
 
