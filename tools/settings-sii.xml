@@ -4,12 +4,27 @@
    settings-sii.xml · el mundo cerrado del SII, en un archivo
   ───────────────────────────────────────────────────────────────────────────
 
-   QUÉ ES
+   QUÉ ES  —  y por qué NO lo está usando nadie ahora mismo
 
-   La configuración de Maven para las máquinas del SII. Ahí adentro no hay
-   internet: el firewall bloquea todo salvo el Nexus interno
-   `apus.sii.cl:8081`, así que `repo.maven.apache.org` no existe. Este archivo
-   le dice a Maven que vaya a buscar TODO a `apus`.
+   La configuración de Maven para las máquinas del SII: le dice que vaya a
+   buscar TODO al Nexus interno `apus.sii.cl:8081`, en vez de a
+   `repo.maven.apache.org`, que allí dentro está bloqueado.
+
+   ESTE ARCHIVO ES EL PLAN B. No está en el camino crítico de nada.
+
+   El curso ya no depende de `apus`: desde la SPEC-022 las dependencias viajan
+   dentro del propio repositorio (`repo-maven/`) y `./mvnw` las usa en modo
+   offline. El material funciona en modo avión, que es la única garantía que se
+   puede dar sin poder probar nada dentro del SII.
+
+   Porque ese es el problema de `apus`: la pregunta «¿sirve los artefactos que
+   el curso necesita?» SOLO se puede responder desde dentro de la red del SII, y
+   no hay VPN. Responderla el día de clase, con los alumnos entrando, no es un
+   plan: es una ruleta. La SPEC-021 lo intentó y se quedó en `NXDOMAIN`.
+
+   Se conserva versionado porque el trabajo ya está hecho y porque el día que
+   exista una VPN —o que alguien corra esto desde una máquina del SII— vuelve a
+   ser útil en treinta segundos.
 
    Viene del archivo probado en cancha que entregó el PO. Se versiona tal cual
    —misma URL, mismo `http://`, mismos ids— con UNA sola diferencia
@@ -68,25 +83,25 @@
    (habilitar lectura anónima con TI, o inyectarla por variable de entorno).
 
 
-   CÓMO SE USA
+   CÓMO SE USARÍA, SI ALGÚN DÍA HACE FALTA
 
-   En el Lab 01 no hay que hacer nada: cada proyecto trae un
-   `.mvn/maven.config` que ya apunta a este archivo, y `./mvnw` lo aplica
-   solo. Tu `~/.m2` no se toca.
+   No hay que hacer nada para el curso normal: `./mvnw` ya resuelve todo contra
+   `repo-maven/`, offline. Este archivo solo entra en juego si alguien necesita
+   traer una dependencia NUEVA estando dentro del SII:
 
-   Fuera del Lab 01, dos formas:
+       DGT_ONLINE=1 ./mvnw -s ../../../tools/settings-sii.xml <lo que sea>
 
-       mvn -s ruta/a/tools/settings-sii.xml <lo que sea>     · puntual
-       cp tools/settings-sii.xml ~/.m2/settings.xml          · permanente
+   `DGT_ONLINE=1` desactiva el modo offline del shim; el `-s` manda a Maven a
+   `apus`. Ajusta la cantidad de `../` según desde dónde lo corras.
 
-   Para comprobar que está activo:
+   Para comprobar que el mirror está activo:
 
-       ./mvnw help:effective-settings
+       DGT_ONLINE=1 ./mvnw -s <ruta> help:effective-settings
 
-   y busca la URL de `apus` en la salida. En los logs de descarga, Maven
-   nombra el mirror por su id: vas a leer `Downloading from maven-sii-apus:`,
-   no `Downloading from central:`. Esa línea es la prueba de que el artefacto
-   vino de donde debía.
+   Y para verificar la PROCEDENCIA de lo que baje: Maven nombra el mirror por
+   su id, así que en el log vas a leer `Downloading from maven-sii-apus:`, NO
+   `Downloading from central:`. Si aparece `repo.maven.apache.org`, el artefacto
+   NO vino de `apus` y la comprobación no vale.
   ===========================================================================
 -->
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"

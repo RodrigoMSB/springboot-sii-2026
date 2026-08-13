@@ -120,52 +120,42 @@ crimen en su sección 1** en vez de en la 7: el bloque fundacional —contenedor
 autoconfiguración— entra después, por una puerta declarada. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
 contratado lo promete y no estaba.
 
-## 1.c · La emancipación de Docker (SPEC-021 · Fase 0)
+## 1.c · La emancipación de Docker · el material autocontenido (SPEC-022)
 
-Las máquinas de los alumnos del SII **no tienen Docker, no pueden instalarlo** (sin admin) y su
-firewall bloquea todo internet salvo el Nexus interno `apus.sii.cl:8081`. El curso completo, hoy,
-depende de Docker. La SPEC-021 abrió la salida: verificar supuestos, reparar el Maven Wrapper y
-probar PostgreSQL embebido (Zonky) en el Lab 01 como prueba de concepto.
+Tres hechos del terreno, y la estrategia sale sola:
 
-**Estado: Fase 0 bloqueada en el gate G1.** El informe completo está en
-`docs/specs/informes/INFORME-SPEC-021.md`. En una línea: `apus.sii.cl` **no resuelve por DNS**
-(NXDOMAIN) desde la máquina donde se ejecutó, así que no hay forma de comprobar si el Nexus del
-SII sirve los artefactos de Zonky ni la distribución de Maven. Por regla de la SPEC, un gate rojo
-produce informe y no workarounds: **no se tocó ningún pom, ningún test, ningún script y ningún
-manifiesto.**
+1. Las máquinas de los alumnos del SII **no tienen Docker y no pueden instalarlo** (sin admin).
+2. Su firewall bloquea todo internet **salvo el Nexus interno `apus.sii.cl:8081`**… que solo se
+   puede probar desde dentro del SII, y **no habrá VPN jamás**.
+3. **GitHub sí funciona** desde esas máquinas, rápido y sin problemas. Es la única puerta
+   confirmada abierta.
 
-Lo que sí quedó establecido, y ahorra trabajo cuando se destrabe:
+La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. El alumno hace
+`git clone` y el material funciona sin volver a tocar la red nunca más.
 
-- **P1 confirmado y acotado**: los **30** `maven-wrapper.properties` comparten exactamente la
-  misma URL a `repo.maven.apache.org` y ninguno declara `wrapperUrl`. Un solo reemplazo los
-  arregla a todos.
-- **P2 confirmado, y son cinco capas, no cuatro**: a las cuatro conocidas (dependencias del
-  `pom`, `compose.yaml`, los 4 tests con `PostgreSQLContainer`, el guard `docker info`) se suman
-  la lógica Docker de `99-destruir.sh` y —la delicada— `application-dev.yml`, cuya cabecera y
-  cuyos `TODO_1`/`TODO_2` **le enseñan el modelo mental al alumno**. Reescribir ese texto es
-  decisión del Arquitecto: es contenido del curso, no limpieza mecánica.
-- **La plataforma del PO está cubierta**: los binarios `darwin-arm64v8` de Zonky existen
-  (verificado contra Central, *no* contra `apus` — eso sigue sin comprobar).
+**Estado: Fase 0 ejecutada y verificada. Labs 01 y 02 convertidos.** El informe está en
+`docs/specs/informes/INFORME-SPEC-022.md`.
 
-Para reintentar hacen falta tres cosas, en este orden: **VPN del SII**, el **`settings.xml`**
-real de los alumnos instalado en la máquina de prueba (sin él los gates resuelven contra Central
-y dan verdes falsos), y **`sdk env`** para medir bajo Java 25 y no bajo el 21 de la sesión.
+- **Docker fuera de los labs 01 y 02.** PostgreSQL llega como dependencia Maven (Zonky): se
+  extrae a una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin.
+  Es PostgreSQL **de verdad** —16.14, el mismo motor— no un H2 disfrazado.
+- **`repo-maven/` en la raíz**: 224 MB, 274 jars. Todas las dependencias de los dos labs.
+- **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
+- **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
+  offline. Para el alumno no cambia una sola letra: sigue siendo `./mvnw test`.
+- **La prueba reina, pasada:** suite completa verde con **el cable de red desenchufado y el
+  Wi-Fi apagado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
+  funciona en modo avión, funciona detrás de cualquier firewall — porque para el material son
+  la misma cosa.
 
-**Anotaciones A1 (aplicadas).** El segundo punto ya está resuelto en el árbol:
-`tools/settings-sii.xml` versiona el mirror a `apus` —con `mirrorOf=*` y **sin** el bloque
-`<servers>`: la credencial de despliegue del Nexus queda fuera del repo, que es literalmente el
-crimen del Lab 01— y cada proyecto del Lab 01 trae un `.mvn/maven.config` que lo aplica solo, sin
-que el alumno toque su `~/.m2`. Verificado que el mirror intercepta de verdad.
+**`apus` no murió, se degradó a plan B.** `tools/settings-sii.xml` sigue versionado, sin
+credenciales, con su encabezado pedagógico. Ya no está en el camino crítico de nada: su gate solo
+podía correrse el día de clase, y eso era una ruleta, no un plan. La SPEC-021 lo intentó y se
+quedó en `NXDOMAIN`; su informe se conserva como registro de por qué se cambió de estrategia.
 
-⚠️ **Con eso viene un peaje que el PO debe decidir antes de mergear:** al cambiar el mirror,
-Maven invalida todo lo cacheado desde Central, así que **el Lab 01 deja de compilar fuera de la
-red del SII** — ni siquiera offline con la caché caliente. Para el alumno del SII es lo buscado;
-para el instructor preparando clase, es una puerta cerrada. Hay escotilla verificada: un `-s` en
-la línea de comandos gana sobre el del `maven.config`. El detalle está en el Addendum A1 del
-informe.
-
-Las dos incógnitas de fondo —Zonky bajo Java 25 y bajo Spring Boot 4.1.0— **siguen abiertas**:
-solo se responden ejecutando.
+**Lo que falta (Fase 1):** los labs 03 a 14 con la misma receta, y los diferidos que ya están
+anotados — el rediseño de los `TODO_1`/`TODO_2` del perfil `dev`, el WireMock in-process del Lab
+08 en adelante, Jib en el Lab 13, y la reconciliación global de manifiestos y derivación.
 
 ## 2 · Qué falta
 
