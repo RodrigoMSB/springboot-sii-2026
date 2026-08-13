@@ -89,11 +89,21 @@ DESTINO="$SIS/config-repo"
 SELLO="$(date +%Y%m%d-%H%M%S)"
 RESPALDO="$DIR_LAB/.respaldo-$SELLO"
 mkdir -p "$RESPALDO"
-cp -R "$DESTINO" "$RESPALDO/" 2>/dev/null
-paso_ok "Tu configuración quedó respaldada en .respaldo-$SELLO/"
+if cp -R "$DESTINO" "$RESPALDO/" 2>/dev/null; then
+    paso_ok "Tu configuración quedó respaldada en .respaldo-$SELLO/"
+else
+    paso_fail "No pude respaldar tu configuración" \
+              "No sigo: recuperar sin respaldo es perderlo. Revisa permisos en $DIR_LAB/"
+    resumen_final "Recuperación completa" "La recuperación falló"
+    exit 1
+fi
 
-cp "$ORIGEN"/*.yml "$DESTINO"/ 2>/dev/null
-paso_ok "config-repo/ ahora tiene la configuración de referencia"
+if cp "$ORIGEN"/*.yml "$DESTINO"/ 2>/dev/null; then
+    paso_ok "config-repo/ ahora tiene la configuración de referencia"
+else
+    paso_fail "No pude copiar la configuración de referencia" \
+              "Comprueba que existe $ORIGEN/ y que tiene .yml dentro."
+fi
 
 printf '\n'
 log_info "Lo tuyo NO se ha perdido. Está en:"

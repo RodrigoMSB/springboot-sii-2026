@@ -428,6 +428,47 @@ labs/lab-13-.../plantillas/reporte-egreso.md:52      - [ ] `./bin/validar-egreso
 
 ---
 
+### A-04 · Calcular una verificación y no imprimirla
+
+> **Anti-herencia nacida en casa**, no destilada del curso de Cypress. Se registra aquí junto a
+> A-01 y A-02 porque es la misma familia de defecto y porque este es el sitio donde el material
+> guarda sus leyes. Precedente: P-15…P-18, adoptados por hallazgo del ejecutor (Addendum
+> SPEC-002).
+
+**Evidencia del defecto:** el arnés de verificación nocturno de la SPEC-023 calculaba, para cada
+`starter`, cuántos tests fallaban FUERA de `enunciado/` — el número que decide si el lab está
+sano o roto:
+
+```bash
+aj="$(grep -oE '…' "$f" | grep -vE '^(T[0-9]_|E[0-9]_)' | wc -l | tr -d ' ')"
+...
+say "    fallos totales: $fal"      # <-- imprime $fal, nunca $aj
+```
+
+El número se calculaba y no se imprimía. Al redactar el informe se reportó como cero para los
+cinco labs. El vuelo 3, cuyo arnés SÍ lo imprimía, midió dos distintos de cero.
+
+**Por qué importa:** el informe no era falso por mala fe ni por un cálculo equivocado — el
+cálculo estaba bien. Era falso porque **nadie podía verlo**. Un número que solo existe dentro
+del proceso no es evidencia: es una creencia con aspecto de dato. Y una creencia con aspecto de
+dato es peor que no tener el dato, porque nadie la audita.
+
+**La regla:**
+
+> **Todo arnés de verificación imprime TODO lo que calcula.** Un número que se calcula y no se
+> imprime no existe; un número que se reporta sin haberse impreso es una mentira estructural,
+> aunque resulte correcto.
+
+**Alcance:** los scripts de vuelo, los arneses de `tools/` y cualquier verificador futuro. Al
+emitirse la regla se auditaron los existentes (`tools/verificar-tamanos.sh` y
+`tools/vuelo-3-modo-avion.sh`): ambos ya la cumplían.
+
+**Parentesco:** es A-02 mirándose al espejo. A-02 prohíbe *declarar sin medir*; A-04 prohíbe
+*medir sin mostrar*. Las dos protegen lo mismo — que el veredicto sea auditable por alguien que
+no estaba delante cuando se generó.
+
+---
+
 ## 5. Resumen de la verificación
 
 | Hipótesis | Estado |

@@ -72,12 +72,22 @@ fi
 
 # Los `target/` de los cinco módulos.
 LIMPIADOS=0
+FALLIDOS=0
 for M in dgt-registro dgt-config dgt-portal dgt-contribuyentes dgt-tramites; do
     if [ -d "$(sistema_dir)/$M/target" ]; then
-        borrar_seguro "$(sistema_dir)/$M/target" && LIMPIADOS=$((LIMPIADOS + 1))
+        if borrar_seguro "$(sistema_dir)/$M/target"; then
+            LIMPIADOS=$((LIMPIADOS + 1))
+        else
+            FALLIDOS=$((FALLIDOS + 1))
+        fi
     fi
 done
-paso_ok "Artefactos de compilación borrados ($LIMPIADOS módulos)"
+if [ "$FALLIDOS" -eq 0 ]; then
+    paso_ok "Artefactos de compilación borrados ($LIMPIADOS módulos)"
+else
+    paso_fail "$FALLIDOS módulo(s) conservan su target/" \
+              "Mira los [ERROR] de arriba: el cinturón de borrar_seguro se negó."
+fi
 
 for _r in "$DIR_LAB"/.respaldo-*; do
     [ -e "$_r" ] || continue

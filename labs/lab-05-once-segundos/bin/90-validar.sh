@@ -93,8 +93,8 @@ else
     fi
 fi
 
-resumen_final "🏆 LAB 02 APROBADO — Carolina aprueba. Por ahora." \
-              "LAB 02 NO APROBADO — vuelve a la guía que menciona cada error"
+resumen_final "🏆 LAB 05 APROBADO — Carolina aprueba. Por ahora." \
+              "LAB 05 NO APROBADO — vuelve a la guía que menciona cada error"
 VEREDICTO=$?
 
 printf '\n'

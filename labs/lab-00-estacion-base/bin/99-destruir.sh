@@ -55,7 +55,14 @@ if [ -f "$PID" ]; then
             esperar_muerte=$((esperar_muerte + 1))
             sleep 1
         done
-        paso_ok "API detenida (PID $NUM_PID)"
+        # El [OK] depende de que el proceso se haya ido DE VERDAD, no de que se lo
+        # hayamos pedido: si aguanta los 15 s, decirlo es mentir (SPEC-FIX-05).
+        if kill -0 "$NUM_PID" 2>/dev/null; then
+            paso_fail "La API (PID $NUM_PID) sigue viva tras 15 s" \
+                      "Ciérrala a mano:  kill -9 $NUM_PID"
+        else
+            paso_ok "API detenida (PID $NUM_PID)"
+        fi
     else
         paso_ok "La API ya no estaba corriendo"
     fi
@@ -98,8 +105,14 @@ fi
 #  3 · Rastro local
 # -----------------------------------------------------------------------------
 if [ -d "$ESTADO" ]; then
-    borrar_seguro "$ESTADO"
-    paso_ok "Archivos temporales del lab borrados (.estado/)"
+    # Condicionado a que el borrado OCURRA, no a que el directorio existiera
+    # (SPEC-FIX-05): borrar_seguro puede negarse, y entonces no hay nada que celebrar.
+    if borrar_seguro "$ESTADO"; then
+        paso_ok "Archivos temporales del lab borrados (.estado/)"
+    else
+        paso_fail "No pude borrar $ESTADO" \
+                  "El cinturón de borrar_seguro se negó; mira el [ERROR] de arriba."
+    fi
 fi
 
 # -----------------------------------------------------------------------------
