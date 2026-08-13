@@ -232,10 +232,17 @@ Y hay **guion para la próxima sesión**: `docs/guion-reinicio-de-sala.md` — c
 `pull`, cómo deshacer el parche de emergencia de la sesión 1, la secuencia de arranque con su
 salida esperada, y el plan B con los tres sospechosos de las máquinas corporativas.
 
-**Pendiente de una mano en el cable:** el vuelo 4 está en pista
-(`tools/vuelo-4-modo-avion.sh`), sin lanzar. Cubre el Lab 00 y los labs 01–07 en modo avión
-**y con el `JAVA_HOME` hostil activo todo el vuelo** — ya no basta con volar sin red: hay que
-volar con la máquina en contra. 14–18 minutos.
+**Volado y verificado** (vuelo 4, 13 de agosto, nueve minutos): el Lab 00 y los siete labs, con
+el cable desenchufado **y con un `JAVA_HOME` hostil apuntando a un Java 21 durante todo el
+vuelo**. Quince suites, **cero descargas**, `ESTACIÓN LISTA` y las siete soluciones APROBADO. El
+JDK se ensambló **dentro del avión**, en tres segundos.
+
+El número para la sala: **38 segundos** desde el `git clone` hasta la aplicación sirviendo, con
+todo frío — sin `target/`, sin caché de binarios, sin JDK ensamblado y sin red. El clon pasa a
+1,0 GB.
+
+Queda una sola verificación fuera de alcance aquí: **el `mvnw.cmd` en Windows real**. Está
+revisado estáticamente, con su punto de riesgo señalado en el informe.
 
 Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 

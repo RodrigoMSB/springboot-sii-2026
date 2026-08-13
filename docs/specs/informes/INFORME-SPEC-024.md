@@ -8,10 +8,11 @@
 
 ## 1 · Veredicto en una línea
 
-**EL CÍRCULO ESTÁ CERRADO** — el JDK 25 viaja partido en el repositorio, el shim lo ensambla
-verificando su firma y lo usa **ignorando cualquier Java de la máquina**; el Lab 00 da
-`ESTACIÓN LISTA` sin red y sin Docker, y la lista de prerrequisitos del curso quedó en una
-palabra: **Git**.
+**EL CÍRCULO ESTÁ CERRADO, Y VOLADO** — el JDK 25 viaja partido en el repositorio, el shim lo
+ensambla verificando su firma y lo usa **ignorando cualquier Java de la máquina**. Verificado en
+el vuelo 4 (§9): Lab 00 más los siete labs, con el cable desenchufado **y con un `JAVA_HOME`
+hostil activo todo el vuelo**. La lista de prerrequisitos del curso quedó en una palabra:
+**Git**.
 
 ---
 
@@ -259,13 +260,117 @@ Cubre: el **Lab 00** completo (que abre el vuelo), N1–N5 en avión de los labs
 y **V10-ter** — el simulacro del alumno con **todas** las cachés frías: la de Zonky borrada y el
 JDK sin ensamblar, porque el clon es nuevo.
 
-**Duración estimada: 14 a 18 minutos** desde el corte. Son los 8m28s del vuelo 3 más el Lab 00,
-más el ensamblado del JDK en dos clones distintos (~4 s cada uno) y el sobrecoste de arrancar
-cada suite con un JDK recién extraído y sin caché de clases.
+**Duración real: 9 minutos exactos** (14:43:09 → 14:52:09), contra los 14–18 estimados. La
+estimación volvió a ser conservadora: el ensamblado del JDK cuesta 3–4 s, no el sobrecoste por
+suite que temía.
 
 ```bash
 nohup tools/vuelo-4-modo-avion.sh > /tmp/vuelo4.out 2>&1 &
 ```
+
+---
+
+## 9 · Vuelo 4 — el material con la máquina en contra
+
+Ejecutado el 13 de agosto, **14:43:09 → 14:52:09: nueve minutos exactos**, contra los 14–18
+estimados. Despegó solo 108 s después de lanzarse y aterrizó con la red todavía cortada. Caja
+negra: `/tmp/caja-negra-vuelo4.log`.
+
+### Aislamiento — con un matiz que hay que mirar de frente
+
+```
+--- ping -c1 github.com ---    ping: cannot resolve github.com: Unknown host   exit=68
+--- curl repo1.maven.org ---   curl: (6) Could not resolve host    http=000    exit=6
+--- IPs no-loopback ---        bridge100 10.211.55.2
+                               bridge101 10.37.129.2
+--- ruta por defecto ---       (sin ruta)
+--- el .m2 del usuario ---     apartado
+--- docker ---                 sin daemon
+```
+
+**Aparecieron dos IPs que en los vuelos anteriores no estaban.** No son un escape: son las redes
+virtuales de **Parallels Desktop**, levantadas porque el PO tenía la VM Windows corriendo.
+Verificado tras aterrizar: sus miembros son `vmenet0` y `vmenet2`, y las creó
+`prl_disp_service`.
+
+El aislamiento se sostiene, y por tres hechos independientes: **no hay ruta por defecto** —sin
+ella no se sale de la máquina—, el **DNS está muerto** (NXDOMAIN), y las quince suites
+registraron **cero descargas intentadas**. Esos puentes solo alcanzan a la VM Windows, y nada
+del build le habla a la VM. Se declara porque un informe que dijera «(ninguna)» cuando la
+pantalla decía otra cosa sería exactamente la clase de mentira que la A-04 persigue.
+
+### El Java hostil, activo desde antes de despegar
+
+```
+--- java HOSTIL de la maquina (el que el material debe ignorar) ---
+JAVA_HOME=/Users/rodrigosilva/.sdkman/candidates/java/21.0.1-graalce
+openjdk version "21.0.1" 2023-10-17
+--- y el que el shim va a usar de verdad ---
+Java version: 25.0.4, vendor: Eclipse Adoptium, runtime: /private/tmp/dgt-vuelo4/tools/jdk/runtime/…
+```
+
+Ese `runtime:` apunta al clon del vuelo, no al del repositorio: **el JDK se ensambló dentro del
+avión**, en tres segundos (14:43:14 → 14:43:17), sin red. La prueba de que el ensamblado no
+necesita internet no es un razonamiento: es una marca de tiempo.
+
+### El Lab 00, primero en la lista
+
+```
+[OK]    git está en el PATH
+[OK]    El clon tiene todas sus piezas (Maven, dependencias, JDK y los labs)
+[OK]    JDK embebido listo: openjdk version "25.0.4" 2026-07-21 LTS
+[INFO]  Java del sistema: openjdk version "21.0.1" 2023-10-17  — el curso NO lo usa
+[OK]    ./mvnw usa el Maven del repositorio: Apache Maven 3.9.11
+[OK]    Espacio libre: 36 GB
+  5/5 verificaciones · ESTACIÓN LISTA          EXIT=0
+```
+
+### Los siete labs
+
+| Lab | `solucion` | descargas | `start-lab` | huérfanos | `90-validar` sol / starter |
+|---|---|---|---|---|---|
+| 01 | `EXIT=0` · 15 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 02 | `EXIT=0` · 15 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 03 | `EXIT=0` · 15 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 04 | `EXIT=0` · 14 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 05 | `EXIT=0` · 21 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 06 | `EXIT=0` · 17 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 07 | `EXIT=0` · 19 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+
+**Cero descargas en las quince suites**, y los labs 04 y 05 ya se anuncian con su propio número
+—el arreglo de la SPEC-FIX-05, confirmado en vuelo.
+
+§4.1 y §4.2, intactos sin red y con el Java hostil: `13L to be less than or equal to 3L`, el
+contador de la solución en verde, y los cuatro tests de la carrera del Lab 06 pasando.
+
+### V10-ter · el simulacro, ahora de verdad frío
+
+```
+cache de binarios de Zonky borrada
+el clon del alumno se hace de cero, asi que su JDK tampoco esta ensamblado
+  git clone                   5s      (1.0G)
+  Lab 06 verify (frio)       25s      EXIT=0 · descargas=0
+  Lab 07 start-lab            8s      EXIT=0 · health=200
+  ------------------------------
+  TOTAL                      38s
+```
+
+**38 segundos** desde el `git clone` hasta la aplicación sirviendo, con **todo** frío: sin
+`target/`, sin caché de Zonky, sin JDK ensamblado y sin una sola conexión de red. Son 4 s más
+que el vuelo 3 (34 s) y esos 4 s son exactamente el ensamblado del JDK. El clon pasó de 486 MB a
+1,0 GB.
+
+### Veredicto
+
+```
+VUELO 4 CON FALLAS EN: lab-03-red-de-seguridad/starter-FALLOS-AJENOS
+                       lab-05-once-segundos/starter-FALLOS-AJENOS
+```
+
+**Las dos son las mismas falsas alarmas del arnés que el vuelo 3 ya diagnosticó**, y siguen
+siendo correctas: `TramiteServiceTest` y `ListadoIntegracionTest` son los huecos donde el alumno
+escribe SUS tests, declarados en su `derivacion-starter.txt` y lanzando
+`UnsupportedOperationException`. Deben fallar en el `starter`. Ninguna otra prueba falló.
 
 ---
 
@@ -294,7 +399,8 @@ pero nadie los ha visto correr. Es deuda explícita de la Fase 2, no de esta SPE
 
 ## 8 · Lo que queda
 
-**Inmediato:** lanzar el vuelo 4 (§6) y la prueba del `.cmd` en Parallels.
+**El vuelo 4 ya voló** — resultados en §9. Queda **la prueba del `.cmd` en Parallels**, que es
+la única verificación de esta SPEC que no se pudo hacer aquí.
 
 **Fase 2:**
 
