@@ -120,7 +120,7 @@ crimen en su sección 1** en vez de en la 7: el bloque fundacional —contenedor
 autoconfiguración— entra después, por una puerta declarada. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
 contratado lo promete y no estaba.
 
-## 1.c · La emancipación de Docker · el material autocontenido (SPEC-022)
+## 1.c · La emancipación de Docker · el material autocontenido (SPEC-022 y SPEC-023)
 
 Tres hechos del terreno, y la estrategia sale sola:
 
@@ -171,6 +171,8 @@ contenedores en un curso sin Docker — eso es decisión del Arquitecto antes qu
 anotados el rediseño de los `TODO_1`/`TODO_2` del perfil `dev` y la reconciliación de la
 frontera Lab 07 → Lab 08.
 
+**Mergeado a `main` y etiquetado `material-v0.3.0`** (PRs #27 y #28, en ese orden).
+
 **Verificado en modo avión, con el cable fuera** (vuelo 3, 13 de agosto): los **siete** labs,
 quince suites, **cero descargas intentadas**, `90-validar` APROBADO en las siete soluciones y
 cero procesos huérfanos. El número que importa para la sala: **34 segundos** desde el
@@ -189,6 +191,10 @@ Faltan las diapositivas y el material del instructor para sala.
 
 La renumeración del temario se cuadra en la actualización contractual pendiente; en el repo ya
 está aplicada. Faltan también las diapositivas y el material del instructor.
+
+**Nota sobre las pruebas de aceptación:** las de los labs 00 a 07 se corren ahora **sin Docker
+y sin red**. Ya no hay que abrir Docker Desktop antes: `./mvnw` y los `bin/` funcionan tal cual
+sobre un clon recién hecho. Los labs 08 a 14 siguen necesitando Docker hasta la Fase 2.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
 de su README), y los Labs 01 a 14, cada uno con su Prueba del PO. Todas diferidas; los
