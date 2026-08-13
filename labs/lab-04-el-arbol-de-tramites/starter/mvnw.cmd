@@ -98,10 +98,21 @@ if /I not "%JDK_REAL%"=="%JDK_ESPERADO%" (
     exit /b 1
 )
 
-@REM `tar` es nativo en Windows 10+ (es bsdtar) y abre el .zip sin problema.
-@REM No se usa `unzip`, que no esta garantizado en ninguna parte.
+@REM Por RUTA EXPLICITA, no por PATH. En cmd.exe el PATH suele resolver al tar de
+@REM System32 (que es bsdtar y abre ZIP), pero "suele" no es una garantia: basta que
+@REM el alumno tenga otro tar delante — Git, MSYS, chocolatey — para caer en un GNU
+@REM tar que NO abre ZIP. Es exactamente lo que paso en Git Bash (SPEC-024 · A2.1).
+@REM Nombrar el binario cuesta cero y cierra la puerta.
+set "TAR_WIN=%SYSTEMROOT%\System32\tar.exe"
+if not exist "%TAR_WIN%" (
+    echo [ERROR] No encuentro %TAR_WIN%, que es lo que descomprime el JDK.
+    echo         En Windows 10 y posteriores viene de fabrica. Avisale al
+    echo         instructor con esta pantalla.
+    rmdir /s /q "%JDK_RUNTIME%" 2>nul
+    exit /b 1
+)
 pushd "%JDK_RUNTIME%"
-tar -xf "jdk.zip"
+"%TAR_WIN%" -xf "jdk.zip"
 set "TAR_ERR=%ERRORLEVEL%"
 popd
 if not "%TAR_ERR%"=="0" (

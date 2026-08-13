@@ -374,6 +374,70 @@ escribe SUS tests, declarados en su `derivacion-starter.txt` y lanzando
 
 ---
 
+## 10 · A2.1 · Lo que la prueba en Windows real destapó
+
+**Mi supuesto era falso, y solo una máquina real podía decirlo.** El informe afirmaba que
+`tar -xf` abre el ZIP «en Git Bash y en Windows 10+, porque es bsdtar». La primera mitad es
+mentira:
+
+```
+tar: This does not look like a tar archive
+```
+
+El `tar` que **Git Bash** pone en el PATH es **GNU tar**, y GNU tar no abre ZIP. El bsdtar que
+sí lo abre existe en toda máquina Windows 10+, pero vive en `System32` y queda **detrás** en el
+PATH de Git Bash. Confundí «hay un bsdtar en Windows» con «el `tar` que se invoca es bsdtar».
+
+### Lo que sí validó Windows real
+
+| | |
+|---|---|
+| Detección de plataforma (`MINGW*`) | ✅ |
+| Concatenación de los trozos | ✅ |
+| Verificación del sha256 | ✅ |
+| Mensajes de error del shim | ✅ comportándose como se diseñaron |
+| Extracción | ❌ — el hallazgo |
+
+Que el sha pasara **antes** de fallar la extracción no es un detalle menor: significa que los
+trozos viajan bien por Git, que `copy`/`cat` los reconstruye bit a bit en Windows, y que la
+detección de `shasum`/`sha256sum` funciona en Git Bash. El fallo estaba en el último paso, y
+solo en él.
+
+### El arreglo
+
+En la rama Windows del shim, la extracción va **por ruta explícita**:
+
+```bash
+TAR_WIN="${SYSTEMROOT:-C:/Windows}"
+TAR_WIN="${TAR_WIN//\\//}/System32/tar.exe"     # SYSTEMROOT viene con \ de Windows
+if [ -x "$TAR_WIN" ]; then "$TAR_WIN" -xf "$1"; return $?; fi
+if command -v unzip >/dev/null 2>&1; then unzip -q "$1"; return $?; fi
+# …y si no hay ninguno, un [ERROR] que explica por qué el tar de Git Bash no sirve
+```
+
+La sustitución de backslashes se comprobó en **bash 3.2.57** (`C:\Windows` →
+`C:/Windows/System32/tar.exe`), y también su valor por defecto cuando `SYSTEMROOT` no existe.
+El archivo se le pasa por **nombre relativo** con el `cwd` ya puesto, así no hay que traducir
+rutas POSIX para un binario nativo de Windows.
+
+**El `.cmd` recibió el mismo tratamiento aunque allí `tar` suele resolver bien.** «Suele» no es
+garantía: basta que el alumno tenga un GNU tar por delante —Git, MSYS, chocolatey— para caer en
+el mismo agujero. Nombrar el binario cuesta cero.
+
+**Revisados todos los demás usos de `tar` del repositorio:** 41 sitios, todos
+`tar cf - | tar xf -` sobre directorios en formato tar. GNU tar los maneja perfecto. **Ninguno
+más tocaba un ZIP.**
+
+**Regresión en macOS:** ensamblado limpio y 46 tests verdes tras el cambio.
+
+### Lo que sigue sin probarse
+
+La reserva de V8 **sigue abierta**: el PO probó Git Bash, es decir el `mvnw`. El `mvnw.cmd` no
+se ha ejecutado en ninguna parte, y con él sigue sin medirse si `set /p` lee bien los archivos
+`VERSION` y `.sha256`, que llegan con finales LF. Es lo que hay que mirar en la re-prueba.
+
+---
+
 ## 7 · Sorpresas y desviaciones
 
 **7.1 · Se tomó `25.0.4+7`, no la `25+36` sugerida.** Detallado en §2. La instrucción principal
@@ -388,8 +452,13 @@ SPEC fija dos plataformas). Si el shim exigiera el JDK embebido, **el CI de GitH
 Ubuntu— se pondría rojo al instante**. Con el fallback, CI sigue verde y el alumno del SII sigue
 cubierto.
 
-**7.4 · El `.cmd` no se pudo ejecutar.** Está en V8 con su reserva. No se disimula: la prueba
-real es la del PO en Parallels.
+**7.4 · El `.cmd` no se pudo ejecutar.** Está en V8 con su reserva, y **sigue sin ejecutarse**:
+la prueba del PO en Parallels usó Git Bash, o sea el `mvnw`. Ver §10.
+
+**7.4-bis · Y la prueba en Windows real encontró un fallo que aquí era invisible** — mi supuesto
+sobre `tar` y el ZIP. Está en §10 con su arreglo. Es la mejor demostración de por qué esa prueba
+no se puede sustituir por razonamiento: el shim se comportó exactamente como estaba diseñado en
+todo lo demás, y falló en el único punto donde yo había supuesto en vez de medir.
 
 **7.5 · Deuda heredada de la FIX-05, que consta aquí como se pidió.** Los `[OK]` corregidos de
 los labs **08–14 siguen sin ejecución real** — necesitan Docker. Quedaron linteados y revisados,

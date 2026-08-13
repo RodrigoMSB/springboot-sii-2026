@@ -79,6 +79,49 @@ case "$(uname -s)" in
         ;;
 esac
 
+# extraer_jdk <archivo-en-el-directorio-actual>
+#
+# En macOS el .tar.gz lo abre cualquier tar. En Windows es OTRA historia, y la
+# aprendimos en una máquina real (SPEC-024 · A2.1):
+#
+#   El `tar` que Git Bash pone en el PATH es GNU tar, y GNU tar NO abre ZIP:
+#       tar: This does not look like a tar archive
+#   El que sí lo abre es el bsdtar que Windows trae en System32 — existe en toda
+#   máquina Windows 10+, pero queda DETRÁS en el PATH de Git Bash. Así que se
+#   invoca por su ruta completa, sin depender de a quién resuelva `tar`.
+#
+# Se le pasa el archivo por su nombre relativo, con el cwd ya puesto: así no hay
+# que traducir rutas POSIX a rutas de Windows para un binario nativo.
+extraer_jdk() {
+    if [ "$JDK_PLATAFORMA" != "windows-x64" ]; then
+        tar -xf "$1"
+        return $?
+    fi
+
+    TAR_WIN="${SYSTEMROOT:-C:/Windows}"
+    TAR_WIN="${TAR_WIN//\\//}/System32/tar.exe"     # SYSTEMROOT viene con \ de Windows
+    if [ -x "$TAR_WIN" ]; then
+        "$TAR_WIN" -xf "$1"
+        return $?
+    fi
+
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -q "$1"
+        return $?
+    fi
+
+    printf '[ERROR] No encuentro con qué descomprimir el JDK en esta máquina.\n'      >&2
+    printf '        Busqué, en este orden:\n'                                          >&2
+    printf '          1. %s\n' "$TAR_WIN"                                              >&2
+    printf '          2. unzip en el PATH\n'                                           >&2
+    printf '\n'                                                                        >&2
+    printf '        El tar de Git Bash no sirve: es GNU tar y no abre archivos\n'     >&2
+    printf '        ZIP. El de Windows sí, y vive en System32 — si no está ahí,\n'    >&2
+    printf '        esta máquina es más rara de lo que el curso puede manejar.\n'     >&2
+    printf '        Avísale al instructor con esta pantalla.\n'                        >&2
+    return 1
+}
+
 # sha256: cada sistema lo llama de otra forma. macOS base no trae sha256sum.
 sha256_de() {
     if command -v shasum >/dev/null 2>&1; then
@@ -127,9 +170,7 @@ if [ -n "$JDK_PLATAFORMA" ] && [ -d "$JDK_DIR" ]; then
             rm -rf "$JDK_RUNTIME"; exit 1
         fi
 
-        # `tar -xf` abre tanto el .tar.gz como el .zip: en Git Bash y en Windows 10+
-        # es bsdtar, que entiende los dos. `unzip` NO está garantizado en Git Bash.
-        if ! ( cd "$JDK_RUNTIME" && tar -xf "$JDK_ARCHIVO" ); then
+        if ! ( cd "$JDK_RUNTIME" && extraer_jdk "$JDK_ARCHIVO" ); then
             printf '[ERROR] No pude extraer el JDK en %s\n' "$JDK_RUNTIME" >&2
             rm -rf "$JDK_RUNTIME"; exit 1
         fi
