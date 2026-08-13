@@ -151,6 +151,19 @@ Para reintentar hacen falta tres cosas, en este orden: **VPN del SII**, el **`se
 real de los alumnos instalado en la máquina de prueba (sin él los gates resuelven contra Central
 y dan verdes falsos), y **`sdk env`** para medir bajo Java 25 y no bajo el 21 de la sesión.
 
+**Anotaciones A1 (aplicadas).** El segundo punto ya está resuelto en el árbol:
+`tools/settings-sii.xml` versiona el mirror a `apus` —con `mirrorOf=*` y **sin** el bloque
+`<servers>`: la credencial de despliegue del Nexus queda fuera del repo, que es literalmente el
+crimen del Lab 01— y cada proyecto del Lab 01 trae un `.mvn/maven.config` que lo aplica solo, sin
+que el alumno toque su `~/.m2`. Verificado que el mirror intercepta de verdad.
+
+⚠️ **Con eso viene un peaje que el PO debe decidir antes de mergear:** al cambiar el mirror,
+Maven invalida todo lo cacheado desde Central, así que **el Lab 01 deja de compilar fuera de la
+red del SII** — ni siquiera offline con la caché caliente. Para el alumno del SII es lo buscado;
+para el instructor preparando clase, es una puerta cerrada. Hay escotilla verificada: un `-s` en
+la línea de comandos gana sobre el del `maven.config`. El detalle está en el Addendum A1 del
+informe.
+
 Las dos incógnitas de fondo —Zonky bajo Java 25 y bajo Spring Boot 4.1.0— **siguen abiertas**:
 solo se responden ejecutando.
 

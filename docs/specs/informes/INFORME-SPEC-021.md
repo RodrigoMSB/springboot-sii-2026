@@ -232,6 +232,7 @@ bloqueado en G2. Se registran en rojo para que nadie las lea como pendientes men
 | V5 | Cronometraje vs. Testcontainers | ⛔ NO EJECUTADO — ídem |
 | V6 | `java -version` junto a V1 | ⛔ NO EJECUTADO — ver desviación §7.3 |
 | V7 | `ps` filtrado por ruta del proyecto | ⛔ NO EJECUTADO — ídem |
+| V8 | `./mvnw help:effective-settings` muestra el mirror de `apus` *(añadida por A1.8)* | 🟡 **PARCIAL** — el cableado está probado, la impresión de las settings efectivas no. Ver Addendum A1.4 |
 
 ---
 
@@ -355,3 +356,194 @@ Decisiones que la Fase 1 debe tomar y que este informe deja preparadas:
 
 Sin cambios pendientes de reconciliación: **no se modificó ningún manifiesto**, ni el
 del Lab 01 ni los otros 23. La cadena tronco→lab01 sigue intacta en esta rama.
+
+---
+---
+
+# Addendum A1 · Anotaciones posteriores al informe
+
+> Anotaciones A1.1 a A1.9, emitidas por el PO tras leer el informe de arriba. El
+> informe original **no se modificó** —salvo la fila V8 de la tabla— para que quede
+> como registro de lo que se supo en cada momento. Todo lo nuevo vive aquí.
+
+## A1.0 · Qué se ejecutó y qué no
+
+| Anotación | Estado |
+|---|---|
+| A1.1 · Push y PR en draft | ✅ Hecho — `e091e7b` pusheado, **PR #26** en draft |
+| A1.2 / A1.9 · `tools/settings-sii.xml` | ✅ Hecho — sin `<servers>`, con encabezado |
+| A1.8 · `.mvn/maven.config` en `starter/` y `solucion/` | ✅ Hecho y verificado |
+| A1.8 · V8 | 🟡 Parcial — ver A1.4 abajo |
+| A1.3 · G0 · Precondiciones | ⛔ Pendiente — necesita la ventana con VPN |
+| A1.4 · G2 reescrito · A1.9 · G2.5 | ⛔ Pendientes — ídem |
+| A1.5 / A1.6 / A1.7 | 📝 Registradas para Fase 1 / POC; nada que ejecutar hoy |
+
+## A1.1 · El settings versionado difiere del archivo del PO en un punto
+
+A1.2 describía el archivo entregado como «el de `mirrorOf=*`, id `central`». El
+archivo real dice **lo inverso**: `<id>maven-sii-apus</id>` con
+`<mirrorOf>central</mirrorOf>`. Se reportó al PO, y A1.9 resolvió versionar
+**`mirrorOf=*`**. Es, por tanto, una **divergencia deliberada** respecto del archivo
+probado en cancha, y queda anotada como tal:
+
+| | Archivo del PO | `tools/settings-sii.xml` versionado |
+|---|---|---|
+| `<id>` del mirror | `maven-sii-apus` | `maven-sii-apus` *(igual)* |
+| `<url>` | `http://apus.sii.cl:8081/repository/maven-sii-group/` | *(igual, `http://` incluido)* |
+| `<mirrorOf>` | `central` | **`*`** ← divergencia A1.9 |
+| `<servers>` (5 bloques) | presentes | **ausentes** ← A1.9 |
+| `<profiles>` / `<activeProfiles>` | presentes | *(iguales)* |
+| Finales de línea | CRLF | LF *(normalizado por `.gitattributes`)* |
+
+Por qué `*` es mejor que `central`, más allá de lo que diga cada archivo:
+`mirrorOf=central` solo canaliza el repositorio `central`. Cualquier otro repositorio
+que un `pom` declare por su cuenta esquiva el mirror; en el SII eso falla, pero fuera
+del SII **resuelve contra internet y el gate pasa en verde por la puerta equivocada**.
+Con `*` no hay puertas laterales. Es la misma trampa de la nota de honestidad de la
+SPEC, cerrada por construcción.
+
+**Credenciales:** el archivo original traía cinco bloques `<server>` con la
+**credencial de despliegue del Nexus (retenida, fuera del repo)**. No entra a ningún
+archivo versionado, este informe incluido. El original queda intacto en su ubicación
+fuera del árbol; no se copió, no se movió, no se borró. Verificado:
+
+```
+$ grep -rn 'deployment123\|<password>' --exclude-dir=.git .
+(0 coincidencias)
+```
+
+## A1.2 · Corrección a A1.4 — la evidencia de procedencia que hay que buscar NO es «central»
+
+A1.4 fija como prueba de procedencia la línea `Downloading from central:
+http://apus.sii.cl:8081/...`. **Esa línea no va a existir nunca**, porque el mirror no
+se llama `central`: se llama `maven-sii-apus`. Maven nombra el mirror por su `id`. Lo
+que sale en el log —verificado hoy contra el settings ya versionado— es:
+
+```
+[INFO] Downloading from maven-sii-apus: http://apus.sii.cl:8081/repository/maven-sii-group/org/springframework/boot/spring-boot-starter-parent/4.1.0/spring-boot-starter-parent-4.1.0.pom
+```
+
+**Criterio corregido para G2**, que es el que debe usarse en la ventana con VPN:
+
+- ✅ Gate **VÁLIDO** si el log dice `Downloading from maven-sii-apus: http://apus.sii.cl:8081/...`
+- ❌ Gate **INVÁLIDO** si aparece `repo.maven.apache.org` en cualquier línea de descarga
+
+Corolario: como el mirror **no** se llama `central`, `_remote.repositories` tampoco
+mentiría —registraría `maven-sii-apus`—, así que el método que A1.4 descartó sigue
+sirviendo como contraste independiente. El razonamiento de A1.4 partía de la premisa
+equivocada, pero su conclusión (usar el log) es la correcta y más directa.
+
+## A1.3 · A1.8 ejecutado — y la ruta relativa no es la que parece
+
+`.mvn/maven.config` creado en `starter/` y `solucion/`, una línea, idéntica en ambos:
+
+```
+-s ../../../../../tools/settings-sii.xml
+```
+
+**Cinco niveles, no tres.** Éste es el hallazgo técnico de la anotación: Maven **no**
+resuelve el `-s` de `maven.config` contra el directorio de trabajo, sino contra la
+ruta del propio archivo `maven.config`. Es decir, hay que subir dos niveles extra
+para compensar `.mvn/maven.config`. Medido empíricamente, no deducido:
+
+```
+N=3  -> .../labs/lab-01-del-otro-lado-del-boton/tools/settings-sii.xml   (no existe)
+N=4  -> .../labs/tools/settings-sii.xml                                  (no existe)
+N=5  -> RESUELVE
+```
+
+La ruta intuitiva (`../../../`, tres niveles desde `starter/`) habría dejado a todo el
+Lab 01 con un `The specified user settings file does not exist` desde el primer
+comando. Verificado que funciona en `starter/` **y** en `solucion/`.
+
+**Compatibilidad en Git Bash:** anotada para verificar en sala, según A1.8. La barra
+inclinada `/` no debería dar problema —Java normaliza separadores— pero no está
+comprobado en Windows y no se declara verde.
+
+**Recomendación para Fase 1 (no ejecutada, es decisión del Arquitecto):** la ruta de
+cinco niveles funciona pero es frágil de una forma que A1.8 no anticipaba — no entre
+plataformas, sino **ante la copia de la carpeta**. Si un alumno copia `starter/` a su
+escritorio (cosa que los alumnos hacen), la ruta apunta al vacío y el error no dice
+nada útil. La alternativa que A1.8 dejaba abierta —copiar el settings dentro del
+`.mvn/` de cada proyecto, con `-s ../../.mvn/settings-sii.xml`— hace cada proyecto
+autocontenido a cambio de tres copias del mismo archivo en el repo.
+
+## A1.4 · V8 · Resultado: PARCIAL, y por una razón que importa
+
+**Lo que sí quedó probado: el cableado funciona.** Con el `maven.config` puesto, Maven
+enruta a `apus` sin que nadie toque `~/.m2`, que era el objetivo entero de A1.8:
+
+```
+$ cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -B help:effective-settings
+[INFO] Artifact org.springframework.boot:spring-boot-starter-parent:pom:4.1.0 is present in the
+       local repository, but cached from a remote repository ID that is unavailable in current
+       build context, verifying that is downloadable from
+       [maven-sii-apus (http://apus.sii.cl:8081/repository/maven-sii-group/, default, releases+snapshots)]
+[INFO] Downloading from maven-sii-apus: http://apus.sii.cl:8081/repository/maven-sii-group/...
+[FATAL] ... Unknown host apus.sii.cl: nodename nor servname provided, or not known
+```
+
+**Lo que no se pudo producir: la impresión de las settings efectivas.** El goal
+`help:effective-settings` necesita resolver antes el POM padre del proyecto
+(`spring-boot-starter-parent:4.1.0`) y, con `mirrorOf=*`, esa resolución va a `apus`,
+que sigue sin resolver por DNS. V8 completo queda para la ventana con VPN. La línea
+`Downloading from maven-sii-apus:` es, mientras tanto, evidencia más fuerte que la que
+V8 pedía: no muestra el mirror *configurado*, lo muestra *interceptando*.
+
+## A1.5 · ⚠️ Consecuencia mayor de A1.8: el Lab 01 ya no compila fuera del SII
+
+Esto no estaba previsto en ninguna anotación y hay que decidirlo antes de mergear.
+
+Maven marca cada artefacto de la caché local con el `id` del repositorio del que vino.
+Al cambiar el mirror a `maven-sii-apus`, **todo lo cacheado desde `central` deja de ser
+utilizable** y Maven exige revalidarlo contra el nuevo remoto. No es que la
+compilación sea más lenta: **es imposible**. Y no basta con desconectar la red —
+probado también en modo offline, con la caché caliente:
+
+```
+$ ./mvnw -B -o help:effective-settings
+[FATAL] Non-resolvable parent POM: ... (present, but unavailable): Cannot access maven-sii-apus
+        (http://apus.sii.cl:8081/repository/maven-sii-group/) in offline mode and the artifact
+        org.springframework.boot:spring-boot-starter-parent:pom:4.1.0 has not been downloaded
+        from it before.
+```
+
+Traducido: en cuanto esto se mergee, **nadie fuera de la red del SII puede correr
+`./mvnw` en el Lab 01** — ni el PO en su Mac, ni el instructor preparando la clase, ni
+un futuro runner de CI si algún día se le añade el Lab 01. El artefacto *está* en el
+disco y Maven se niega a usarlo.
+
+Para el alumno del SII esto es exactamente lo que se quería. Para todos los demás es
+una puerta cerrada, y conviene que sea una decisión y no una sorpresa.
+
+**Escotilla de escape, verificada:** un `-s` en la línea de comandos **gana** sobre el
+de `maven.config`. Quien necesite compilar fuera del SII puede:
+
+```
+$ ./mvnw -s /ruta/a/otro-settings.xml test      # BUILD SUCCESS, cero líneas con apus
+```
+
+Comprobado hoy contra un settings vacío: `BUILD SUCCESS`, ninguna referencia a `apus`.
+Vale la pena documentarlo en el README del lab si A1.8 se mantiene tal cual.
+
+## A1.6 · G2.5 registrado
+
+Sub-gate nuevo (A1.9): los `dependency:get` de G2 se corren con este settings **sin
+credenciales**, comprobando que `apus` permite lectura anónima de `maven-sii-group`.
+Si devuelve `401`/`403` → **detenerse y reportar**. La decisión (lectura anónima vía
+TI, o la credencial interpolada por `${env.*}`) es del PO. No se improvisa auth.
+
+Queda además advertido en el propio encabezado del `settings-sii.xml`, para que quien
+lo lea en frío no caiga en la tentación de pegar la credencial ahí.
+
+## A1.7 · Lo que cambia en «qué queda para la Fase 1»
+
+Se mantiene la lista de §8, con estos ajustes:
+
+- El punto 2 («instalar el `settings.xml`») **queda resuelto**: ya vive en el árbol y
+  se aplica solo en el Lab 01. Lo que queda es comprobar que funciona contra `apus`
+  de verdad (G2 + G2.5).
+- Se añade: **decidir sobre A1.5** (Lab 01 inservible fuera del SII) antes de mergear.
+- Se añade: **verificar la ruta de cinco niveles en Git Bash**, en sala.
+- Se añade: **evaluar el `.mvn/` autocontenido** frente a la copia de carpeta.
+- El criterio de procedencia de G2 es el de A1.2 de este addendum, no el de A1.4.
