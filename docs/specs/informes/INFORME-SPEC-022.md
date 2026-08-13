@@ -9,8 +9,9 @@
 
 ## 1 · Veredicto en una línea
 
-**MATERIAL AUTOCONTENIDO VIABLE** — los labs 01 y 02 corren enteros, suite completa
-verde, con el cable de red desenchufado y sin Docker.
+**MATERIAL AUTOCONTENIDO VIABLE** — el Lab 01 corre entero, suite completa verde, con el
+cable de red desenchufado y sin Docker. El Lab 02 está verde en modo `--offline` y su
+verificación en avión (V6) se traslada al vuelo 3 por no haber despegado el vuelo 2.
 
 ---
 
@@ -224,11 +225,11 @@ Al aterrizar: `red aun cortada`. **Ningún tramo del vuelo quedó contaminado.**
 | **V3** | `start-lab.sh` + curls + `99-destruir.sh` | ✅ | `start-lab EXIT=0 · 5s` · `curls con 200: 3/3` · `99-destruir EXIT=0` |
 | **V4** | `90-validar.sh` en ambos estados | ✅ | starter `4/5 · LAB 01 NO APROBADO` (único fallo: *«Faltan TODOs por resolver»*) · solución `5/5 · 🏆 LAB 01 APROBADO` |
 | **V5** | `ps` por ruta exacta tras V3 | ✅ | antes: `app: 1 · postgres: 1` → después: `app: 0 · postgres: 0` |
-| **V6** | Lab 02 en modo avión | ⏳ | Requiere un segundo vuelo. Verde con red disponible pero `--offline`: `42 + 11 tests · BUILD SUCCESS · descargas: 0` |
+| **V6** | Lab 02 en modo avión | ⏭️ DIFERIDA | El vuelo 2 quedó en pista y nunca despegó: no hubo corte de red esa noche. Se traslada al **vuelo 3** (SPEC-023 §6). Verde con red disponible pero `--offline`: `42 + 11 tests · BUILD SUCCESS · descargas: 0` |
 | **V7** | `java -version` junto a V1 | ✅ | `openjdk version "25" · Temurin-25+36`, citado dentro del vuelo |
 | **V8** | Tamaños + guard 95 MB | ✅ | Ver abajo |
 | **V9** | Comparativa de tiempos | ⚠️ SKIP parcial | Ver §7 |
-| **V10** | Simulacro del alumno | ⏳ | Requiere el segundo vuelo |
+| **V10** | Simulacro del alumno | ⏭️ DIFERIDA | Ídem: al vuelo 3, como V10-bis |
 
 **Sobre V1 y el criterio «Verde»:** la tabla de la SPEC pide *«Verde»* para el `starter`, y eso
 no es alcanzable — un starter con los TODO sin resolver **debe** fallar sus tests del
@@ -374,8 +375,11 @@ incluyendo por qué `apus` dejó de estar en el camino crítico. Sigue sin crede
 
 ## 9 · Lo que queda para la Fase 1
 
-**Bloqueante inmediato:** cerrar V6 y V10 con un segundo vuelo. Todo está preparado y
-verificado con red disponible; falta la evidencia de red apagada, que §10 exige.
+**V6 y V10 se trasladan al vuelo 3** (SPEC-023 §6). El script del vuelo 2 quedó en pista
+esperando el corte de red y nunca despegó — la noche avanzó y el cable siguió puesto. No es un
+fallo del material: ambas pruebas están verdes con red disponible y `--offline`, con cero
+descargas; lo que falta es la evidencia de red apagada que §10 exige. Como la SPEC-023 pide un
+vuelo 3 de todos modos, se agrupan ahí en vez de pedir dos cortes de cable al PO.
 
 **El grueso — los labs 03 a 14**, con la receta ya probada. Lo que la réplica del Lab 02
 enseña sobre el costo real: la parte mecánica es rápida, y el trabajo de verdad es leer el
