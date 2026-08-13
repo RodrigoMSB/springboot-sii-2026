@@ -30,7 +30,14 @@ for PID_FILE in $PIDS_GLOB; do
         kill "$NUM_PID" 2>/dev/null
         espera=0
         while kill -0 "$NUM_PID" 2>/dev/null && [ "$espera" -lt 15 ]; do espera=$((espera + 1)); sleep 1; done
-        DETENIDAS=$((DETENIDAS + 1))
+        # Solo cuenta como detenida si se murió; si aguantó los 15 s, se dice
+        # (SPEC-FIX-05: el contador cuenta lo que pasó, no lo que se intentó).
+        if kill -0 "$NUM_PID" 2>/dev/null; then
+            paso_fail "Una instancia (PID $NUM_PID) sigue viva tras 15 s" \
+                      "Ciérrala a mano:  kill -9 $NUM_PID"
+        else
+            DETENIDAS=$((DETENIDAS + 1))
+        fi
     fi
     rm -f "$PID_FILE"
 done
@@ -58,7 +65,11 @@ if docker info >/dev/null 2>&1; then
             ( cd "$DIR_LAB/$PROYECTO" && docker compose down -v >/dev/null 2>&1 ) && BAJADOS=$((BAJADOS + 1))
         fi
     done
-    paso_ok "PostgreSQL del laboratorio detenido ($BAJADOS compose)"
+    if [ "$BAJADOS" -gt 0 ]; then
+        paso_ok "PostgreSQL del laboratorio detenido ($BAJADOS compose)"
+    else
+        paso_skip "No había ningún compose del lab levantado que bajar"
+    fi
 
     SOBRANTES="$(docker ps -q --filter label=org.testcontainers 2>/dev/null | wc -l | tr -d ' ')"
     if [ "${SOBRANTES:-0}" -gt 0 ]; then
@@ -69,10 +80,21 @@ else
     paso_skip "Docker no responde: no hay contenedores del lab que bajar"
 fi
 
-borrar_seguro "$ESTADO"
-    borrar_seguro "$DIR_LAB/.e2e"
-    for _r in "$DIR_LAB"/.respaldo-*; do [ -e "$_r" ] && borrar_seguro "$_r"; done
-paso_ok "Archivos temporales del lab borrados"
+# Cada borrado responde si pudo o no; el veredicto suma esas respuestas en vez de
+# darlas por buenas. Aqui vivia el bug que da nombre a la SPEC-FIX-05: el cinturon
+# de borrar_seguro abortaba y el script felicitaba igual.
+BORRADOS_OK=1
+borrar_seguro "$ESTADO"       || BORRADOS_OK=0
+borrar_seguro "$DIR_LAB/.e2e" || BORRADOS_OK=0
+for _r in "$DIR_LAB"/.respaldo-*; do
+    [ -e "$_r" ] && { borrar_seguro "$_r" || BORRADOS_OK=0; }
+done
+if [ "$BORRADOS_OK" -eq 1 ]; then
+    paso_ok "Archivos temporales del lab borrados"
+else
+    paso_fail "Quedó algún temporal sin borrar" \
+              "Mira los [ERROR] de arriba: el cinturón de borrar_seguro se negó, y por algo será."
+fi
 
 resumen_final "Todo quedó como estaba" "Quedó algo a medio desmontar"
 VEREDICTO=$?

@@ -181,6 +181,27 @@ conexión de red.
 
 Con eso quedan cerradas también las dos verificaciones que la SPEC-022 tenía diferidas.
 
+## 1.d · Los validadores dicen la verdad (SPEC-FIX-05)
+
+Los vuelos de las SPEC-022/023 destaparon hallazgos **preexistentes**, ninguno causado por la
+migración. El que les da nombre: un `99-destruir.sh` que declaraba `[OK] Archivos borrados` y
+`3/3 · Todo quedó como estaba` sobre un borrado que había **abortado**.
+
+- **El guard de `borrar_seguro` ya no es ciego a los symlinks.** Comparaba la ruta lógica
+  (`/tmp/…`) contra la física (`/private/tmp/…`) y abortaba borrados legítimos. Ahora resuelve
+  ambas con `pwd -P`. **No se aflojó**: sigue negándose a la ruta vacía, a la raíz, a `$HOME` y
+  a todo lo que caiga fuera del repo.
+- **39 declaraciones de éxito mentirosas, corregidas** en 35 archivos, tras inventariar los
+  **256 sitios** que declaran éxito en los 81 scripts del repo — labs 08 a 14 incluidos. La más
+  extendida no era la del nombre: era `"API detenida (PID N)"`, que en 14 labs felicitaba tras
+  esperar 15 segundos sin comprobar si el proceso se había ido.
+- **Los 14 labs saben cómo se llaman.** Los `90-validar` de los labs 04 y 05 se presentaban como
+  «LAB 02».
+- **Regla nueva de la casa, A-04:** todo arnés de verificación imprime TODO lo que calcula. Es
+  A-02 mirándose al espejo — aquella prohíbe declarar sin medir, esta prohíbe medir sin mostrar.
+
+Cero código Java tocado. Informe en `docs/specs/informes/INFORME-SPEC-FIX-05.md`.
+
 ## 2 · Qué falta
 
 **Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales

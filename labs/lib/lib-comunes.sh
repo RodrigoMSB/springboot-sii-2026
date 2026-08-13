@@ -205,21 +205,35 @@ borrar_seguro() {
     case "$ruta" in
         /|/*/|"$HOME"|"$HOME"/) printf '[ERROR] borrar_seguro: ruta peligrosa (%s) — abortado\n' "$ruta" >&2; return 1 ;;
     esac
-    # Debe estar DENTRO del repo. Comparamos rutas absolutas.
+    # Debe estar DENTRO del repo. Comparamos rutas absolutas y RESUELTAS.
+    #
+    # El `-P` de `pwd` no es un detalle: sin él, `pwd` devuelve la ruta LÓGICA (la
+    # que escribiste) y `git rev-parse` devuelve la FÍSICA (con los symlinks ya
+    # resueltos). En macOS `/tmp` es un symlink a `/private/tmp`, así que un repo
+    # clonado ahí daba `/tmp/…` por un lado y `/private/tmp/…` por el otro, no
+    # cuadraban, y el cinturón abortaba un borrado perfectamente legítimo.
+    # Lo cazó el vuelo 1 de la SPEC-022; se arregla en la SPEC-FIX-05.
+    #
+    # El cinturón NO se afloja: sigue negándose a todo lo que quede fuera del repo.
+    # Lo que cambia es que ahora compara peras con peras.
     raiz="$(raiz_repo)"
-    abs="$(cd "$(dirname "$ruta")" 2>/dev/null && printf '%s/%s' "$(pwd)" "$(basename "$ruta")" || printf '%s' "$ruta")"
+    abs="$(cd "$(dirname "$ruta")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$ruta")" || printf '%s' "$ruta")"
     case "$abs" in
         "$raiz"/*) rm -rf "$ruta" ;;
         *) printf '[ERROR] borrar_seguro: %s cae fuera del repo (%s) — abortado\n' "$ruta" "$raiz" >&2; return 1 ;;
     esac
 }
 
-# raiz_repo — ruta absoluta a la raíz del repositorio, desde donde sea.
+# raiz_repo — ruta absoluta y RESUELTA a la raíz del repositorio, desde donde sea.
+#
+# Siempre física (symlinks resueltos), por las dos vías. Si una vía devolviera la
+# ruta lógica y la otra la física, cualquier comparación entre ellas fallaría según
+# desde dónde se invoque — que es exactamente el bug que arrastraba borrar_seguro.
 raiz_repo() {
     if command -v git >/dev/null 2>&1 && git rev-parse --show-toplevel >/dev/null 2>&1; then
-        git rev-parse --show-toplevel
+        ( cd "$(git rev-parse --show-toplevel)" && pwd -P )
         return 0
     fi
     # Sin git: subimos desde este archivo (labs/lib/ -> raíz).
-    ( cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd )
+    ( cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P )
 }

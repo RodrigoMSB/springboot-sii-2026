@@ -48,22 +48,35 @@ printf '\n  Recuperando (%s)\n\n' "$MODO"
 SELLO="$(git -C "$DIR_LAB" log -1 --format=%h 2>/dev/null || printf 'sin-git')"
 RESPALDO="$DESTINO/../.respaldo-$(basename "$DESTINO")-$SELLO-$$"
 mkdir -p "$RESPALDO"
-( cd "$DESTINO" && tar cf - --exclude='./target' --exclude='./.estado' . ) | ( cd "$RESPALDO" && tar xf - )
-paso_ok "Tu trabajo quedó respaldado en $(basename "$RESPALDO")/"
+if ( cd "$DESTINO" && tar cf - --exclude='./target' --exclude='./.estado' . ) | ( cd "$RESPALDO" && tar xf - ); then
+    paso_ok "Tu trabajo quedó respaldado en $(basename "$RESPALDO")/"
+else
+    paso_fail "No pude respaldar tu trabajo" \
+              "No sigo: recuperar sin respaldo es perderlo. Revisa permisos en $(dirname "$RESPALDO")/"
+    resumen_final "Recuperación completa" "La recuperación falló"
+    exit 1
+fi
 
 ENUNCIADO="src/test/java/cl/dgt/tramites/enunciado"
 
 if [ "$MODO" = "enunciado" ]; then
     borrar_seguro "$DESTINO/$ENUNCIADO"
     mkdir -p "$DESTINO/$ENUNCIADO"
-    cp "$SOLUCION/$ENUNCIADO"/*.java "$DESTINO/$ENUNCIADO/"
-    borrar_seguro "$DESTINO/target"
-    paso_ok "Tests del enunciado restaurados"
+    if cp "$SOLUCION/$ENUNCIADO"/*.java "$DESTINO/$ENUNCIADO/"; then
+        borrar_seguro "$DESTINO/target"
+        paso_ok "Tests del enunciado restaurados"
+    else
+        paso_fail "No pude restaurar los tests del enunciado" \
+                  "Comprueba que existe $SOLUCION/$ENUNCIADO/"
+    fi
 else
-    ( cd "$SOLUCION" && tar cf - --exclude='./target' --exclude='./.estado' . ) | ( cd "$DESTINO" && tar xf - )
-    # tar preserva fechas: un .class viejo puede tapar la fuente nueva. Limpia el build.
-    borrar_seguro "$DESTINO/target"
-    paso_ok "Solución aplicada sobre $(basename "$DESTINO")/"
+    if ( cd "$SOLUCION" && tar cf - --exclude='./target' --exclude='./.estado' . ) | ( cd "$DESTINO" && tar xf - ); then
+        # tar preserva fechas: un .class viejo puede tapar la fuente nueva. Limpia el build.
+        borrar_seguro "$DESTINO/target"
+        paso_ok "Solución aplicada sobre $(basename "$DESTINO")/"
+    else
+        paso_fail "No pude aplicar la solución" "Comprueba que existe $SOLUCION/"
+    fi
 fi
 
 resumen_final "Recuperación completa" "La recuperación falló"

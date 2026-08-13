@@ -52,11 +52,17 @@ mkdir -p "$DESTINO"
       --exclude='./.estado' \
       --exclude='./.git' \
       . ) | ( cd "$DESTINO" && tar xf - )
+COPIA_OK=$?
 
 # Invalidar cualquier build previo del destino. `tar` PRESERVA las fechas, así que
 # un `.class` viejo puede quedar más nuevo que la fuente recién copiada y Maven NO
 # recompila: correría bytecode fantasma. Quien reemplaza fuentes limpia el target.
 borrar_seguro "$DESTINO/target"
 
-paso_ok "Derivado: $ORIGEN -> $DESTINO"
+if [ "$COPIA_OK" -eq 0 ]; then
+    paso_ok "Derivado: $ORIGEN -> $DESTINO"
+else
+    paso_fail "La copia de $ORIGEN a $DESTINO falló" \
+              "Revisa permisos y espacio; el destino puede haber quedado a medias."
+fi
 resumen_final "Derivación completa" "La derivación falló"
