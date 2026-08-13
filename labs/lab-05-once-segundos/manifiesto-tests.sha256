@@ -1,3 +1,3 @@
-9f97a77a9b3c6ea927437d2194bf118d3f6e39221177a2bd9c558bf9671d5c67  src/test/java/cl/dgt/tramites/enunciado/BaseRendimientoIT.java
-90dad822f37ccb8e35451bd87043399e99aef50803130ce9b27e9afd31fcb8c6  src/test/java/cl/dgt/tramites/enunciado/E1_ContadorDeConsultasIT.java
-8405b97c3be4d29aa994ce3ce29d6b9990b950d2768664ad708687798591ff84  src/test/java/cl/dgt/tramites/enunciado/E2_ListadoFuncionalIT.java
+5969fabee512219daf578e59c3aa59b1286907c090bf0022b182fcf9143ddddc  src/test/java/cl/dgt/tramites/enunciado/BaseRendimientoIT.java
+7b2631aa21836264be0cdbfd284aa83d11c08cd3df817898c9658d3b67708b83  src/test/java/cl/dgt/tramites/enunciado/E1_ContadorDeConsultasIT.java
+df5c11ae1ea792788c2ced37b5433ea81303d566dbce223537767b2c9f034459  src/test/java/cl/dgt/tramites/enunciado/E2_ListadoFuncionalIT.java

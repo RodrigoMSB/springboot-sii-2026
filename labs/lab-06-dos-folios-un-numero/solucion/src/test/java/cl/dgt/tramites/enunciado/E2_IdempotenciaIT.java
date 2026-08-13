@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * ({@code creado = false}). El {@code UNIQUE (tramite_id)} de la V1 deja de ser adorno: es el
  * suelo que hace esto posible aun si dos reintentos corren a la vez.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BaseConcurrenciaIT.class)
 class E2_IdempotenciaIT {
 

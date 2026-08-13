@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * El número no es mágico: es "los datos, y el conteo de la paginación, y nada más". Un listado
  * que itera relaciones (el N+1) lo revienta; una proyección lo cumple.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BaseRendimientoIT.class)
 class E1_ContadorDeConsultasIT {
 

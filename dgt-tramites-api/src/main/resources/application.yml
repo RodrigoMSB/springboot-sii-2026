@@ -2,8 +2,9 @@
 #  application.yml — configuración de dgt-tramites-api
 # -----------------------------------------------------------------------------
 #  Aquí NO hay credenciales. Ninguna. Ni de desarrollo ni de producción.
-#  El DataSource lo cablea `spring-boot-docker-compose` a partir de compose.yaml
-#  (que lleva su credencial de laboratorio, documentada y desechable).
+#  El DataSource lo publica `BaseDeDatosEmbebida` en el perfil dev: PostgreSQL
+#  de verdad, empaquetado como dependencia Maven y corriendo como proceso hijo.
+#  Ni compose, ni Docker, ni cadena de conexión que filtrar (SPEC-022).
 #
 #  En producción, las credenciales llegan por variable de entorno o por un
 #  gestor de secretos — jamás por este archivo. Ese es el crimen del Lab 01.
@@ -12,10 +13,8 @@ spring:
   application:
     name: dgt-tramites-api
 
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start_and_stop
+  profiles:
+    active: ${DGT_PERFIL:dev}
 
   jpa:
     open-in-view: false          # el famoso OSIV: apagado desde el día uno

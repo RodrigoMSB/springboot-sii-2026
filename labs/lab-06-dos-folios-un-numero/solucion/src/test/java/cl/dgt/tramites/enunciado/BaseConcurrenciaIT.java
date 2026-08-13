@@ -1,11 +1,11 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import cl.dgt.tramites.application.EmisionService;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import javax.sql.DataSource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.function.IntConsumer;
 
 /**
- * Config compartida de los tests de concurrencia: un PostgreSQL real (Testcontainers) y el
+ * Config compartida de los tests de concurrencia: un PostgreSQL real (embebido) y el
  * ARNÉS que dispara N hilos a la vez. El arnés NO usa {@code Thread.sleep} —AU-05 lo prohíbe,
  * y con razón: un test que "espera un poquito" es un test que falla el martes—. Sincroniza con
  * un {@link CountDownLatch}: todos los hilos se preparan, esperan el disparo, y arrancan en el
@@ -22,10 +22,14 @@ import java.util.function.IntConsumer;
 @TestConfiguration(proxyBeanMethods = false)
 class BaseConcurrenciaIT {
 
+    /**
+     * El {@code DataSource} del PostgreSQL embebido, arrancado una sola vez por JVM. Antes esto
+     * era un contenedor con {@code @ServiceConnection}; el motor es el mismo, lo que cambia es
+     * que llega como dependencia Maven y no como imagen Docker (SPEC-022).
+     */
     @Bean
-    @ServiceConnection
-    PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer("postgres:16-alpine3.24");
+    DataSource dataSource() {
+        return PostgresEmbebido.nuevoDataSource();
     }
 
     /** Emite dentro de una transacción y REVIENTA después: prueba el rollback (E4). */

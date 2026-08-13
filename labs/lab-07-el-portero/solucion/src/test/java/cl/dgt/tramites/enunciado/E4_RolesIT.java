@@ -20,7 +20,7 @@ import java.util.Map;
  * el rol). La diferencia entre "no tienes credencial" y "tu credencial no abre esta puerta".
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @Import(BaseSeguridadIT.class)
 class E4_RolesIT {
 

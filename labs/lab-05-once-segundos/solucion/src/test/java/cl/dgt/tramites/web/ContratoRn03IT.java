@@ -1,14 +1,13 @@
 package cl.dgt.tramites.web;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.Map;
 
@@ -25,23 +24,22 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Estilo de referencia para los labs: `RestTestClient` contra el servidor real
  * (Spring Framework 7). La rebanada rápida usa `@WebMvcTest` + MockMvc.
  *
- * <p>Testcontainers 2.x: el contenedor vive en `org.testcontainers.postgresql`. Las
- * coordenadas viejas (`org.testcontainers:postgresql`) ya no existen — la mitad del
- * material en línea todavía las muestra. Es contenido del Módulo 6.
+ * <p>La base es PostgreSQL de verdad, no un H2 que se le parece: los tipos, las restricciones y
+ * el SQL de Flyway son los del motor que corre en producción. Lo que cambió (SPEC-022) es cómo
+ * llega — ya no en un contenedor, sino como dependencia Maven que se extrae y corre como proceso
+ * hijo. La diferencia le importa a la máquina del alumno, no al test.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 class ContratoRn03IT {
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class BaseDeDatosDePrueba {
-        @Bean
-        @ServiceConnection
-        PostgreSQLContainer postgres() {
-            // Testcontainers 2 dejó de ser genérico: ya no hay PostgreSQLContainer<?>
-            // ni el `new ...<>()` autorreferente de la 1.x.
-            return new PostgreSQLContainer("postgres:16-alpine3.24");
-        }
+    @DynamicPropertySource
+    static void baseDeDatos(DynamicPropertyRegistry registro) {
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort

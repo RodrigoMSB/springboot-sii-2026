@@ -30,7 +30,9 @@ class T1_FichaSinDatosSensiblesIT {
 
     @DynamicPropertySource
     static void baseDeDatos(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", PostgresEmbebido::jdbcUrl);
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
         registro.add("spring.datasource.username", PostgresEmbebido::usuario);
         registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }

@@ -12,7 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** TODO_2 · Consultas derivadas: el nombre del método es la consulta. Contra la semilla. */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BasePersistenciaIT.class)
 class E2_ConsultasDerivadasIT {
 

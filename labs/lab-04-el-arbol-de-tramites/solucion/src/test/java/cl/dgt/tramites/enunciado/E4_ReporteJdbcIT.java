@@ -13,7 +13,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** TODO_4 · Un reporte agregado con JdbcClient, sin cargar entidades. */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BasePersistenciaIT.class)
 class E4_ReporteJdbcIT {
 

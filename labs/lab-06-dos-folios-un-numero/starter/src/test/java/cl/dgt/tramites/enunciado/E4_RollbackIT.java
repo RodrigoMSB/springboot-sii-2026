@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * {@code REQUIRES_NEW}, ese incremento commitea aparte y sobrevive al rollback — el contador
  * avanza sin folio, y el libro foliado salta. Con la propagación por defecto (REQUIRED), no.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BaseConcurrenciaIT.class)
 class E4_RollbackIT {
 
