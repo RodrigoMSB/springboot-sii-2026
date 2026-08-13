@@ -31,3 +31,21 @@ mvnw.cmd  text eol=crlf
 *.pptx    binary
 *.xlsx    binary
 *.class   binary
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Material autocontenido (SPEC-022): NADA se normaliza aquí dentro.
+#
+#  No es una manía: Maven verifica cada .jar y cada .pom contra su .sha1. Si Git
+#  "arreglara" los finales de línea de un .pom al clonar, el archivo cambiaría,
+#  el checksum dejaría de cuadrar y la compilación fallaría con un error de
+#  integridad — en la máquina del alumno, el día 1, sin red para recuperarse.
+#
+#  Lo mismo con tools/maven: es la distribución de Apache tal cual salió del
+#  zip. `binary` la deja intacta, con sus `mvn` en LF y sus `mvn.cmd` en CRLF,
+#  que es exactamente como cada plataforma los necesita.
+#
+#  Estas dos reglas van AL FINAL a propósito: en .gitattributes gana la última
+#  coincidencia, y tienen que ganarle al `* text=auto eol=lf` de arriba.
+# ─────────────────────────────────────────────────────────────────────────────
+repo-maven/**   binary
+tools/maven/**  binary
