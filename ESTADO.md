@@ -202,6 +202,43 @@ migración. El que les da nombre: un `99-destruir.sh` que declaraba `[OK] Archiv
 
 Cero código Java tocado. Informe en `docs/specs/informes/INFORME-SPEC-FIX-05.md`.
 
+## 1.e · El Java viaja en la maleta (SPEC-024)
+
+Quedó demostrado en vivo el 13 de agosto: la VM Windows del PO tenía **Java 17** y el curso pide
+25. Ese era el último eslabón donde el material le pedía algo a la máquina del alumno — y todo
+lo que se le pide a dieciocho máquinas distintas falla en alguna. La sesión 1 fue eso.
+
+**El JDK 25 viaja ahora dentro del repositorio.** Eclipse Temurin `jdk-25.0.4+7`, para Windows
+x64 y Mac Apple Silicon, partido en trozos de 80 MB porque GitHub rechaza los archivos de más de
+100. El shim `./mvnw` los junta la primera vez, **verifica el sha256 contra el que publica
+Temurin**, extrae, y usa ese JDK **ignorando cualquier Java que la máquina tenga**. Si la firma
+no cuadra, aborta: un JDK que no se puede verificar no se usa.
+
+Nada de esto toca el entorno del alumno: `JAVA_HOME` y `PATH` se configuran solo para el proceso
+de Maven. Ni `.bashrc`, ni variables de usuario, ni permisos de administrador.
+
+**La lista de prerrequisitos del curso quedó en una palabra: Git.**
+
+La prueba que lo resume, con `JAVA_HOME` apuntando a un GraalVM 21 y ese Java primero en el
+`PATH`: `Java version: 25.0.4, vendor: Eclipse Adoptium` y la suite del Lab 01 en verde, 46
+tests. El problema «N alumnos con N Javas distintos» pasó a ser cero problemas.
+
+**El Lab 00 se migró con él.** Fuera Docker, Docker Hub, Maven Central y el requisito de tener
+Java; dentro, Git, la integridad del clon y el ensamblado real del JDK. Da `5/5 · ESTACIÓN
+LISTA` con el cable desenchufado, y el Java del sistema baja a informativo: *«el curso NO lo
+usa»*.
+
+Y hay **guion para la próxima sesión**: `docs/guion-reinicio-de-sala.md` — clon fresco y no
+`pull`, cómo deshacer el parche de emergencia de la sesión 1, la secuencia de arranque con su
+salida esperada, y el plan B con los tres sospechosos de las máquinas corporativas.
+
+**Pendiente de una mano en el cable:** el vuelo 4 está en pista
+(`tools/vuelo-4-modo-avion.sh`), sin lanzar. Cubre el Lab 00 y los labs 01–07 en modo avión
+**y con el `JAVA_HOME` hostil activo todo el vuelo** — ya no basta con volar sin red: hay que
+volar con la máquina en contra. 14–18 minutos.
+
+Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
+
 ## 2 · Qué falta
 
 **Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
