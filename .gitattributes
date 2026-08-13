@@ -49,3 +49,7 @@ mvnw.cmd  text eol=crlf
 # ─────────────────────────────────────────────────────────────────────────────
 repo-maven/**   binary
 tools/maven/**  binary
+
+# Los trozos del JDK: binarios explicitos. Si Git les tocara un byte —un CRLF,
+# lo que sea— el ensamblado dejaria de cuadrar con su sha256 y el shim abortaria.
+tools/jdk/**    binary

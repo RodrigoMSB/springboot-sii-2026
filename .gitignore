@@ -10,6 +10,11 @@ target/
 !tools/maven/**
 !tools/maven/**/*.jar
 
+# El JDK viaja PARTIDO en trozos (tools/jdk/<plataforma>/*.part-NN), y esos SI se
+# versionan. Lo que el shim ensambla y extrae al vuelo, no: es derivable, pesa
+# 400 MB y cambiaria en cada maquina.
+tools/jdk/runtime/
+
 # IDE / SO
 .idea/
 .DS_Store
