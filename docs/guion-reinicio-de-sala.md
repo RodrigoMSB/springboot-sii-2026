@@ -92,7 +92,7 @@ Windows no tiene nada que preguntar. Si aun así aparece en alguna máquina:
   máquina y todo va por `localhost`.
 - Si tras cancelar la app funciona igual (`curl http://localhost:8099/actuator/health` responde),
   no hay nada que arreglar: el cartel era ruido.
-- Si la app NO funciona tras cancelar, avísame: sería un caso nuevo.
+- Si la app NO funciona tras cancelar, avisa al instructor: sería un caso nuevo.
 
 ---
 
