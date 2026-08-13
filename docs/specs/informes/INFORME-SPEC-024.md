@@ -8,11 +8,12 @@
 
 ## 1 · Veredicto en una línea
 
-**EL CÍRCULO ESTÁ CERRADO, Y VOLADO** — el JDK 25 viaja partido en el repositorio, el shim lo
-ensambla verificando su firma y lo usa **ignorando cualquier Java de la máquina**. Verificado en
-el vuelo 4 (§9): Lab 00 más los siete labs, con el cable desenchufado **y con un `JAVA_HOME`
-hostil activo todo el vuelo**. La lista de prerrequisitos del curso quedó en una palabra:
-**Git**.
+**EL CÍRCULO ESTÁ CERRADO, VOLADO Y PROBADO EN WINDOWS** — el JDK 25 viaja partido en el
+repositorio, el shim lo ensambla verificando su firma y lo usa **ignorando cualquier Java de la
+máquina**. Verificado en el vuelo 4 (§9) —Lab 00 más los siete labs, con el cable desenchufado y
+un `JAVA_HOME` hostil activo— y en **cuatro vueltas de prueba en una máquina Windows real**
+(§10–§13), que encontraron tres defectos invisibles desde macOS y los cerraron todos. La lista
+de prerrequisitos del curso quedó en una palabra: **Git**.
 
 ---
 
@@ -610,16 +611,10 @@ Dos cosas se aprenden y una queda pendiente:
    Windows no cuentan los procesos igual, y el riesgo real es que muera el shell del wrapper y
    sobreviva el Java escuchando el 8099.
 
-**Verificación para la tercera vuelta**, en Git Bash y tras `99-destruir.sh`:
+**Verificación ejecutada en la cuarta vuelta — el pariente quedó ABSUELTO. Ver §13.**
 
-```bash
-netstat -ano | grep 8099        # vacío = muerte real
-tasklist | grep -i java         # ningún java del lab
-```
-
-Si el puerto sigue tomado, el `[OK]` es un mentiroso nuevo y entra en la familia de la FIX-05.
-Va al guion de sala como plan B (§4.d) con el `taskkill` para desatascar una máquina sin perder
-la clase.
+El plan B del guion de sala (§4.d) se conserva igual: aunque el desmontaje funcione, un puerto
+tomado por cualquier otra razón sigue mereciendo su receta.
 
 ### A2.3 · `server.address: localhost`
 
@@ -648,3 +643,65 @@ intacta — el `application-dev.yml` sigue idéntico donde debe serlo.
 
 **Si A2.3 pedía otra cosa** —otro alcance, otra propiedad, el `.yml` de otro perfil—, es un
 cambio de minutos: está en un solo bloque, en un solo archivo por proyecto.
+
+---
+
+## 13 · Cuarta vuelta — el veredicto de Windows
+
+### A2.3, verificado en la máquina real
+
+`./bin/start-lab.sh` levantó la aplicación **sin que apareciera el cartel del Firewall**, a la
+primera. `server.address: localhost` hace lo que prometía: Tomcat se ata al loopback y Windows
+no tiene nada que preguntar.
+
+Es el defecto que **habría parado la sala entera** — dieciocho máquinas corporativas, dieciocho
+diálogos pidiendo un administrador que ningún alumno tiene — y no llegó a existir.
+
+### El pariente del `pgrep`: ABSUELTO, con evidencia
+
+La sospecha de §11 era razonable y resultó infundada. Tras `./bin/start-lab.sh` y
+`./bin/99-destruir.sh`, en Git Bash de Windows:
+
+```
+netstat -ano | grep 8099     ->  solo un TIME_WAIT del curl cliente; CERO en LISTENING
+tasklist | grep -i java      ->  vacío
+```
+
+**El JVM nativo muere, no solo el envoltorio.** Los dos hechos juntos lo cierran: nada escuchando
+en el 8099 y ningún proceso `java` en la lista de tareas de Windows — que es la lista real, no
+la que ve Git Bash.
+
+Un matiz para quien lea esto y se asuste con el `TIME_WAIT`: es el **lado cliente** del `curl`
+que se usó para probar la app, un socket que el sistema retiene unos segundos tras cerrarse. No
+es un servidor vivo. Lo que importaba era la ausencia de `LISTENING`, y no hay ninguno.
+
+Con esto, el `[OK] API detenida (PID …)` de los `99-destruir.sh` **dice la verdad también en
+Windows**. El arreglo de la SPEC-FIX-05 —hacerlo depender de un `kill -0` posterior a la espera—
+resulta ser correcto en las dos plataformas, y ahora está medido en ambas.
+
+### Las cuatro vueltas, en una tabla
+
+| Vuelta | Qué encontró | Estado |
+|---|---|---|
+| **1ª** | `tar -xf` no abre ZIP en Git Bash: es GNU tar, no bsdtar (§10 · A2.1) | ✅ Arreglado por ruta explícita a `System32\tar.exe` |
+| **2ª** | El chequeo del Lab 00 comparaba rutas absolutas entre plataformas y daba `[ERROR]` con todo funcionando (§11 · A2.2) | ✅ Arreglado comparando el sufijo normalizado |
+| **2ª** | `mvnw.cmd` en `cmd.exe`: **46/46 · BUILD SUCCESS en 40 s** (§12) | ✅ V8 cerrada y medida |
+| **3ª/4ª** | `server.address: localhost` — sin cartel del Firewall, a la primera (§13 · A2.3) | ✅ Verificado |
+| **4ª** | El desmontaje mata el JVM nativo, no solo el wrapper (§13) | ✅ Absuelto con evidencia |
+
+**Los tres defectos que encontraron esas vueltas eran invisibles desde macOS**, y los tres
+habrían costado tiempo de sala. Ninguno se podía haber cazado razonando: el `tar` porque
+confundí «existe un bsdtar en Windows» con «el `tar` que se invoca es bsdtar»; el del Lab 00
+porque en una sola plataforma la comparación funciona; el del firewall porque en macOS no hay
+cartel que aparecer.
+
+Es el argumento entero a favor de probar en la máquina del alumno, y la razón de que esta SPEC
+cierre con cuatro vueltas en vez de con una.
+
+### Estado final
+
+**Nada pendiente de esta SPEC.** Las ocho verificaciones cerradas, las cuatro anotaciones A2.x
+implementadas y verificadas en Windows real, el vuelo 4 volado y el guion de sala listo para
+proyectar.
+
+En posición de merge y tag `material-v0.4.0`.

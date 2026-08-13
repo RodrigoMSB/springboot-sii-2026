@@ -241,8 +241,15 @@ El número para la sala: **38 segundos** desde el `git clone` hasta la aplicaci�
 todo frío — sin `target/`, sin caché de binarios, sin JDK ensamblado y sin red. El clon pasa a
 1,0 GB.
 
-Queda una sola verificación fuera de alcance aquí: **el `mvnw.cmd` en Windows real**. Está
-revisado estáticamente, con su punto de riesgo señalado en el informe.
+**Probado en Windows real, en cuatro vueltas.** Encontraron tres defectos que desde macOS eran
+invisibles —el `tar` de Git Bash que no abre ZIP, un chequeo del Lab 00 que comparaba rutas
+absolutas entre plataformas y daba `[ERROR]` con todo funcionando, y el cartel del Firewall— y
+los tres están cerrados. `mvnw.cmd` en `cmd.exe`: **46/46 · BUILD SUCCESS en 40 s**. El
+desmontaje mata el JVM nativo, verificado con `netstat` y `tasklist`. Y la app se ata a
+`localhost`, así que Windows ya no pide un permiso de administrador que el alumno no tiene.
+
+Ninguno de esos tres se podía cazar razonando: es el argumento entero a favor de probar en la
+máquina del alumno.
 
 Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 
