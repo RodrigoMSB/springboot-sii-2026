@@ -5,8 +5,10 @@
 #  Autónomo y desatendido. Se lanza con la red viva y espera en pista; despega
 #  solo cuando detecta que el cable se fue.
 #
-#  Cubre:  · V6/V10 que quedaron pendientes de la SPEC-022 (Lab 02)
-#          · N1-N5 en avión de los labs 03, 04, 05, 06 y 07
+#  Cubre:  · N1-N5 en avión de los SIETE labs, del 01 al 07
+#          · el 01 y el 02 se revalidan enteros: los toqué después de su vuelo 1
+#            (aislamiento por contexto, unificación, manifiestos), así que su
+#            evidencia anterior está vencida. Eso cierra además V6 y V10 de la 022
 #          · V10-bis: simulacro del alumno cronometrado, con caché fría
 #
 #  NO relanza Docker al aterrizar: quedó mañoso tras los relanzamientos
@@ -121,7 +123,11 @@ ciclo() {  # ciclo <lab>
     grep -q 'NO APROBADO' "/tmp/w3-$lab-v-sta.log" || falla "$lab-STARTER-NO-DEBERIA-APROBAR"
 }
 
-for LAB in lab-02-el-folio-que-se-filtro lab-03-red-de-seguridad lab-04-el-arbol-de-tramites \
+# El 01 y el 02 entran aunque ya volaron: los toco DESPUES de su vuelo 1 —el
+# aislamiento por contexto, la unificacion cosmetica y sus manifiestos
+# regenerados—, asi que aquella evidencia esta vencida. Se revalidan enteros.
+for LAB in lab-01-del-otro-lado-del-boton lab-02-el-folio-que-se-filtro \
+           lab-03-red-de-seguridad lab-04-el-arbol-de-tramites \
            lab-05-once-segundos lab-06-dos-folios-un-numero lab-07-el-portero; do
     titulo "$LAB"
     suite "$LAB" solucion verde

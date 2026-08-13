@@ -321,11 +321,20 @@ vigila entre tramos que la red no vuelva, caja negra con timestamps
 Se prepara solo: clona en pista (es local, no necesita red) y aparta `~/.m2` **después** del
 despegue — si el vuelo no sale, el entorno del PO queda intacto, que es la lección del vuelo 2.
 
-Cubre: V6 y V10 heredadas de la 022 (Lab 02), N1–N5 en avión de los labs 03 a 07, §4.1 y §4.2
-con el cable fuera, y **V10-bis**: clon fresco → suite del Lab 06 → `start-lab` del Lab 07,
-cronometrado y con la caché de Zonky borrada para que el arranque en frío sea de verdad frío.
+Cubre **N1–N5 en avión de los siete labs, del 01 al 07**, §4.1 y §4.2 con el cable fuera, y
+**V10-bis**: clon fresco → suite del Lab 06 → `start-lab` del Lab 07, cronometrado y con la
+caché de Zonky borrada para que el arranque en frío sea de verdad frío.
 
-**Duración estimada: 10 a 12 minutos desde el corte.** Lanzarlo:
+**Los labs 01 y 02 entran aunque ya volaron** (adición pedida por el Arquitecto al aprobar este
+informe). Su evidencia del vuelo 1 está **vencida**: los toqué después, y no de forma cosmética
+—el aislamiento por contexto de §7.1 cambió `PostgresEmbebido` en los dos, la unificación de §5
+reescribió `SemillaCoherenteIT` y `ContratoRn03IT`, y sus manifiestos se regeneraron—. Validar
+con evidencia caducada es no validar. Al revalidarlos enteros se cierran de paso V6 y V10 de la
+SPEC-022, que estaban esperando este vuelo.
+
+**Duración estimada: 13 a 16 minutos desde el corte** (eran 10–12 antes de sumar el Lab 01 y el
+ciclo completo del 02): 15 suites de ~18 s, 7 ciclos de arranque + destrucción + doble
+`90-validar` a ~55 s cada uno, y ~2 min del simulacro. Lanzarlo:
 
 ```bash
 nohup tools/vuelo-3-modo-avion.sh > /tmp/vuelo3.out 2>&1 &
