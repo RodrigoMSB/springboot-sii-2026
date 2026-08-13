@@ -1,14 +1,13 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.Map;
 
@@ -26,16 +25,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * "solo dejo salir los que decidí".
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 class T1_FichaSinDatosSensiblesIT {
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class BaseDeDatos {
-        @Bean
-        @ServiceConnection
-        PostgreSQLContainer postgres() {
-            return new PostgreSQLContainer("postgres:16-alpine3.24");
-        }
+    @DynamicPropertySource
+    static void baseDeDatos(DynamicPropertyRegistry registro) {
+        registro.add("spring.datasource.url", PostgresEmbebido::jdbcUrl);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort

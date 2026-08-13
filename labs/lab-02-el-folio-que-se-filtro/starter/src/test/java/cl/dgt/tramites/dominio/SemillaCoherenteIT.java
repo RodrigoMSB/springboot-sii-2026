@@ -1,14 +1,13 @@
 package cl.dgt.tramites.dominio;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,16 +26,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Verifica contra la base real, después de Flyway. Nadie declara "sin duplicados" sin un
  * mecanismo que lo mida: esa es la anti-herencia A-02 del ADN.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 class SemillaCoherenteIT {
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class BaseDeDatosDePrueba {
-        @Bean
-        @ServiceConnection
-        PostgreSQLContainer postgres() {
-            return new PostgreSQLContainer("postgres:16-alpine3.24");
-        }
+    @DynamicPropertySource
+    static void baseDeDatos(DynamicPropertyRegistry registro) {
+        registro.add("spring.datasource.url", PostgresEmbebido::jdbcUrl);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @Autowired
