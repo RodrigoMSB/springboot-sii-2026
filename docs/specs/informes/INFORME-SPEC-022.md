@@ -9,9 +9,9 @@
 
 ## 1 · Veredicto en una línea
 
-**MATERIAL AUTOCONTENIDO VIABLE** — el Lab 01 corre entero, suite completa verde, con el
-cable de red desenchufado y sin Docker. El Lab 02 está verde en modo `--offline` y su
-verificación en avión (V6) se traslada al vuelo 3 por no haber despegado el vuelo 2.
+**MATERIAL AUTOCONTENIDO VIABLE** — los labs 01 y 02 corren enteros, suite completa verde,
+con el cable de red desenchufado y sin Docker. **Cerrado del todo:** V1–V5 y V7 en el vuelo 1,
+y V6 y V10 en el vuelo 3 (ver adenda al final).
 
 ---
 
@@ -225,11 +225,11 @@ Al aterrizar: `red aun cortada`. **Ningún tramo del vuelo quedó contaminado.**
 | **V3** | `start-lab.sh` + curls + `99-destruir.sh` | ✅ | `start-lab EXIT=0 · 5s` · `curls con 200: 3/3` · `99-destruir EXIT=0` |
 | **V4** | `90-validar.sh` en ambos estados | ✅ | starter `4/5 · LAB 01 NO APROBADO` (único fallo: *«Faltan TODOs por resolver»*) · solución `5/5 · 🏆 LAB 01 APROBADO` |
 | **V5** | `ps` por ruta exacta tras V3 | ✅ | antes: `app: 1 · postgres: 1` → después: `app: 0 · postgres: 0` |
-| **V6** | Lab 02 en modo avión | ⏭️ DIFERIDA | El vuelo 2 quedó en pista y nunca despegó: no hubo corte de red esa noche. Se traslada al **vuelo 3** (SPEC-023 §6). Verde con red disponible pero `--offline`: `42 + 11 tests · BUILD SUCCESS · descargas: 0` |
+| **V6** | Lab 02 en modo avión | ✅ | Cerrada en el **vuelo 3**: `solucion EXIT=0 · 15s · descargas=0` · `start-lab health=200` · `90-validar: LAB 02 APROBADO` · cero huérfanos |
 | **V7** | `java -version` junto a V1 | ✅ | `openjdk version "25" · Temurin-25+36`, citado dentro del vuelo |
 | **V8** | Tamaños + guard 95 MB | ✅ | Ver abajo |
 | **V9** | Comparativa de tiempos | ⚠️ SKIP parcial | Ver §7 |
-| **V10** | Simulacro del alumno | ⏭️ DIFERIDA | Ídem: al vuelo 3, como V10-bis |
+| **V10** | Simulacro del alumno | ✅ | Cerrada en el **vuelo 3** como V10-bis: `git clone` 4 s → suite en frío 21 s → app viva 9 s = **34 s**, cero descargas |
 
 **Sobre V1 y el criterio «Verde»:** la tabla de la SPEC pide *«Verde»* para el `starter`, y eso
 no es alcanzable — un starter con los TODO sin resolver **debe** fallar sus tests del
@@ -375,11 +375,9 @@ incluyendo por qué `apus` dejó de estar en el camino crítico. Sigue sin crede
 
 ## 9 · Lo que queda para la Fase 1
 
-**V6 y V10 se trasladan al vuelo 3** (SPEC-023 §6). El script del vuelo 2 quedó en pista
-esperando el corte de red y nunca despegó — la noche avanzó y el cable siguió puesto. No es un
-fallo del material: ambas pruebas están verdes con red disponible y `--offline`, con cero
-descargas; lo que falta es la evidencia de red apagada que §10 exige. Como la SPEC-023 pide un
-vuelo 3 de todos modos, se agrupan ahí en vez de pedir dos cortes de cable al PO.
+**V6 y V10 quedaron cerradas en el vuelo 3** (13 de agosto, 12:46–12:54). El vuelo 2 nunca
+despegó —el script esperó el corte toda la noche y el cable siguió puesto—, así que se
+agruparon con el vuelo de la SPEC-023 en vez de pedir dos cortes al PO. Ver la adenda.
 
 **El grueso — los labs 03 a 14**, con la receta ya probada. Lo que la réplica del Lab 02
 enseña sobre el costo real: la parte mecánica es rápida, y el trabajo de verdad es leer el
@@ -401,3 +399,73 @@ enunciado, que arrastran manifiesto.
    falso. Limpieza cuando el shim llegue a todos los labs.
 8. **Verificar el shim en Git Bash sobre Windows**, en sala. La lógica es POSIX simple y
    `mvnw.cmd` tiene su equivalente para `cmd.exe`, pero no está probado en la plataforma real.
+
+
+---
+---
+
+# Adenda · Cierre de V6 y V10 en el vuelo 3
+
+> Las dos verificaciones que quedaron diferidas se ejecutaron el **13 de agosto de 2026**, en
+> el vuelo 3 de la SPEC-023. Caja negra: `/tmp/caja-negra-vuelo3.log`. El informe de arriba no
+> se reescribió —queda como registro de lo que se supo en su momento—, salvo las dos filas de
+> la tabla y el veredicto.
+
+**Aislamiento, citado antes de correr nada:**
+
+```
+--- ping -c1 github.com ---    ping: cannot resolve github.com: Unknown host   exit=68
+--- curl repo1.maven.org ---   curl: (6) Could not resolve host    http=000    exit=6
+--- IPs no-loopback ---        (ninguna)
+--- ruta por defecto ---       (sin ruta)
+--- el .m2 del usuario ---     apartado
+--- docker ---                 sin daemon
+```
+
+**V6 · Lab 02 en modo avión** — el ciclo entero, no solo la suite:
+
+```
+############ lab-02-el-folio-que-se-filtro ############
+  solucion   EXIT=0  15s  descargas=0  Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+  starter    EXIT=1   6s  descargas=0  Tests run: 38, Failures: 4
+      fallos fuera de enunciado/: 0
+  start-lab EXIT=0 · health=200
+  postgres huerfanos: 0
+  90-validar  solucion: LAB 02 APROBADO      starter: LAB 02 NO APROBADO
+```
+
+**V10 · simulacro del alumno**, ejecutado como V10-bis con la caché de binarios borrada:
+
+```
+git clone                   4s      (486 MB)
+Lab 06 · ./mvnw verify     21s      EXIT=0 · descargas=0     <-- primer comando, todo frío
+Lab 07 · ./bin/start-lab.sh 9s      EXIT=0 · health=200
+------------------------------
+TOTAL                      34s
+```
+
+Treinta y cuatro segundos desde el `git clone` hasta la aplicación sirviendo, sin una sola
+conexión de red.
+
+**Nota sobre el Lab 01.** También se revalidó en ese vuelo, y no por celo: entre el vuelo 1 y
+el 3 lo cambié dos veces —el aislamiento por contexto de la SPEC-023 reescribió
+`PostgresEmbebido`, y la unificación de archivos compartidos tocó `SemillaCoherenteIT` y
+`ContratoRn03IT`, con sus manifiestos regenerados—. La evidencia del vuelo 1 había caducado.
+La nueva:
+
+```
+############ lab-01-del-otro-lado-del-boton ############
+  solucion   EXIT=0  14s  descargas=0  Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+  starter    EXIT=1   7s  descargas=0  Tests run: 46, Failures: 5, Errors: 2
+      fallos fuera de enunciado/: 0
+  start-lab EXIT=0 · health=200
+  postgres huerfanos: 0
+  90-validar  solucion: LAB 01 APROBADO      starter: LAB 01 NO APROBADO
+```
+
+**V9 sigue en SKIP.** El demonio de Docker no volvió a levantar y la línea base de
+Testcontainers nunca se midió. La comparativa honesta, dicha en §7, no cambia: en las máquinas
+del SII ese lado no tiene un tiempo, tiene un error.
+
+Con esto la SPEC-022 queda **cerrada sin verificaciones pendientes**, salvo V9, que depende de
+que alguien resucite Docker y ya no bloquea nada.

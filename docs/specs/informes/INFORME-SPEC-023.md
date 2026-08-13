@@ -8,9 +8,10 @@
 
 ## 1 · Veredicto en una línea
 
-**FASE 1 EJECUTADA Y VERDE CON RED** — el tronco y los labs 03 a 07 corren la receta
-autocontenida, con las suites, los scripts y `90-validar` en verde **offline contra
-`repo-maven/`**; la cadena de derivación cierra entera y el vuelo 3 queda en pista.
+**FASE 1 EJECUTADA Y VERIFICADA EN MODO AVIÓN** — el tronco y los labs 01 a 07 corren la
+receta autocontenida con el cable de red desenchufado: siete labs, quince suites, cero
+descargas intentadas y `90-validar` APROBADO en las siete soluciones. La cadena de derivación
+cierra entera y el simulacro del alumno va de `git clone` a app viva en **34 segundos**.
 
 ---
 
@@ -56,15 +57,39 @@ no menos de lo que costaron el 05 y el 06, porque el 08 en adelante añade WireM
 
 Todo con red (captura a `repo-maven`), salvo N4 que se corrió **offline** a propósito.
 
-### N1 · `starter`: fallan SOLO los de `enunciado/`
+### N1 · `starter`: falla lo del alumno, y solo eso
 
-| Lab | Resultado |
-|---|---|
-| 03 | 21 fallos, `fallos fuera de enunciado/: 0` |
-| 04 | 14 fallos, 0 ajenos |
-| 05 | 4 fallos, 0 ajenos |
-| 06 | 6 fallos, 0 ajenos |
-| 07 | 11 fallos, 0 ajenos |
+Los números de esta tabla son los del **vuelo 3** (§9), no los del turno nocturno: el arnés
+nocturno calculaba los «fallos ajenos» pero no llegaba a imprimirlos, así que la primera
+versión de este informe los daba por cero sin evidencia. El vuelo los midió de verdad y
+corrigió dos.
+
+| Lab | Fallos del `starter` | Fuera de `enunciado/` |
+|---|---|---|
+| 01 | `Tests run: 46, Failures: 5, Errors: 2` | 0 |
+| 02 | `Tests run: 38, Failures: 4` | 0 |
+| 03 | `Tests run: 60, Failures: 3, Errors: 14` | **2** — ver abajo |
+| 04 | `Tests run: 40, Failures: 1` | 0 |
+| 05 | `Tests run: 41, Errors: 1` | **2** — ver abajo |
+| 06 | `Tests run: 11, Failures: 2, Errors: 1` | 0 |
+| 07 | `Tests run: 22, Failures: 6, Errors: 1` | 0 |
+
+**Los dos «ajenos» no son ajenos: son huecos del alumno que viven fuera de `enunciado/`**, y
+están DECLARADOS como tales en el `derivacion-starter.txt` de su lab:
+
+```
+lab-03 · src/test/java/cl/dgt/tramites/servicio/TramiteServiceTest.java
+lab-05 · src/test/java/cl/dgt/tramites/integracion/ListadoIntegracionTest.java
+
+$ grep UnsupportedOperationException …
+        throw new UnsupportedOperationException("{{TODO_4}}");
+        throw new UnsupportedOperationException("{{TODO_2}}");
+```
+
+Son los TODO donde el alumno escribe SUS tests —el `90` comprueba que existan y pasen—, así que
+en el `starter` **tienen que** fallar. El criterio «solo puede fallar `enunciado/`» era mío y
+era demasiado estrecho: el criterio correcto es «solo puede fallar lo declarado como hueco».
+Defecto del arnés de verificación, no del material.
 
 ### N2 · `solucion`: verde
 
@@ -310,9 +335,93 @@ en la raíz de la cadena.
 
 ---
 
+## 9 · Vuelo 3 — la verificación en modo avión
+
+Ejecutado el 13 de agosto, 12:46–12:54. Caja negra completa en
+`/tmp/caja-negra-vuelo3.log`. Despegó solo 36 s después de lanzarse, y aterrizó con la red
+todavía cortada: **ningún tramo quedó contaminado**.
+
+### Evidencia de aislamiento, antes de tocar nada
+
+```
+--- ping -c1 github.com ---    ping: cannot resolve github.com: Unknown host   exit=68
+--- curl repo1.maven.org ---   curl: (6) Could not resolve host    http=000    exit=6
+--- IPs no-loopback ---        (ninguna)
+--- ruta por defecto ---       (sin ruta)
+--- el .m2 del usuario ---     apartado
+--- docker ---                 sin daemon
+--- java ---                   openjdk version "25" 2025-09-16 LTS
+```
+
+### Los siete labs, con el cable fuera
+
+| Lab | `solucion` | descargas | `start-lab` | huérfanos | `90-validar` solución / starter |
+|---|---|---|---|---|---|
+| 01 | `EXIT=0` · 14 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 02 | `EXIT=0` · 15 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 03 | `EXIT=0` · 14 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 04 | `EXIT=0` · 14 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 05 | `EXIT=0` · 19 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 06 | `EXIT=0` · 15 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+| 07 | `EXIT=0` · 18 s | **0** | `health=200` | 0 | APROBADO / NO APROBADO |
+
+**Cero descargas intentadas en las quince suites.** No es que fallaran: Maven ni lo intentó.
+
+Los labs 01 y 02 se revalidaron enteros porque su evidencia del vuelo 1 estaba vencida (los
+cambié después, §7.1 y §5). Ahora está fresca — y con ella se cierran **V6 y V10 de la
+SPEC-022**.
+
+### §4.1 y §4.2, ya sin red
+
+```
+############ §4.1 · el N+1 con el cable fuera ############
+Expecting actual:
+  13L
+to be less than or equal to:
+  3L
+contador en solucion (debe pasar): Tests run: 1, Failures: 0, Errors: 0
+
+############ §4.2 · la carrera del Lab 06 con el cable fuera ############
+Tests run: 1, Failures: 0 -- in E1_EmisionConcurrenteIT
+Tests run: 1, Failures: 0 -- in E2_IdempotenciaIT
+Tests run: 1, Failures: 0 -- in E3_CheckMontoCeroIT
+Tests run: 1, Failures: 0 -- in E4_RollbackIT
+```
+
+Los mismos 13 contra 3, y la misma carrera verde, sin red y sin Docker.
+
+### V10-bis · el simulacro del alumno
+
+Caché de binarios de Zonky borrada antes de empezar, para que el arranque en frío lo sea de
+verdad:
+
+```
+git clone                   4s      (486 MB)
+Lab 06 · ./mvnw verify     21s      EXIT=0 · descargas=0     <-- primer comando, todo frío
+Lab 07 · ./bin/start-lab.sh 9s      EXIT=0 · health=200
+------------------------------
+TOTAL                      34s
+```
+
+**34 segundos desde el `git clone` hasta la aplicación sirviendo**, sin una sola conexión de
+red. Ese es el número que importa para la sala.
+
+### Veredicto del vuelo
+
+```
+VUELO 3 CON FALLAS EN: lab-03-red-de-seguridad/starter-FALLOS-AJENOS
+                       lab-05-once-segundos/starter-FALLOS-AJENOS
+```
+
+**Las dos son falsas alarmas del arnés**, diagnosticadas y explicadas en N1: son los huecos que
+el alumno rellena, declarados en su `derivacion-starter.txt`, y deben fallar en el `starter`.
+Ninguna otra prueba falló. El material pasó el vuelo entero.
+
+---
+
 ## 8 · Lo que queda
 
-**Inmediato — el vuelo 3, en pista y sin lanzar** (§6). Está versionado en
+**El vuelo 3 ya voló** — resultados en §9. Sigue versionado en
 `tools/vuelo-3-modo-avion.sh`, con el mismo diseño probado: espera hasta detectar el corte,
 vigila entre tramos que la red no vuelva, caja negra con timestamps
 (`/tmp/caja-negra-vuelo3.log`), veredicto (`/tmp/veredicto-vuelo3.txt`) y restauración de
@@ -332,9 +441,9 @@ reescribió `SemillaCoherenteIT` y `ContratoRn03IT`, y sus manifiestos se regene
 con evidencia caducada es no validar. Al revalidarlos enteros se cierran de paso V6 y V10 de la
 SPEC-022, que estaban esperando este vuelo.
 
-**Duración estimada: 13 a 16 minutos desde el corte** (eran 10–12 antes de sumar el Lab 01 y el
-ciclo completo del 02): 15 suites de ~18 s, 7 ciclos de arranque + destrucción + doble
-`90-validar` a ~55 s cada uno, y ~2 min del simulacro. Lanzarlo:
+**Duración real: 8 minutos y 28 segundos** (12:46:06 → 12:54:34), contra los 13–16 estimados.
+La estimación fue conservadora: los ciclos de `90-validar` salieron más rápidos de lo previsto.
+Para relanzarlo:
 
 ```bash
 nohup tools/vuelo-3-modo-avion.sh > /tmp/vuelo3.out 2>&1 &
@@ -349,7 +458,8 @@ nohup tools/vuelo-3-modo-avion.sh > /tmp/vuelo3.out 2>&1 &
 3. **Lab 12 y Lab 14** — el 12 usa los mismos contenedores singleton que el 08; el 14 son cinco
    proyectos Spring Cloud.
 4. **SPEC-FIX-05**, ya con dos hallazgos que la esperan: el `borrar_seguro` con symlinks
-   (SPEC-022 §8.5) y el rótulo «LAB 02» de los labs 04 y 05 (§7.3 de aquí).
+   (SPEC-022 §8.5) y el rótulo «LAB 02» de los labs 04 y 05 (§7.3 de aquí), que el vuelo volvió
+   a exhibir: los labs 04 y 05 anuncian «LAB 02 APROBADO» estando aprobados ellos.
 5. **Rediseño de los `TODO_1`/`TODO_2`** del perfil `dev`, todavía marcados
    `PROVISORIO SPEC-022`.
 6. **Los 30 `maven-wrapper.properties`** siguen apuntando a `repo.maven.apache.org`. Ya no los

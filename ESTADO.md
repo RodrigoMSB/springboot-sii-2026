@@ -143,8 +143,8 @@ La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. 
 - **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
 - **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
   offline. Para el alumno no cambia una sola letra: sigue siendo `./mvnw test`.
-- **La prueba reina, pasada:** suite completa verde con **el cable de red desenchufado y el
-  Wi-Fi apagado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
+- **La prueba reina, pasada dos veces:** suite completa verde con **el cable de red
+  desenchufado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
   funciona en modo avión, funciona detrás de cualquier firewall — porque para el material son
   la misma cosa.
 
@@ -171,8 +171,13 @@ contenedores en un curso sin Docker — eso es decisión del Arquitecto antes qu
 anotados el rediseño de los `TODO_1`/`TODO_2` del perfil `dev` y la reconciliación de la
 frontera Lab 07 → Lab 08.
 
-**Pendiente de una mano en el cable:** el vuelo 3 está en pista (`tools/vuelo-3-modo-avion.sh`),
-sin lanzar. Cubre los labs 02 a 07 en modo avión y el simulacro del alumno, en 10-12 minutos.
+**Verificado en modo avión, con el cable fuera** (vuelo 3, 13 de agosto): los **siete** labs,
+quince suites, **cero descargas intentadas**, `90-validar` APROBADO en las siete soluciones y
+cero procesos huérfanos. El número que importa para la sala: **34 segundos** desde el
+`git clone` hasta la aplicación sirviendo, con la caché de binarios borrada y sin una sola
+conexión de red.
+
+Con eso quedan cerradas también las dos verificaciones que la SPEC-022 tenía diferidas.
 
 ## 2 · Qué falta
 
