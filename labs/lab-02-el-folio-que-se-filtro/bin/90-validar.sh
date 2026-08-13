@@ -7,9 +7,9 @@
 #
 #  EL MISMO CRITERIO JUZGA A AMBOS. No hay dos verdades.
 #
-#  Este lab NECESITA DOCKER: dos de sus pruebas (la ficha contra base real y el
-#  contrato OpenAPI) levantan un PostgreSQL con Testcontainers. Corre `verify`,
-#  no `test`. Si no tienes Docker, te lo dice claro y no finge un veredicto.
+#  Este lab corre `verify`, no `test`: dos de sus pruebas (la ficha contra base
+#  real y el contrato OpenAPI) son de integración y necesitan PostgreSQL. No
+#  hace falta Docker — la base viaja como dependencia Maven y arranca sola.
 #
 #  De SOLO LECTURA y SIN `set -e`. En Java el criterio se verifica con TESTS
 #  COMPILADOS y ArchUnit; este script orquesta, jamás inspecciona tu código con
@@ -45,15 +45,11 @@ esac
 printf '\n  Lab 02 · validando %s\n\n' "$OBJETIVO"
 
 # -----------------------------------------------------------------------------
-#  0 · Docker vivo (lo necesitan T1 y T4)
+#  0 · Ya no hay gate de Docker. T1 y T4 siguen probando contra una base real,
+#      pero esa base la trae el propio proyecto: PostgreSQL empaquetado como
+#      dependencia Maven, que arranca como proceso hijo del JVM (SPEC-022).
+#      Sin demonio que abrir, sin permisos que pedir y sin red que tener.
 # -----------------------------------------------------------------------------
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" \
-              "Este lab prueba la ficha contra una base real. Abre Docker Desktop (T-03 del Lab 00)."
-    resumen_final "no verificado" "no verificado" >/dev/null
-    printf '\n[ERROR] No puedo validar sin Docker.\n\n'
-    exit 1
-fi
 
 # -----------------------------------------------------------------------------
 #  1 · El enunciado no se toca (manifiesto) — antes de compilar, es barato
@@ -69,7 +65,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-#  2 · `verify` — una sola vez (compila + tests + integración con Docker)
+#  2 · `verify` — una sola vez (compila + tests + integración contra la base)
 # -----------------------------------------------------------------------------
 SALIDA="$(mktemp)"
 trap 'rm -f "$SALIDA"' EXIT

@@ -3,6 +3,13 @@ target/
 *.class
 *.jar
 
+# ...pero el material autocontenido (SPEC-022) es la excepción: ahí los jars SON
+# el contenido. Sin estas tres líneas, `*.jar` de arriba vaciaría el repositorio
+# embebido y el alumno clonaría un esqueleto que no compila.
+!repo-maven/**
+!tools/maven/**
+!tools/maven/**/*.jar
+
 # IDE / SO
 .idea/
 .DS_Store

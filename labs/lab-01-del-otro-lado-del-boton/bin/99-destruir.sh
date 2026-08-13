@@ -47,22 +47,22 @@ for PROYECTO in starter solucion; do
     fi
 done
 
-if docker info >/dev/null 2>&1; then
-    BAJADOS=0
-    for PROYECTO in starter solucion; do
-        if [ -f "$DIR_LAB/$PROYECTO/compose.yaml" ]; then
-            ( cd "$DIR_LAB/$PROYECTO" && docker compose down -v >/dev/null 2>&1 ) && BAJADOS=$((BAJADOS + 1))
-        fi
-    done
-    paso_ok "PostgreSQL del laboratorio detenido ($BAJADOS compose)"
-
-    SOBRANTES="$(docker ps -q --filter label=org.testcontainers 2>/dev/null | wc -l | tr -d ' ')"
-    if [ "${SOBRANTES:-0}" -gt 0 ]; then
-        log_info "Veo $SOBRANTES contenedor(es) de Testcontainers, de un './mvnw verify'."
-        log_info "No los toco: no los levantó este laboratorio. Cómo limpiarlos: ver T-11 del Lab 00."
-    fi
+# El PostgreSQL embebido es proceso HIJO del JVM de la app: cuando el contexto
+# de Spring se cierra, el bean lo apaga y el proceso se va con él. Aquí no hay
+# nada que bajar — solo que comprobar que efectivamente se fue.
+#
+# Y ojo con la tentación de `pkill postgres`: eso mataría la base del proyecto
+# del trabajo, la de otro curso y cualquier PostgreSQL que el alumno tenga
+# levantado. Se MIRAN, no se matan. Es la misma regla que aplicábamos a los
+# contenedores ajenos, y la razón por la que existe.
+HUERFANOS="$(pgrep -f 'embedded-pg/PG-.*/bin/postgres' 2>/dev/null | wc -l | tr -d ' ')"
+if [ "${HUERFANOS:-0}" -eq 0 ]; then
+    paso_ok "PostgreSQL embebido detenido: no quedó ningún proceso"
 else
-    paso_skip "Docker no responde: no hay contenedores del lab que bajar"
+    paso_warn "Veo $HUERFANOS proceso(s) de PostgreSQL embebido todavía vivos"
+    log_info "No los mato por nombre: podrían ser de otro proyecto tuyo."
+    log_info "Míralos con:   pgrep -fl 'embedded-pg/PG-'"
+    log_info "Si son de este lab, ciérralos por PID:   kill <pid>"
 fi
 
 borrar_seguro "$ESTADO"

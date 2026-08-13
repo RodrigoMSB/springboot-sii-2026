@@ -120,6 +120,43 @@ crimen en su sección 1** en vez de en la 7: el bloque fundacional —contenedor
 autoconfiguración— entra después, por una puerta declarada. gRPC entró en el Lab 08 —teoría y demo ejecutable— porque el M10
 contratado lo promete y no estaba.
 
+## 1.c · La emancipación de Docker · el material autocontenido (SPEC-022)
+
+Tres hechos del terreno, y la estrategia sale sola:
+
+1. Las máquinas de los alumnos del SII **no tienen Docker y no pueden instalarlo** (sin admin).
+2. Su firewall bloquea todo internet **salvo el Nexus interno `apus.sii.cl:8081`**… que solo se
+   puede probar desde dentro del SII, y **no habrá VPN jamás**.
+3. **GitHub sí funciona** desde esas máquinas, rápido y sin problemas. Es la única puerta
+   confirmada abierta.
+
+La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. El alumno hace
+`git clone` y el material funciona sin volver a tocar la red nunca más.
+
+**Estado: Fase 0 ejecutada y verificada. Labs 01 y 02 convertidos.** El informe está en
+`docs/specs/informes/INFORME-SPEC-022.md`.
+
+- **Docker fuera de los labs 01 y 02.** PostgreSQL llega como dependencia Maven (Zonky): se
+  extrae a una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin.
+  Es PostgreSQL **de verdad** —16.14, el mismo motor— no un H2 disfrazado.
+- **`repo-maven/` en la raíz**: 224 MB, 274 jars. Todas las dependencias de los dos labs.
+- **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
+- **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
+  offline. Para el alumno no cambia una sola letra: sigue siendo `./mvnw test`.
+- **La prueba reina, pasada:** suite completa verde con **el cable de red desenchufado y el
+  Wi-Fi apagado**, sobre un clon fresco y con `~/.m2` apartado. Cero descargas intentadas. Si
+  funciona en modo avión, funciona detrás de cualquier firewall — porque para el material son
+  la misma cosa.
+
+**`apus` no murió, se degradó a plan B.** `tools/settings-sii.xml` sigue versionado, sin
+credenciales, con su encabezado pedagógico. Ya no está en el camino crítico de nada: su gate solo
+podía correrse el día de clase, y eso era una ruleta, no un plan. La SPEC-021 lo intentó y se
+quedó en `NXDOMAIN`; su informe se conserva como registro de por qué se cambió de estrategia.
+
+**Lo que falta (Fase 1):** los labs 03 a 14 con la misma receta, y los diferidos que ya están
+anotados — el rediseño de los `TODO_1`/`TODO_2` del perfil `dev`, el WireMock in-process del Lab
+08 en adelante, Jib en el Lab 13, y la reconciliación global de manifiestos y derivación.
+
 ## 2 · Qué falta
 
 **Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales

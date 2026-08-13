@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ===========================================================================
+   settings-sii.xml · el mundo cerrado del SII, en un archivo
+  ───────────────────────────────────────────────────────────────────────────
+
+   QUÉ ES  —  y por qué NO lo está usando nadie ahora mismo
+
+   La configuración de Maven para las máquinas del SII: le dice que vaya a
+   buscar TODO al Nexus interno `apus.sii.cl:8081`, en vez de a
+   `repo.maven.apache.org`, que allí dentro está bloqueado.
+
+   ESTE ARCHIVO ES EL PLAN B. No está en el camino crítico de nada.
+
+   El curso ya no depende de `apus`: desde la SPEC-022 las dependencias viajan
+   dentro del propio repositorio (`repo-maven/`) y `./mvnw` las usa en modo
+   offline. El material funciona en modo avión, que es la única garantía que se
+   puede dar sin poder probar nada dentro del SII.
+
+   Porque ese es el problema de `apus`: la pregunta «¿sirve los artefactos que
+   el curso necesita?» SOLO se puede responder desde dentro de la red del SII, y
+   no hay VPN. Responderla el día de clase, con los alumnos entrando, no es un
+   plan: es una ruleta. La SPEC-021 lo intentó y se quedó en `NXDOMAIN`.
+
+   Se conserva versionado porque el trabajo ya está hecho y porque el día que
+   exista una VPN —o que alguien corra esto desde una máquina del SII— vuelve a
+   ser útil en treinta segundos.
+
+   Viene del archivo probado en cancha que entregó el PO. Se versiona tal cual
+   —misma URL, mismo `http://`, mismos ids— con UNA sola diferencia
+   deliberada, explicada más abajo: no trae el bloque `<servers>`.
+
+
+   POR QUÉ mirrorOf=*
+
+   El asterisco significa "todos los repositorios, sin excepción". No solo
+   `central`: también cualquier repositorio que un `pom.xml` declare por su
+   cuenta (milestones de Spring, repos de terceros, lo que sea). Todos pasan
+   por `apus`.
+
+   Es a propósito, y por dos razones. En el SII, un repositorio que se escape
+   del mirror simplemente no responde y el alumno se queda bloqueado sin
+   entender por qué. Y fuera del SII pasa algo peor: el repositorio que se
+   escapa SÍ responde —hay internet— y la compilación pasa en verde habiendo
+   descargado por la puerta equivocada. Con `*` no hay puertas laterales:
+   o pasa por `apus`, o no pasa.
+
+   Efecto lateral que conviene saber: el `*` también redirige los repositorios
+   `nexus.sii.cl` y `cl.sii.group` de más abajo hacia el grupo de `apus`. Para
+   este curso da igual —todo lo que necesitamos son artefactos públicos que el
+   grupo proxea— pero si algún día se necesita un artefacto que viva SOLO en
+   `cl.sii.group`, hay que revisar esta decisión.
+
+   El segundo mirror, `maven-default-http-blocker`, no es decorativo: desde
+   Maven 3.8.1 el `settings.xml` global bloquea todo repositorio `http://`.
+   Como `apus` es `http://` y no `https://`, hay que neutralizar ese bloqueo
+   redefiniendo su id. Sin esas cinco líneas, nada de esto funciona.
+
+
+   POR QUÉ NO TRAE CREDENCIALES  —  y sí, esto es el Lab 01
+
+   El archivo original traía cinco bloques `<server>` con la credencial de
+   despliegue del Nexus escrita en claro. No están aquí. Se quedaron fuera del
+   repositorio, a propósito.
+
+   Si el Lab 01 te suena, ya sabes por qué: el crimen del Lab 01 es
+   exactamente este —una credencial de verdad, versionada, al alcance de
+   cualquiera que clone el proyecto—. Habría sido difícil dictar ese
+   laboratorio con la contraseña del Nexus institucional dos carpetas más
+   arriba.
+
+   Y ojo con la distinción, que es la misma que explica el perfil `dev`: el
+   problema no es "una contraseña en un archivo". Es QUÉ protege esa
+   contraseña y qué pasa si se filtra. Una credencial de laboratorio, de una
+   base desechable que muere al terminar el ejercicio, se versiona sin
+   remordimiento. La credencial de despliegue de la infraestructura del SII,
+   no.
+
+   Consecuencia práctica: este archivo asume que `apus` permite LECTURA
+   ANÓNIMA del grupo `maven-sii-group`. Es lo normal en un Nexus que sirve de
+   proxy, pero está sin comprobar. Si al usarlo aparece un `401` o un `403`,
+   NO improvises añadiendo la credencial aquí: es una decisión del PO
+   (habilitar lectura anónima con TI, o inyectarla por variable de entorno).
+
+
+   CÓMO SE USARÍA, SI ALGÚN DÍA HACE FALTA
+
+   No hay que hacer nada para el curso normal: `./mvnw` ya resuelve todo contra
+   `repo-maven/`, offline. Este archivo solo entra en juego si alguien necesita
+   traer una dependencia NUEVA estando dentro del SII:
+
+       DGT_ONLINE=1 ./mvnw -s ../../../tools/settings-sii.xml <lo que sea>
+
+   `DGT_ONLINE=1` desactiva el modo offline del shim; el `-s` manda a Maven a
+   `apus`. Ajusta la cantidad de `../` según desde dónde lo corras.
+
+   Para comprobar que el mirror está activo:
+
+       DGT_ONLINE=1 ./mvnw -s <ruta> help:effective-settings
+
+   Y para verificar la PROCEDENCIA de lo que baje: Maven nombra el mirror por
+   su id, así que en el log vas a leer `Downloading from maven-sii-apus:`, NO
+   `Downloading from central:`. Si aparece `repo.maven.apache.org`, el artefacto
+   NO vino de `apus` y la comprobación no vale.
+  ===========================================================================
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <!-- El bloque <servers> del archivo original NO se versiona. Ver arriba. -->
+
+    <mirrors>
+        <mirror>
+            <id>maven-sii-apus</id>
+            <name>maven-sii-apus</name>
+            <url>http://apus.sii.cl:8081/repository/maven-sii-group/</url>
+            <mirrorOf>*</mirrorOf>
+        </mirror>
+        <mirror>
+            <id>maven-default-http-blocker</id>
+            <mirrorOf>dummy</mirrorOf>
+            <name>Dummy mirror to override default blocking mirror that blocks http</name>
+            <url>http://0.0.0.0/</url>
+        </mirror>
+    </mirrors>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <repositories>
+                <repository>
+                    <id>maven-sii-apus</id>
+                    <name>Maven SII Apus</name>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <url>http://apus.sii.cl:8081/repository/maven-sii-group/</url>
+                    <layout>default</layout>
+                </repository>
+
+                <repository>
+                    <id>maven-sii-nexus</id>
+                    <name>Maven SII Nexus</name>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <url>http://nexus.sii.cl:8081/repository/maven-sii-group/</url>
+                    <layout>default</layout>
+                </repository>
+
+                <repository>
+                    <id>cl.sii.group</id>
+                    <name>cl.sii.group</name>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                    <url>http://nexus.sii.cl:8081/repository/cl.sii.group/</url>
+                    <layout>default</layout>
+                </repository>
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>maven-sii-apus</id>
+                    <name>Maven SII Apus</name>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <url>http://apus.sii.cl:8081/repository/maven-sii-group/</url>
+                    <layout>default</layout>
+                </pluginRepository>
+
+                <pluginRepository>
+                    <id>maven-sii-nexus</id>
+                    <name>Maven SII Nexus</name>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <url>http://nexus.sii.cl:8081/repository/maven-sii-group/</url>
+                    <layout>default</layout>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>default</activeProfile>
+    </activeProfiles>
+</settings>

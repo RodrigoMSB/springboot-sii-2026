@@ -1,12 +1,18 @@
 # =============================================================================
 #  Perfil dev — tu portátil
 # -----------------------------------------------------------------------------
-#  Boot levanta el compose.yaml y cablea el DataSource solo. Tú no escribes
-#  ninguna cadena de conexión aquí, y por tanto no hay ninguna que filtrar.
+#  Fíjate en lo que NO hay aquí: ninguna cadena de conexión. La base de datos la
+#  levanta BaseDeDatosEmbebida — PostgreSQL de verdad, empaquetado como una
+#  dependencia Maven más y corriendo como proceso hijo. Tú no escribes url,
+#  usuario ni contraseña aquí, y por tanto no hay ninguna que filtrar.
+#
+#  PROVISORIO SPEC-022: rediseño en Fase 1.
 #
 #  TODO_1 y TODO_2 — te faltan dos perfiles hermanos de este:
 #
-#    application-test.yml  · para la suite: sin compose (lo levanta Testcontainers)
+#    application-test.yml  · para la suite: apaga la base embebida del perfil dev
+#                            (`dgt.base-embebida.enabled: false`), porque los
+#                            tests levantan la suya y la cablean solos.
 #    application-prod.yml  · para el servidor: la conexión llega por VARIABLES DE
 #                            ENTORNO, con placeholders ${DGT_DB_URL} y sin valores
 #                            por defecto.
@@ -14,8 +20,6 @@
 #  Pista 2: un `${VAR}` sin `:valor` no admite omisiones. Un `${VAR:algo}` sí, y
 #  por eso es peligroso: arranca en silencio contra la base equivocada.
 # =============================================================================
-spring:
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start_and_stop
+dgt:
+  base-embebida:
+    enabled: true
