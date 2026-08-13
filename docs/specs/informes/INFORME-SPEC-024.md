@@ -95,7 +95,7 @@ Detalles de portabilidad que la SPEC exigía y quedaron resueltos:
 | **V5** | Idempotencia | ✅ 0,5 s en la segunda corrida, cero re-ensamblado |
 | **V6** | Lab 00 completo | ✅ 5/5 `ESTACIÓN LISTA`, sin red |
 | **V7** | Guard 95 MB y tamaños | ✅ Mayor archivo: 80,0 MB |
-| **V8** | Revisión estática del `.cmd` | ✅ Con una reserva declarada, §5 |
+| **V8** | El `.cmd` en Windows real | ✅ **CERRADA Y MEDIDA** — ver §12 |
 
 ### V2 · Ensamblado limpio, desde cero
 
@@ -432,9 +432,7 @@ más tocaba un ZIP.**
 
 ### Lo que sigue sin probarse
 
-La reserva de V8 **sigue abierta**: el PO probó Git Bash, es decir el `mvnw`. El `mvnw.cmd` no
-se ha ejecutado en ninguna parte, y con él sigue sin medirse si `set /p` lee bien los archivos
-`VERSION` y `.sha256`, que llegan con finales LF. Es lo que hay que mirar en la re-prueba.
+*(Superado por §12: la segunda vuelta del PO cerró esta reserva.)*
 
 ---
 
@@ -569,3 +567,84 @@ la única verificación de esta SPEC que no se pudo hacer aquí.
    se limpian cuando el shim llegue a los catorce labs.
 7. **El JDK para los labs 08–14** ya está: el shim es el mismo en los 16 proyectos migrados, y
    copiarlo a los que falten es parte de su migración.
+
+
+---
+
+## 12 · Segunda vuelta en Windows — lo que quedó medido
+
+### V8, cerrada
+
+`mvnw.cmd` **se ejecutó en `cmd.exe`**. Resolvió el Maven y el Java embebidos a la primera, y
+`mvnw.cmd test` dio **46/46 · BUILD SUCCESS en 40 s**.
+
+Con eso cae la reserva que arrastraba el informe desde §4: **`set /p` lee bien los archivos
+`VERSION` y `.sha256` aunque lleguen con finales LF.** Era razonado; ahora está medido. Y con
+ello el `.cmd` deja de ser territorio virgen: la ruta explícita a `System32\tar.exe`, el
+`copy /b`, el `certutil` y el sellado funcionan en Windows real.
+
+### Los acentos: el problema es de la consola, no del material
+
+Los mensajes salen **correctos en `cmd.exe`** —«Defínelas», «jamás»—. Los `▒` que se veían son
+de la **consola de Git Bash**, no de los scripts ni de los `.yml`.
+
+Eso reduce el alcance de ese pulido a un problema de terminal, no de material. Queda **fuera**
+de esta SPEC: no se toca nada por ahora, y si molesta en sala se ataca donde está el defecto
+—la configuración de la consola—, no reescribiendo textos que ya son correctos.
+
+### El pariente del `pgrep`: media respuesta
+
+En Git Bash de Windows, `99-destruir.sh` corrió **sin `pgrep: command not found`** y reportó:
+
+```
+[OK] API detenida (PID 1660)
+  3/3 verificaciones
+```
+
+Dos cosas se aprenden y una queda pendiente:
+
+1. **`pgrep`/`pkill` existen** en el Git Bash de esa máquina. La incógnita mayor, despejada.
+2. Ese `[OK]` **ya no es de los que regalan**: tras la SPEC-FIX-05 depende de un `kill -0`
+   posterior a la espera. Que lo diga significa que, para Git Bash, ese PID ya no existía.
+3. **Lo que falta:** que `kill -0` no lo vea no prueba que el JVM nativo muriera. Git Bash y
+   Windows no cuentan los procesos igual, y el riesgo real es que muera el shell del wrapper y
+   sobreviva el Java escuchando el 8099.
+
+**Verificación para la tercera vuelta**, en Git Bash y tras `99-destruir.sh`:
+
+```bash
+netstat -ano | grep 8099        # vacío = muerte real
+tasklist | grep -i java         # ningún java del lab
+```
+
+Si el puerto sigue tomado, el `[OK]` es un mentiroso nuevo y entra en la familia de la FIX-05.
+Va al guion de sala como plan B (§4.d) con el `taskkill` para desatascar una máquina sin perder
+la clase.
+
+### A2.3 · `server.address: localhost`
+
+⚠️ **El texto de esta anotación no llegó al ejecutor: solo su título.** Se implementó bajo la
+lectura evidente, y se declara para que el Arquitecto la ratifique o la corrija.
+
+**Lo que se hizo:** `server.address: localhost` en el perfil `dev` de los 16 proyectos, con el
+porqué escrito al lado. Sin esto Tomcat se ata a `0.0.0.0` y Windows saca el cartel de
+«Windows Defender ha bloqueado algunas características…», que pide administrador — un permiso
+que el alumno de una máquina corporativa no puede dar, en el primer minuto de clase.
+
+**Verificado en el Mac:**
+
+```
+lsof -nP -iTCP:8099 -sTCP:LISTEN
+  java -> 127.0.0.1:8099          <-- loopback, no *:8099
+curl localhost:8099  -> 200
+curl 127.0.0.1:8099  -> 200
+```
+
+Suites verdes tras el cambio: Lab 01 `46 + 7` y Lab 07 `40`, ambas `BUILD SUCCESS`. Derivación
+intacta — el `application-dev.yml` sigue idéntico donde debe serlo.
+
+**Y en el guion de sala** (§3): qué cartel *no* debería aparecer, qué hacer si aparece igual
+(Cancelar, y comprobar que la app responde de todos modos), y cuándo eso sí sería un caso nuevo.
+
+**Si A2.3 pedía otra cosa** —otro alcance, otra propiedad, el `.yml` de otro perfil—, es un
+cambio de minutos: está en un solo bloque, en un solo archivo por proyecto.

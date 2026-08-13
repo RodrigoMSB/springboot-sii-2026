@@ -79,6 +79,21 @@ del día: ya no importa.
 
 Con `ESTACIÓN LISTA`, al Lab 01.
 
+### Lo que NO debería aparecer: el cartel del Firewall
+
+Cuando levanten la app (`./bin/start-lab.sh`), Windows **no debería** sacar el cartel de
+«Windows Defender ha bloqueado algunas características de esta aplicación». Si apareciera, es un
+cartel que pide administrador y que el alumno de una máquina corporativa **no puede aceptar**.
+
+Ya está resuelto de raíz: la app se ata solo a `localhost`, no a todas las interfaces, así que
+Windows no tiene nada que preguntar. Si aun así aparece en alguna máquina:
+
+- **Que le dé a Cancelar.** No hace falta permitir nada — el laboratorio se usa desde la propia
+  máquina y todo va por `localhost`.
+- Si tras cancelar la app funciona igual (`curl http://localhost:8099/actuator/health` responde),
+  no hay nada que arreglar: el cartel era ruido.
+- Si la app NO funciona tras cancelar, avísame: sería un caso nuevo.
+
 ---
 
 ## 4 · Plan B — si UNA máquina falla
@@ -133,6 +148,19 @@ del antivirus para la carpeta del curso, y eso es una gestión de TI. Emparéjal
 y sigue — no detengas a diecisiete personas por una.
 
 ---
+
+### d · ¿La app quedó viva después de `99-destruir.sh`?
+
+En Windows, el desmontaje es lo menos probado del material. Si un alumno dice que
+`./bin/start-lab.sh` se queja de que **el puerto 8099 está ocupado**, es que un arranque
+anterior no murió del todo. Cómo verlo y resolverlo, en Git Bash:
+
+```bash
+netstat -ano | grep 8099        # ¿hay algo escuchando? La última columna es el PID
+taskkill //PID <ese-pid> //F    # las dos barras son a propósito en Git Bash
+```
+
+Si pasa en más de una máquina, díselo al equipo del material: es un hallazgo, no una anécdota.
 
 ## 5 · Lo que ya NO hay que verificar (y no hay que dejar que se verifique)
 

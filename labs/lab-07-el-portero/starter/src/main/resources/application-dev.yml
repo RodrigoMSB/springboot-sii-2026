@@ -39,3 +39,17 @@ dgt:
   # application-prod.yml y VerificadorDeSecretosProd): la variable es obligatoria.
   jwt:
     secret: ${DGT_JWT_SECRET:clave-de-laboratorio-hs256-no-usar-en-produccion-2026}
+
+# -----------------------------------------------------------------------------
+#  A qué interfaz se ata la aplicación
+# -----------------------------------------------------------------------------
+#  `localhost` y no todas las interfaces. Sin esto, Tomcat se ata a 0.0.0.0 y
+#  Windows saca el cartel del Firewall —«Windows Defender ha bloqueado algunas
+#  características de esta aplicación»— pidiendo permiso de administrador que el
+#  alumno de una máquina corporativa no tiene. Un cartel que no puede aceptar, en
+#  el primer minuto de clase (SPEC-024 · A2.3).
+#
+#  No se pierde nada: el laboratorio se usa desde la propia máquina. Y de paso la
+#  app deja de estar publicada en la red de la institución, que tampoco es malo.
+server:
+  address: localhost
