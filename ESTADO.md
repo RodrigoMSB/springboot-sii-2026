@@ -153,9 +153,26 @@ credenciales, con su encabezado pedagógico. Ya no está en el camino crítico d
 podía correrse el día de clase, y eso era una ruleta, no un plan. La SPEC-021 lo intentó y se
 quedó en `NXDOMAIN`; su informe se conserva como registro de por qué se cambió de estrategia.
 
-**Lo que falta (Fase 1):** los labs 03 a 14 con la misma receta, y los diferidos que ya están
-anotados — el rediseño de los `TODO_1`/`TODO_2` del perfil `dev`, el WireMock in-process del Lab
-08 en adelante, Jib en el Lab 13, y la reconciliación global de manifiestos y derivación.
+**Fase 1 hecha (SPEC-023): el tronco y los labs 03 a 07 también.** Con eso **la primera mitad
+del curso completa corre sin internet y sin Docker** — doce proyectos más, suites verdes,
+`90-validar` en verde corriendo offline, y los quince eslabones de la derivación en sincronía
+desde el tronco hasta el Lab 07. Informe en `docs/specs/informes/INFORME-SPEC-023.md`.
+
+Los dos números pedagógicos que no podían romperse, medidos y sanos: el contador del Lab 05
+sigue marcando **13 consultas** en la versión con N+1 contra un presupuesto de 3, y los cuatro
+tests de concurrencia del Lab 06 pasan sin un solo reintento.
+
+El peso apenas se movió: `repo-maven/` pasó de 225 a **230 MB** al sumar cinco labs. Los labs
+comparten casi todas sus dependencias.
+
+**Lo que falta (Fase 2):** los labs 08 a 14. El salto real está en el 08–11, que hoy levantan
+WireMock en contenedor y habría que pasar a in-process; y en el 13, que es un lab de
+contenedores en un curso sin Docker — eso es decisión del Arquitecto antes que técnica. Siguen
+anotados el rediseño de los `TODO_1`/`TODO_2` del perfil `dev` y la reconciliación de la
+frontera Lab 07 → Lab 08.
+
+**Pendiente de una mano en el cable:** el vuelo 3 está en pista (`tools/vuelo-3-modo-avion.sh`),
+sin lanzar. Cubre los labs 02 a 07 en modo avión y el simulacro del alumno, en 10-12 minutos.
 
 ## 2 · Qué falta
 
