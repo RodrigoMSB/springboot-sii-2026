@@ -438,6 +438,90 @@ se ha ejecutado en ninguna parte, y con él sigue sin medirse si `set /p` lee bi
 
 ---
 
+## 11 · A2.2 · El validador que dio ERROR con todo funcionando
+
+**Re-prueba en Windows real, segunda vuelta.** El arreglo del `tar` funcionó: el JDK ensambla y
+verifica. Pero el Lab 00 bajó a **4/5** por un chequeo que mentía al revés:
+
+```
+[ERROR] ./mvnw no está resolviendo al Maven de tools/
+```
+
+Y a mano, en esa misma máquina:
+
+```
+Maven home: C:\SPRINGBOOT\prueba-windows\tools\maven
+```
+
+Resolvía perfecto. **El falso negativo era mío.** El chequeo comparaba la salida de Maven contra
+`$RAIZ/tools/maven`, y en Git Bash `$RAIZ` vale `/c/SPRINGBOOT/prueba-windows`. No es solo el
+separador: **la misma carpeta se escribe de dos formas y ninguna contiene a la otra**, así que
+el `grep` no podía acertar jamás en Windows.
+
+### El arreglo
+
+Se compara **el final de la ruta, con los separadores normalizados** — que es lo que el chequeo
+quiere saber de verdad: ¿el Maven que corrió es el del repositorio o uno del sistema?
+
+```bash
+HOME_MVN="$(printf '%s' "$SALIDA_MVN" | grep -m1 '^Maven home:' \
+            | sed 's/^Maven home: *//' | tr -d '\r' | tr '\\' '/')"
+case "$HOME_MVN" in
+    */tools/maven|*/tools/maven/)  paso_ok  … ;;
+    "")                            paso_fail "no imprimió su 'Maven home'" … ;;
+    *)                             paso_fail "está usando otro Maven: $HOME_MVN" … ;;
+esac
+```
+
+Probado contra las formas reales:
+
+| Entrada | Veredicto |
+|---|---|
+| `Maven home: /Users/rodrigo/repo/tools/maven` | ACEPTA |
+| `Maven home: C:\SPRINGBOOT\prueba-windows\tools\maven` | **ACEPTA** |
+| `Maven home: /opt/homebrew/Cellar/maven/3.9.11/libexec` | RECHAZA |
+| `Maven home: C:\Program Files\apache-maven-3.9.9` | RECHAZA |
+| Salida sin línea `Maven home:` | «no imprimió su Maven home» |
+
+El caso de fallo también mejora: antes decía «no está resolviendo al Maven de tools/» sin más;
+ahora **nombra el Maven que sí encontró**, que es la información que hace falta para arreglarlo.
+
+### Revisión de parientes
+
+**Comparaciones de ruta contra la salida de un programa: había exactamente una en todo el
+repositorio**, la corregida. Ninguna otra.
+
+**Pero apareció un pariente que NO se puede verificar desde macOS y queda declarado como
+sospecha, no como hallazgo.** Los catorce `99-destruir.sh` localizan la app del lab así:
+
+```bash
+PATRON="multiModuleProjectDirectory=$DIR_LAB/$PROYECTO"
+pgrep -f "$PATRON"
+```
+
+Ese patrón lleva una ruta POSIX (`/c/…`) dentro, y la línea de comandos del proceso en Windows
+la llevará en formato Windows (`C:\…`). **Es la misma clase de fallo que A2.2.** Y hay una
+segunda incógnita encima: `pgrep` y `pkill` **no vienen de fábrica en Git Bash**, así que puede
+que esos bloques ni siquiera lleguen a ejecutarse.
+
+No se toca a ciegas, por dos razones: no se puede verificar aquí, y cualquier cambio ahí roza la
+ley post-ALCHEMIA de no matar procesos por nombre genérico. **Va a la re-prueba como pregunta
+concreta:** en Windows, tras `./bin/start-lab.sh`, ¿qué dice `./bin/99-destruir.sh`? Si aparece
+`pgrep: command not found` o si dice que detuvo cosas sin haberlo hecho, está confirmado.
+
+### Gobernanza
+
+Es el **segundo validador mentiroso de la semana**, y por eso se registró — pero como **coda de
+A-04, no como anti-herencia nueva**: inventar una A-05 por cada instancia las diluye, y esta es
+la misma familia vista desde el otro lado. A-02 prohíbe declarar sin medir; A-04, medir sin
+mostrar; la coda cierra el triángulo: **un validador solo puede fallar por la razón que dice**.
+Con su regla práctica: *nunca compares rutas absolutas entre plataformas*.
+
+Que los dos casos aparecieran en la misma semana no es casualidad: **los dos salieron al correr
+el material en una máquina que no era la de su autor.**
+
+---
+
 ## 7 · Sorpresas y desviaciones
 
 **7.1 · Se tomó `25.0.4+7`, no la `25+36` sugerida.** Detallado en §2. La instrucción principal

@@ -132,12 +132,31 @@ fi
 # -----------------------------------------------------------------------------
 if [ -x "$LAB01/mvnw" ]; then
     SALIDA_MVN="$( cd "$LAB01" && ./mvnw -version 2>&1 )"
-    if printf '%s' "$SALIDA_MVN" | grep -q "$RAIZ/tools/maven"; then
-        paso_ok "./mvnw usa el Maven del repositorio: $(printf '%s' "$SALIDA_MVN" | grep -m1 '^Apache Maven')"
-    else
-        paso_fail "./mvnw no está resolviendo al Maven de tools/" \
-                  "Mándale al instructor la salida de:  cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -version"
-    fi
+
+    # Se compara el FINAL de la ruta, no la ruta entera, y con los separadores
+    # normalizados. Es lo que este chequeo quiere saber de verdad: ¿el Maven que
+    # corrió es el del repositorio, o uno del sistema?
+    #
+    # Comparar la ruta completa contra $RAIZ era un falso negativo garantizado en
+    # Windows, y nos lo encontramos en una máquina real (SPEC-024 · A2.2): Git Bash
+    # conoce el repo como `/c/SPRINGBOOT/…` y Maven imprime `C:\SPRINGBOOT\…`. No es
+    # solo el separador: es que la misma carpeta se escribe de dos formas distintas,
+    # y ninguna contiene a la otra. El chequeo daba [ERROR] con todo funcionando.
+    HOME_MVN="$(printf '%s' "$SALIDA_MVN" | grep -m1 '^Maven home:' \
+                | sed 's/^Maven home: *//' | tr -d '\r' | tr '\\' '/')"
+    case "$HOME_MVN" in
+        */tools/maven|*/tools/maven/)
+            paso_ok "./mvnw usa el Maven del repositorio: $(printf '%s' "$SALIDA_MVN" | grep -m1 '^Apache Maven')"
+            ;;
+        "")
+            paso_fail "./mvnw no imprimió su 'Maven home'" \
+                      "Mándale al instructor la salida de:  cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -version"
+            ;;
+        *)
+            paso_fail "./mvnw está usando otro Maven: $HOME_MVN" \
+                      "Debería ser el de tools/maven del repositorio. Mándale esta línea al instructor."
+            ;;
+    esac
 else
     paso_fail "No encuentro $LAB01/mvnw" \
               "¿Clonaste el repo completo? Corre este script desde labs/lab-00-estacion-base/."
