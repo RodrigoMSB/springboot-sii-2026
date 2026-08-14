@@ -1,19 +1,22 @@
 # INFORME-SPEC-024 · El Java que viaja en la maleta
 
-**SPEC:** SPEC-024 · **Ejecuta:** mocito · **Fecha:** 13 de agosto de 2026
+**SPEC:** SPEC-024 · **Ejecuta:** mocito · **Fecha:** 13 de agosto de 2026 · **Cierre:** 14 de agosto de 2026
 **Rama:** `spec-024-jdk-embebido` · **Tag al cierre:** `material-v0.4.0`
-**Máquina:** Mac Studio del PO — Darwin 25.5.0, `arm64`
+**Máquinas:** Mac Studio del PO (Darwin 25.5.0, `arm64`) · Windows 11 ARM en Parallels ·
+Windows 11 x64 corporativo (VM de Netec)
 
 ---
 
 ## 1 · Veredicto en una línea
 
-**EL CÍRCULO ESTÁ CERRADO, VOLADO Y PROBADO EN WINDOWS** — el JDK 25 viaja partido en el
+**EL CÍRCULO ESTÁ CERRADO, VOLADO Y PROBADO EN TRES PLATAFORMAS** — el JDK 25 viaja partido en el
 repositorio, el shim lo ensambla verificando su firma y lo usa **ignorando cualquier Java de la
 máquina**. Verificado en el vuelo 4 (§9) —Lab 00 más los siete labs, con el cable desenchufado y
-un `JAVA_HOME` hostil activo— y en **cuatro vueltas de prueba en una máquina Windows real**
-(§10–§13), que encontraron tres defectos invisibles desde macOS y los cerraron todos. La lista
-de prerrequisitos del curso quedó en una palabra: **Git**.
+un `JAVA_HOME` hostil activo—, en **cuatro vueltas de prueba en una máquina Windows real**
+(§10–§13), que encontraron tres defectos invisibles desde macOS y los cerraron todos, y en una
+**quinta validación sobre Windows 11 x64 corporativo** (§14), el pariente más cercano a las
+máquinas del SII, donde todo pasó a la primera. La lista de prerrequisitos del curso quedó en una
+palabra: **Git**.
 
 ---
 
@@ -551,8 +554,14 @@ pero nadie los ha visto correr. Es deuda explícita de la Fase 2, no de esta SPE
 
 ## 8 · Lo que queda
 
-**El vuelo 4 ya voló** — resultados en §9. Queda **la prueba del `.cmd` en Parallels**, que es
-la única verificación de esta SPEC que no se pudo hacer aquí.
+**Nada de esta SPEC.** El vuelo 4 voló (§9), las cuatro vueltas de Windows cerraron sus tres
+defectos (§10–§13) y la quinta validación en Windows x64 corporativo pasó a la primera (§14). La
+prueba del `.cmd`, que era la última reserva, quedó medida en la segunda vuelta (§12).
+
+**Anotación abierta para la próxima SPEC — A2.4 · el cartel del Firewall durante `verify`.**
+Detallada en §14: es **cosmética y no bloqueante**, con evidencia de dos máquinas Windows de que
+el build termina verde aunque el permiso se deniegue. No entra en esta SPEC; su investigación y su
+candado son trabajo de la siguiente.
 
 **Fase 2:**
 
@@ -698,10 +707,140 @@ cartel que aparecer.
 Es el argumento entero a favor de probar en la máquina del alumno, y la razón de que esta SPEC
 cierre con cuatro vueltas en vez de con una.
 
-### Estado final
+### Estado final de las cuatro vueltas
 
-**Nada pendiente de esta SPEC.** Las ocho verificaciones cerradas, las cuatro anotaciones A2.x
+**Nada pendiente de esta SPEC.** Las ocho verificaciones cerradas, las tres anotaciones A2.x
 implementadas y verificadas en Windows real, el vuelo 4 volado y el guion de sala listo para
 proyectar.
+
+Lo que faltaba no era una prueba pendiente sino una **plataforma**: las cuatro vueltas corrieron
+sobre Windows ARM en Parallels, y las máquinas del SII son x64 nativas. Eso es lo que cierra §14.
+
+---
+
+## 14 · Quinta validación · Netec, Windows x64 corporativo
+
+**Fuente:** evidencia del PO, transcrita por el Arquitecto. Ejecutada el 14 de agosto de 2026.
+
+La tercera plataforma del tour, y la que más se parece a la sala: **VM corporativa de Netec,
+Windows 11 x64 NATIVO** (no ARM, no emulación), consola **MINGW64**, **Temurin 17.0.20 instalado
+como Java de sistema**, clon en `C:\PRUEBA`. Máquina con antivirus corporativo y sin privilegios
+de administrador — el retrato del alumno del SII.
+
+### Resultados
+
+| Prueba | Resultado |
+|---|---|
+| `git clone` de la rama (475 MB) | **21 s** a 62 MB/s — sin síntoma de antivirus en git |
+| Lab 00 `00-verificar.sh` | **5/5 ESTACIÓN LISTA a la primera** — JDK embebido ensamblado en x64 nativo, Java 17 del sistema declarado irrelevante |
+| `./mvnw verify` (frío) | **BUILD SUCCESS · 46 + 7/7 IT · 1m28s** — PostgreSQL 16.14 nativo, Flyway 2 migraciones, initdb 14 s (vs 8 en Parallels: ahí se nota el antivirus, irrelevante por loopback) |
+| Cartel del firewall durante `verify` | **Apareció** (en `SemillaCoherenteIT`) y el PO le dio **Cancel a propósito** → el build terminó verde igual. El alumno sin admin sobrevive completo |
+| `start-lab.sh` | App viva **SIN cartel** — **A2.3 validado en fierro corporativo** |
+| health / destruir / netstat / tasklist | UP con Postgres → 3/3 honesto → netstat solo TIME_WAIT del curl cliente, **cero LISTENING** → tasklist limpio. Muerte del JVM nativo confirmada en segunda plataforma Windows |
+
+### Qué queda demostrado con esto
+
+**Cero defectos nuevos.** Es la primera plataforma del tour que no encontró nada que arreglar, y
+eso importa más que un verde cualquiera: significa que los tres arreglos de las vueltas 1–4 —el
+`tar` por ruta explícita, el sufijo normalizado del Lab 00 y el `server.address: localhost`— no
+eran parches de una máquina, sino correcciones reales que sobreviven al cambio de arquitectura.
+
+**El x64 nativo estaba sin probar, y era justamente el de la sala.** Todo lo anterior en Windows
+corrió sobre ARM emulado en Parallels. Aquí el JDK embebido `windows-x64` se ensambla y corre en
+el procesador para el que fue empaquetado, que es el caso real y no el difícil.
+
+**Tres Javas hostiles derrotados**, uno por plataforma: GraalVM 21 (Mac), Temurin 17.0.13
+(Parallels) y **Temurin 17.0.20 (Netec)**. La tesis de la SPEC —el material ignora el Java de la
+máquina— ya no descansa en una sola observación.
+
+**El antivirus se dejó ver donde no molesta.** `initdb` tardó 14 s contra 8 en Parallels: es el
+antivirus inspeccionando los binarios de PostgreSQL al extraerse. Es un costo de arranque, una
+vez, y no toca el camino crítico de la clase. En `git clone` —los 475 MB que más miedo daban— no
+apareció síntoma alguno: 21 s a 62 MB/s.
+
+**A2.3 validado en fierro corporativo.** `start-lab.sh` levantó la app **sin cartel del
+Firewall**, igual que en Parallels. Es el defecto que habría parado dieciocho máquinas a la vez, y
+ahora está descartado en las dos plataformas Windows.
+
+**El desmontaje, confirmado en segunda plataforma Windows.** `netstat` sin un solo `LISTENING` en
+el 8099 y `tasklist` sin `java`: el JVM nativo muere, no solo el envoltorio. Lo que en §13 era una
+medición, aquí es una reproducción.
+
+### El tour de validación, completo
+
+| Plataforma | Vueltas | Java hostil derrotado | Resultado |
+|---|---|---|---|
+| **Mac Studio** (Darwin, arm64) | 4 vuelos en modo avión | GraalVM 21 | ✅ Sin red, sin Docker, 15 suites |
+| **Windows ARM** (Parallels) | 4 vueltas | Temurin 17.0.13 | ✅ Tres defectos hallados y cerrados |
+| **Windows 11 x64** (Netec, corporativa) | 1 vuelta | Temurin 17.0.20 | ✅ Todo a la primera, cero defectos |
+
+**Cero incógnitas.** No queda plataforma, Java ni escenario de esta SPEC sin medir en fierro real.
+
+---
+
+## 15 · A2.4 · El cartel del Firewall durante `verify` — anotación abierta
+
+**Clasificación: cosmético, NO bloqueante. No se toca en esta SPEC.**
+
+### El hecho
+
+El cartel de «Windows Defender ha bloqueado algunas características…» **reaparece durante
+`./mvnw verify`, en la fase de tests de integración**. Se vio en las **dos** máquinas Windows —
+Parallels y Netec—, en Netec concretamente al correr `SemillaCoherenteIT`.
+
+**A2.3 cubrió la aplicación en perfil `dev`, no el contexto de los IT.** Eso no es una sospecha:
+está medido en el propio repositorio. `address: localhost` aparece en **exactamente 16 archivos, y
+los 16 son `application-dev.yml`**. Ni un solo `application-test.yml` lo lleva, y ese es el perfil
+con el que corren los tests. `start-lab.sh` —que sí usa `dev`— levanta la app sin cartel en las
+dos máquinas Windows; `verify` no tiene de dónde heredar la propiedad.
+
+**Lo que sí está verificado sobre los sospechosos, desde el código:**
+
+- **`ContratoRn03IT` y `E2_ListadoFuncionalIT` arrancan Tomcat de verdad** —
+  `@SpringBootTest(webEnvironment = RANDOM_PORT)`— y sin `server.address` se atan a todas las
+  interfaces. Es el candidato más directo.
+- **Pero `SemillaCoherenteIT`, donde el PO vio el cartel, NO levanta Tomcat**: es
+  `@SpringBootTest(properties = "dgt.base-embebida.enabled=false")`, sin `webEnvironment`, o sea
+  entorno `MOCK`. Ahí no hay servidor web que atar.
+
+**Esa contradicción es el corazón de la anotación, y se declara sin resolver.** Caben dos lecturas
+y desde macOS no se puede elegir entre ellas: o el cartel lo dispara **otro proceso** —el
+`postgres.exe` nativo que Zonky extrae y arranca, que también abre un socket y es un binario
+desconocido para el Firewall—, o el diálogo apareció mientras la consola mostraba
+`SemillaCoherenteIT` pero lo disparó otra IT del mismo fork. **Atribuir el cartel a una clase por
+lo que había en pantalla es justamente el error que la coda de A-04 prohíbe**, así que aquí queda
+como observación, no como diagnóstico.
+
+### Por qué no bloquea el merge
+
+**Porque está medido con el permiso denegado.** El PO le dio **Cancel a propósito** al cartel en
+Netec y **el build terminó verde igual: `BUILD SUCCESS · 46 + 7/7 IT`.** El alumno sin
+administrador —que es el alumno real del SII— completa la suite entera cancelando el diálogo. La
+molestia es visual; la funcionalidad no depende del permiso.
+
+Y el guion de sala **ya cubre el caso**: su §3 dice qué hacer si el cartel aparece igual —Cancelar
+y comprobar que el material sigue— sin prometer que no aparecerá nunca.
+
+### Lo que la próxima SPEC tiene que hacer
+
+1. **Identificar el proceso, no la clase.** En la máquina Windows, mirar qué ejecutable nombra el
+   cartel —¿`java.exe` o `postgres.exe`?— y qué está en `LISTENING` fuera del loopback mientras
+   corre `verify`. Esa sola pregunta separa las dos lecturas de arriba en un minuto.
+2. **Poner el candado donde esté el defecto**, no donde sea cómodo: si es el Tomcat de
+   `RANDOM_PORT`, `server.address` va al perfil de test; si es el PostgreSQL de Zonky, se le pasa
+   su propia dirección de escucha al arrancarlo. Son arreglos distintos y solo uno es el correcto.
+3. **Verificar en Windows real** — este es exactamente el tipo de defecto que macOS no puede ver,
+   como los tres de §10–§13.
+
+Queda anotado también en `ESTADO.md`.
+
+---
+
+## 16 · Cierre
+
+Ocho verificaciones cerradas. Tres anotaciones A2.x implementadas y verificadas en fierro. Un
+vuelo en modo avión, cuatro vueltas en Windows ARM y una validación limpia en Windows x64
+corporativo. Una anotación abierta —A2.4— clasificada con evidencia de dos máquinas como cosmética
+y entregada a la próxima SPEC.
 
 En posición de merge y tag `material-v0.4.0`.

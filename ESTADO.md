@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-04.*
+*Última actualización: SPEC-024 (tag `material-v0.4.0`).*
 
 ---
 
@@ -251,7 +251,21 @@ desmontaje mata el JVM nativo, verificado con `netstat` y `tasklist`. Y la app s
 Ninguno de esos tres se podía cazar razonando: es el argumento entero a favor de probar en la
 máquina del alumno.
 
+**Y confirmado en la máquina que más se parece a la sala** (14 de agosto): VM corporativa de
+Netec, **Windows 11 x64 nativo**, MINGW64, con un **Temurin 17 instalado de sistema** y antivirus
+corporativo. Todo a la primera y **cero defectos nuevos**: `git clone` de 475 MB en **21 s**, Lab
+00 **5/5 ESTACIÓN LISTA**, `./mvnw verify` en frío **BUILD SUCCESS · 46 + 7/7 IT · 1m28s** con
+PostgreSQL 16.14, `start-lab.sh` **sin cartel del Firewall**, y el desmontaje dejando el 8099 sin
+un solo `LISTENING`.
+
+Con eso el tour queda completo sobre **tres plataformas** —Mac, Windows ARM y Windows x64
+corporativo— y **tres Javas hostiles derrotados**: GraalVM 21, Temurin 17.0.13 y Temurin 17.0.20.
+Que la tercera plataforma no encontrara nada es lo que convierte los tres arreglos anteriores en
+correcciones reales y no en parches de una máquina.
+
 Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
+
+**Mergeado a `main` y etiquetado `material-v0.4.0`** (PR #30).
 
 ## 2 · Qué falta
 
@@ -276,6 +290,17 @@ correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
+
+**Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** El diálogo de Windows
+Defender **reaparece en la fase de tests de integración**, visto en las dos máquinas Windows. La
+A2.3 ató la aplicación a `localhost`, pero solo en el perfil `dev`: los 16 archivos que llevan
+`address: localhost` son todos `application-dev.yml`, y ningún `application-test.yml` lo tiene.
+**Es cosmético y no bloquea**: el PO le dio Cancel a propósito en la VM de Netec y el build
+terminó verde igual —`46 + 7/7 IT`—, así que el alumno sin permisos de administrador completa la
+suite entera; y el guion de sala ya cubre el caso. Falta identificar **qué proceso** abre el
+socket antes de poner el candado: hay dos lecturas vivas (el Tomcat de las IT con `RANDOM_PORT`,
+o el `postgres.exe` que Zonky arranca) y solo se distinguen mirando la máquina Windows. Detalle,
+evidencia y plan en §15 del `INFORME-SPEC-024.md`. **Trabajo de la próxima SPEC.**
 
 ## 3 · Qué viene ahora
 
