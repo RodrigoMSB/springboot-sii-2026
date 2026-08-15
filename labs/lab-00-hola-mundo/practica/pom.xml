@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lab 00 — Hola mundo.
+
+  El pom más corto del curso, a propósito: cabe entero en una pantalla y el paso 4
+  lo lee línea por línea. Una sola dependencia, sin web y sin base de datos.
+
+      ./mvnw spring-boot:run
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- El "padre": trae las versiones de todo lo demás ya elegidas y probadas. -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>lab00-hola-mundo</artifactId>
+  <version>0.1.0</version>
+  <name>lab00-hola-mundo</name>
+  <description>Lab 00 — que Spring Boot arranque</description>
+
+  <properties>
+    <java.version>25</java.version>
+  </properties>
+
+  <dependencies>
+    <!-- Lo mínimo para que exista un contenedor de Spring. Nada más. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- El que aporta la meta `spring-boot:run`. -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
