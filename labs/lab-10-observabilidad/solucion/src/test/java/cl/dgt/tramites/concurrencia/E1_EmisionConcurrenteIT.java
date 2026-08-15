@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Determinista en veredicto: con el contador bloqueado, los emisores se serializan y el
  * resultado es siempre el mismo. Si este test parpadea, el candado está en el lugar equivocado.
  */
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = "dgt.base-embebida.enabled=false")
 @Import(BaseConcurrenciaIT.class)
 class E1_EmisionConcurrenteIT {
 

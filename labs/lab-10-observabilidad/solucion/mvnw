@@ -1,295 +1,202 @@
-#!/bin/sh
-# ----------------------------------------------------------------------------
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
+#!/usr/bin/env bash
+# =============================================================================
+#  mvnw — el Maven Y el Java de este curso (SPEC-022 · D-022-2, SPEC-024 · D-024-3)
+# -----------------------------------------------------------------------------
+#  Esto YA NO es el Maven Wrapper de Apache. El wrapper original era un
+#  DESCARGADOR: al primer uso se bajaba una distribución de Maven de internet.
+#  En las máquinas del SII no hay internet, así que se quedaba colgado en el
+#  primer comando del primer día.
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#  Este shim no descarga nada. Usa:
 #
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-# ----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Apache Maven Wrapper startup batch script, version 3.3.4
+#      · el Maven que viaja en el repositorio  (tools/maven)
+#      · las dependencias que viajan con él    (repo-maven)
+#      · y el JDK 25 que también viaja         (tools/jdk)
 #
-# Optional ENV vars
-# -----------------
-#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
-#   MVNW_REPOURL - repo url base for downloading maven distribution
-#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
-#   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
-# ----------------------------------------------------------------------------
+#  Ese último es el que te ahorra la pelea: da igual que tu máquina tenga Java
+#  17, Java 21, un JAVA_HOME apuntando a una carpeta que ya no existe, o ningún
+#  Java. Este shim usa el suyo y no le pregunta a nadie.
+#
+#  Para ti no cambia nada. Sigue siendo:
+#
+#      ./mvnw test
+#      ./mvnw spring-boot:run
+#
+#  La PRIMERA vez tarda unos segundos más: tiene que ensamblar el JDK desde los
+#  trozos en que viaja (GitHub no acepta archivos de más de 100 MB) y verificar
+#  su firma. Después, el costo es comprobar que un archivo existe.
+#
+#  ---------------------------------------------------------------------------
+#  DGT_ONLINE=1 · solo para quien PREPARA el material
+#
+#      DGT_ONLINE=1 ./mvnw verify
+#
+#  Omite el modo offline y el repositorio embebido, y sale a internet como un
+#  Maven normal. El alumno no lo necesita nunca.
+# =============================================================================
+set -uo pipefail
 
-set -euf
-[ "${MVNW_VERBOSE-}" != debug ] || set -x
+# --- La raíz del repositorio, subiendo hasta dar con el marcador -------------
+# Sin git, sin rutas absolutas y sin variables de entorno: así el material sigue
+# funcionando si el alumno lo clona donde se le antoje.
+DIR_PROYECTO="$(cd "$(dirname "$0")" && pwd)"
+RAIZ="$DIR_PROYECTO"
+while [ ! -x "$RAIZ/tools/maven/bin/mvn" ]; do
+    PADRE="$(dirname "$RAIZ")"
+    if [ "$PADRE" = "$RAIZ" ]; then
+        printf '[ERROR] No encuentro tools/maven/ subiendo desde:\n'                     >&2
+        printf '        %s\n'                                    "$DIR_PROYECTO"         >&2
+        printf '\n'                                                                       >&2
+        printf '        Este proyecto tiene que vivir DENTRO del repositorio del\n'      >&2
+        printf '        curso. Si copiaste la carpeta a otro sitio, vuelve a\n'          >&2
+        printf '        trabajar sobre el clon original.\n'                              >&2
+        exit 1
+    fi
+    RAIZ="$PADRE"
+done
 
-# OS specific support.
-native_path() { printf %s\\n "$1"; }
-case "$(uname)" in
-CYGWIN* | MINGW*)
-  [ -z "${JAVA_HOME-}" ] || JAVA_HOME="$(cygpath --unix "$JAVA_HOME")"
-  native_path() { cygpath --path --windows "$1"; }
-  ;;
+# =============================================================================
+#  El JDK que viaja en la maleta
+# =============================================================================
+# Qué plataforma es esta, y por tanto qué paquete le toca.
+JDK_PLATAFORMA=""
+JDK_ARCHIVO=""
+JDK_SUBDIR=""
+case "$(uname -s)" in
+    Darwin)
+        # Solo se empaqueta Apple Silicon: es la máquina donde se prepara el
+        # material. En un Mac Intel se cae al Java del sistema (ver abajo).
+        if [ "$(uname -m)" = "arm64" ]; then
+            JDK_PLATAFORMA="macos-aarch64"
+            JDK_ARCHIVO="jdk.tar.gz"
+            # El tar.gz de Temurin para macOS trae el JDK dentro de un bundle.
+            JDK_SUBDIR="/Contents/Home"
+        fi
+        ;;
+    MINGW*|MSYS*|CYGWIN*)
+        JDK_PLATAFORMA="windows-x64"
+        JDK_ARCHIVO="jdk.zip"
+        ;;
 esac
 
-# set JAVACMD and JAVACCMD
-set_java_home() {
-  # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
-  if [ -n "${JAVA_HOME-}" ]; then
-    if [ -x "$JAVA_HOME/jre/sh/java" ]; then
-      # IBM's JDK on AIX uses strange locations for the executables
-      JAVACMD="$JAVA_HOME/jre/sh/java"
-      JAVACCMD="$JAVA_HOME/jre/sh/javac"
+# extraer_jdk <archivo-en-el-directorio-actual>
+#
+# En macOS el .tar.gz lo abre cualquier tar. En Windows es OTRA historia, y la
+# aprendimos en una máquina real (SPEC-024 · A2.1):
+#
+#   El `tar` que Git Bash pone en el PATH es GNU tar, y GNU tar NO abre ZIP:
+#       tar: This does not look like a tar archive
+#   El que sí lo abre es el bsdtar que Windows trae en System32 — existe en toda
+#   máquina Windows 10+, pero queda DETRÁS en el PATH de Git Bash. Así que se
+#   invoca por su ruta completa, sin depender de a quién resuelva `tar`.
+#
+# Se le pasa el archivo por su nombre relativo, con el cwd ya puesto: así no hay
+# que traducir rutas POSIX a rutas de Windows para un binario nativo.
+extraer_jdk() {
+    if [ "$JDK_PLATAFORMA" != "windows-x64" ]; then
+        tar -xf "$1"
+        return $?
+    fi
+
+    TAR_WIN="${SYSTEMROOT:-C:/Windows}"
+    TAR_WIN="${TAR_WIN//\\//}/System32/tar.exe"     # SYSTEMROOT viene con \ de Windows
+    if [ -x "$TAR_WIN" ]; then
+        "$TAR_WIN" -xf "$1"
+        return $?
+    fi
+
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -q "$1"
+        return $?
+    fi
+
+    printf '[ERROR] No encuentro con qué descomprimir el JDK en esta máquina.\n'      >&2
+    printf '        Busqué, en este orden:\n'                                          >&2
+    printf '          1. %s\n' "$TAR_WIN"                                              >&2
+    printf '          2. unzip en el PATH\n'                                           >&2
+    printf '\n'                                                                        >&2
+    printf '        El tar de Git Bash no sirve: es GNU tar y no abre archivos\n'     >&2
+    printf '        ZIP. El de Windows sí, y vive en System32 — si no está ahí,\n'    >&2
+    printf '        esta máquina es más rara de lo que el curso puede manejar.\n'     >&2
+    printf '        Avísale al instructor con esta pantalla.\n'                        >&2
+    return 1
+}
+
+# sha256: cada sistema lo llama de otra forma. macOS base no trae sha256sum.
+sha256_de() {
+    if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$1" | awk '{print $1}'
+    elif command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
     else
-      JAVACMD="$JAVA_HOME/bin/java"
-      JAVACCMD="$JAVA_HOME/bin/javac"
-
-      if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
-        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
-        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
-        return 1
-      fi
+        printf 'sin-herramienta-sha256'
     fi
-  else
-    JAVACMD="$(
-      'set' +e
-      'unset' -f command 2>/dev/null
-      'command' -v java
-    )" || :
-    JAVACCMD="$(
-      'set' +e
-      'unset' -f command 2>/dev/null
-      'command' -v javac
-    )" || :
-
-    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
-      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
-      return 1
-    fi
-  fi
 }
 
-# hash string like Java String::hashCode
-hash_string() {
-  str="${1:-}" h=0
-  while [ -n "$str" ]; do
-    char="${str%"${str#?}"}"
-    h=$(((h * 31 + $(LC_CTYPE=C printf %d "'$char")) % 4294967296))
-    str="${str#?}"
-  done
-  printf %x\\n $h
-}
+JDK_DIR="$RAIZ/tools/jdk/$JDK_PLATAFORMA"
 
-verbose() { :; }
-[ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+if [ -n "$JDK_PLATAFORMA" ] && [ -d "$JDK_DIR" ]; then
+    JDK_VERSION="$(cat "$JDK_DIR/VERSION" 2>/dev/null)"
+    JDK_ESPERADO="$(cat "$JDK_DIR/$JDK_ARCHIVO.sha256" 2>/dev/null)"
+    JDK_RUNTIME="$RAIZ/tools/jdk/runtime/$JDK_PLATAFORMA"
+    JDK_SELLO="$JDK_RUNTIME/.listo"
+    JDK_HOME="$JDK_RUNTIME/$JDK_VERSION$JDK_SUBDIR"
 
-die() {
-  printf %s\\n "$1" >&2
-  exit 1
-}
+    # ¿Hay que ensamblar? Solo si no hay sello, o el sello no es de ESTE paquete
+    # (por ejemplo, tras un `git pull` que trajo una versión nueva del JDK).
+    if [ ! -f "$JDK_SELLO" ] || [ "$(cat "$JDK_SELLO" 2>/dev/null)" != "$JDK_ESPERADO" ]; then
+        printf '[INFO]  Primera vez: ensamblando el JDK %s del repositorio…\n' "$JDK_VERSION"
+        printf '        (solo ocurre una vez; después arranca directo)\n'
 
-trim() {
-  # MWRAPPER-139:
-  #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
-  #   Needed for removing poorly interpreted newline sequences when running in more
-  #   exotic environments such as mingw bash on Windows.
-  printf "%s" "${1}" | tr -d '[:space:]'
-}
+        rm -rf "$JDK_RUNTIME"
+        mkdir -p "$JDK_RUNTIME"
+        JDK_TMP="$JDK_RUNTIME/$JDK_ARCHIVO"
 
-scriptDir="$(dirname "$0")"
-scriptName="$(basename "$0")"
+        if ! cat "$JDK_DIR/$JDK_ARCHIVO".part-* > "$JDK_TMP" 2>/dev/null; then
+            printf '[ERROR] No pude juntar los trozos del JDK en %s\n' "$JDK_DIR" >&2
+            printf '        ¿Está el clon completo? Prueba con un clon fresco.\n'  >&2
+            rm -rf "$JDK_RUNTIME"; exit 1
+        fi
 
-# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
-while IFS="=" read -r key value; do
-  case "${key-}" in
-  distributionUrl) distributionUrl=$(trim "${value-}") ;;
-  distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
-  esac
-done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
-[ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+        JDK_REAL="$(sha256_de "$JDK_TMP")"
+        if [ "$JDK_REAL" != "$JDK_ESPERADO" ]; then
+            printf '[ERROR] El JDK ensamblado NO coincide con su firma.\n'            >&2
+            printf '          esperado: %s\n' "$JDK_ESPERADO"                          >&2
+            printf '          obtenido: %s\n' "$JDK_REAL"                              >&2
+            printf '\n'                                                                >&2
+            printf '        No voy a usar un JDK que no puedo verificar. Lo más\n'    >&2
+            printf '        probable es un clon incompleto o un antivirus que tocó\n' >&2
+            printf '        los archivos. Solución: clon fresco del repositorio.\n'   >&2
+            rm -rf "$JDK_RUNTIME"; exit 1
+        fi
 
-case "${distributionUrl##*/}" in
-maven-mvnd-*bin.*)
-  MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
-  case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
-  *AMD64:CYGWIN* | *AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
-  :Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
-  :Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
-  :Linux*x86_64*) distributionPlatform=linux-amd64 ;;
-  *)
-    echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
-    distributionPlatform=linux-amd64
-    ;;
-  esac
-  distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
-  ;;
-maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
-*) MVN_CMD="mvn${scriptName#mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
-esac
+        if ! ( cd "$JDK_RUNTIME" && extraer_jdk "$JDK_ARCHIVO" ); then
+            printf '[ERROR] No pude extraer el JDK en %s\n' "$JDK_RUNTIME" >&2
+            rm -rf "$JDK_RUNTIME"; exit 1
+        fi
+        rm -f "$JDK_TMP"
 
-# apply MVNW_REPOURL and calculate MAVEN_HOME
-# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
-[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
-distributionUrlName="${distributionUrl##*/}"
-distributionUrlNameMain="${distributionUrlName%.*}"
-distributionUrlNameMain="${distributionUrlNameMain%-bin}"
-MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
-MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+        if [ ! -x "$JDK_HOME/bin/java" ] && [ ! -f "$JDK_HOME/bin/java.exe" ]; then
+            printf '[ERROR] El JDK se extrajo pero no encuentro su java en:\n'   >&2
+            printf '        %s/bin\n' "$JDK_HOME"                                 >&2
+            rm -rf "$JDK_RUNTIME"; exit 1
+        fi
 
-exec_maven() {
-  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
-}
-
-if [ -d "$MAVEN_HOME" ]; then
-  verbose "found existing MAVEN_HOME at $MAVEN_HOME"
-  exec_maven "$@"
-fi
-
-case "${distributionUrl-}" in
-*?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
-*) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
-esac
-
-# prepare tmp dir
-if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
-  clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
-  trap clean HUP INT TERM EXIT
-else
-  die "cannot create temp dir"
-fi
-
-mkdir -p -- "${MAVEN_HOME%/*}"
-
-# Download and Install Apache Maven
-verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
-verbose "Downloading from: $distributionUrl"
-verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
-
-# select .zip or .tar.gz
-if ! command -v unzip >/dev/null; then
-  distributionUrl="${distributionUrl%.zip}.tar.gz"
-  distributionUrlName="${distributionUrl##*/}"
-fi
-
-# verbose opt
-__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
-[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
-
-# normalize http auth
-case "${MVNW_PASSWORD:+has-password}" in
-'') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
-has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
-esac
-
-if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
-  verbose "Found wget ... using wget"
-  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
-elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
-  verbose "Found curl ... using curl"
-  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
-elif set_java_home; then
-  verbose "Falling back to use Java to download"
-  javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
-  targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
-  cat >"$javaSource" <<-END
-	public class Downloader extends java.net.Authenticator
-	{
-	  protected java.net.PasswordAuthentication getPasswordAuthentication()
-	  {
-	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
-	  }
-	  public static void main( String[] args ) throws Exception
-	  {
-	    setDefault( new Downloader() );
-	    java.nio.file.Files.copy( java.net.URI.create( args[0] ).toURL().openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
-	  }
-	}
-	END
-  # For Cygwin/MinGW, switch paths to Windows format before running javac and java
-  verbose " - Compiling Downloader.java ..."
-  "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
-  verbose " - Running Downloader.java ..."
-  "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
-fi
-
-# If specified, validate the SHA-256 sum of the Maven distribution zip file
-if [ -n "${distributionSha256Sum-}" ]; then
-  distributionSha256Result=false
-  if [ "$MVN_CMD" = mvnd.sh ]; then
-    echo "Checksum validation is not supported for maven-mvnd." >&2
-    echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
-    exit 1
-  elif command -v sha256sum >/dev/null; then
-    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c - >/dev/null 2>&1; then
-      distributionSha256Result=true
+        printf '%s' "$JDK_ESPERADO" > "$JDK_SELLO"
+        printf '[INFO]  JDK %s listo en tools/jdk/runtime/\n' "$JDK_VERSION"
     fi
-  elif command -v shasum >/dev/null; then
-    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c >/dev/null 2>&1; then
-      distributionSha256Result=true
-    fi
-  else
-    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
-    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
-    exit 1
-  fi
-  if [ $distributionSha256Result = false ]; then
-    echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
-    echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
-    exit 1
-  fi
+
+    # Solo para ESTE proceso. No se toca el entorno del alumno, ni su .bashrc,
+    # ni su JAVA_HOME: lo que tenga instalado sigue exactamente como estaba.
+    export JAVA_HOME="$JDK_HOME"
+    PATH="$JAVA_HOME/bin:$PATH"
+    export PATH
 fi
 
-# unzip and move
-if command -v unzip >/dev/null; then
-  unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
-else
-  tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
+MVN="$RAIZ/tools/maven/bin/mvn"
+
+if [ "${DGT_ONLINE:-0}" = "1" ]; then
+    exec "$MVN" "$@"
 fi
 
-# Find the actual extracted directory name (handles snapshots where filename != directory name)
-actualDistributionDir=""
-
-# First try the expected directory name (for regular distributions)
-if [ -d "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" ]; then
-  if [ -f "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/bin/$MVN_CMD" ]; then
-    actualDistributionDir="$distributionUrlNameMain"
-  fi
-fi
-
-# If not found, search for any directory with the Maven executable (for snapshots)
-if [ -z "$actualDistributionDir" ]; then
-  # enable globbing to iterate over items
-  set +f
-  for dir in "$TMP_DOWNLOAD_DIR"/*; do
-    if [ -d "$dir" ]; then
-      if [ -f "$dir/bin/$MVN_CMD" ]; then
-        actualDistributionDir="$(basename "$dir")"
-        break
-      fi
-    fi
-  done
-  set -f
-fi
-
-if [ -z "$actualDistributionDir" ]; then
-  verbose "Contents of $TMP_DOWNLOAD_DIR:"
-  verbose "$(ls -la "$TMP_DOWNLOAD_DIR")"
-  die "Could not find Maven distribution directory in extracted archive"
-fi
-
-verbose "Found extracted Maven distribution directory: $actualDistributionDir"
-printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$actualDistributionDir/mvnw.url"
-mv -- "$TMP_DOWNLOAD_DIR/$actualDistributionDir" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
-
-clean || :
-exec_maven "$@"
+exec "$MVN" --offline "-Dmaven.repo.local=$RAIZ/repo-maven" "$@"
