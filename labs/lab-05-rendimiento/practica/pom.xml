@@ -103,6 +103,25 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <!-- El `repackage` queda apagado a propósito.
+
+             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
+             aplicación y TODAS sus dependencias dentro. Aquí pesaba 160 MB,
+             porque se lleva los binarios de PostgreSQL de las cinco plataformas
+             que soporta Zonky.
+
+             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
+             que ejecuta las clases directamente y no necesita empaquetar nada.
+             `./mvnw package` sigue funcionando y deja el jar normal, de unos
+             pocos KB.
+
+             Para volver a activarlo, borrar este bloque <executions>. -->
+        <executions>
+          <execution>
+            <id>repackage</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
