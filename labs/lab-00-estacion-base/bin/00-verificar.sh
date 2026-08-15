@@ -5,8 +5,15 @@
 #  Córrelo ANTES de la sesión 1. Cada [ERROR] trae una flecha "->" con qué hacer.
 #  Si algo falla, no es culpa tuya: es información.
 #
-#    ./bin/00-verificar.sh                # verificación completa
-#    ./bin/00-verificar.sh --sin-docker   # si tu institución no autorizó Docker
+#    ./bin/00-verificar.sh
+#
+#  La lista de requisitos de este curso cabe en una línea: GIT. Nada más.
+#
+#  No hace falta Docker (PostgreSQL viaja como dependencia y corre como proceso
+#  hijo), no hace falta Maven (viaja en tools/maven), no hace falta internet (las
+#  dependencias viajan en repo-maven) y —desde la SPEC-024— tampoco hace falta
+#  Java: el JDK 25 viaja partido en tools/jdk y el propio ./mvnw lo ensambla la
+#  primera vez. Da igual el Java que tengas instalado, o si no tienes ninguno.
 #
 #  Sin `set -e`: este script es de SOLO LECTURA y acumula todas las fallas para
 #  decírtelas juntas. Un validador que se detiene en el primer error te obliga a
@@ -22,18 +29,19 @@ DIR_BIN="$(cd "$(dirname "$0")" && pwd)"
 . "$DIR_BIN/../../lib/lib-comunes.sh"
 
 RAIZ="$(raiz_repo)"
-APP="$RAIZ/dgt-tramites-api"
-SIN_DOCKER=0
-JAVA_MINIMO=25
+LAB01="$RAIZ/labs/lab-01-del-otro-lado-del-boton/starter"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --sin-docker) SIN_DOCKER=1; shift ;;
         -h|--help)
-            printf 'Uso: %s [--sin-docker]\n' "$(basename "$0")"
+            printf 'Uso: %s\n' "$(basename "$0")"
+            exit 0 ;;
+        --sin-docker)
+            printf '[INFO]  --sin-docker ya no existe: el curso entero corre sin Docker.\n'
+            printf '        Corre el script sin argumentos.\n'
             exit 0 ;;
         *)
-            printf '[ERROR] Argumento no reconocido: %s  (usa --sin-docker)\n' "$1" >&2
+            printf '[ERROR] Argumento no reconocido: %s\n' "$1" >&2
             exit 2 ;;
     esac
 done
@@ -43,132 +51,158 @@ PLATAFORMA="$(detectar_plataforma)"
 printf '\n'
 printf '  Estación Base de la DGT — verificación de tu máquina\n'
 printf '  Plataforma detectada: %s\n' "$PLATAFORMA"
-[ "$SIN_DOCKER" -eq 1 ] && printf '  Modo: SIN DOCKER (capacidades reducidas)\n'
 printf '\n'
 
 # -----------------------------------------------------------------------------
-#  1 · Java 25
+#  1 · Git — el único requisito de verdad
 # -----------------------------------------------------------------------------
-#  `java -version` escribe en stderr, y el formato varía entre distribuciones.
-#  Tomamos el primer número: "25.0.3" -> 25, "1.8.0_401" -> 1 (y falla, bien).
+if requiere_comando git "Instala Git desde https://git-scm.com (en Windows trae Git Bash, que es tu terminal)."; then
+    log_info "Tu Git: $(git --version 2>/dev/null)"
+fi
+
+# -----------------------------------------------------------------------------
+#  2 · El clon está completo
+# -----------------------------------------------------------------------------
+#  Un clon a medias (antivirus, disco lleno, Ctrl-C a destiempo) da errores
+#  rarísimos más adelante. Se comprueba aquí, que es barato, en vez de dejar que
+#  reviente en el Lab 03.
+FALTAN=""
+for PIEZA in "tools/maven/bin/mvn" "repo-maven" "tools/jdk" "$LAB01/pom.xml"; do
+    case "$PIEZA" in
+        /*) RUTA="$PIEZA" ;;
+        *)  RUTA="$RAIZ/$PIEZA" ;;
+    esac
+    [ -e "$RUTA" ] || FALTAN="$FALTAN $PIEZA"
+done
+if [ -z "$FALTAN" ]; then
+    paso_ok "El clon tiene todas sus piezas (Maven, dependencias, JDK y los labs)"
+else
+    paso_fail "Al clon le faltan piezas:$FALTAN" \
+              "Clona otra vez, entero. No uses 'Download ZIP' de GitHub."
+fi
+
+# -----------------------------------------------------------------------------
+#  3 · El JDK embebido se ensambla y responde
+# -----------------------------------------------------------------------------
+#  Este es el paso que reemplazó al viejo "¿tienes Java 25 instalado?". Ya no se
+#  le pregunta nada a tu máquina: se ensambla el JDK del repositorio y se le
+#  pregunta a ÉL. La primera vez tarda unos segundos.
+case "$PLATAFORMA" in
+    macos)   PLAT_JDK="macos-aarch64"; SUB="/Contents/Home" ;;
+    gitbash) PLAT_JDK="windows-x64";   SUB="" ;;
+    *)       PLAT_JDK="";              SUB="" ;;
+esac
+
+if [ -z "$PLAT_JDK" ]; then
+    paso_skip "JDK embebido: no se empaqueta para $PLATAFORMA" \
+              "En esta plataforma ./mvnw usará el Java que tengas instalado."
+elif [ ! -d "$RAIZ/tools/jdk/$PLAT_JDK" ]; then
+    paso_fail "No encuentro tools/jdk/$PLAT_JDK en el clon" \
+              "Clona otra vez, entero."
+else
+    log_info "Ensamblando el JDK embebido si hace falta (la primera vez tarda)…"
+    if ( cd "$LAB01" && ./mvnw -q -version >/dev/null 2>&1 ); then
+        JDK_VER="$(cat "$RAIZ/tools/jdk/$PLAT_JDK/VERSION" 2>/dev/null)"
+        JAVA_EMB="$RAIZ/tools/jdk/runtime/$PLAT_JDK/$JDK_VER$SUB/bin/java"
+        if [ -x "$JAVA_EMB" ] || [ -f "$JAVA_EMB.exe" ]; then
+            paso_ok "JDK embebido listo: $("$JAVA_EMB" -version 2>&1 | head -n 1)"
+        else
+            paso_fail "El JDK no quedó donde se esperaba ($JAVA_EMB)" \
+                      "Borra tools/jdk/runtime/ y vuelve a correr este script."
+        fi
+    else
+        paso_fail "No pude ensamblar o usar el JDK embebido" \
+                  "Corre  cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -version  y mándale la salida al instructor."
+    fi
+fi
+
+# -----------------------------------------------------------------------------
+#  4 · El Java del sistema — informativo, no requisito
+# -----------------------------------------------------------------------------
+#  Se muestra solo para que nadie se asuste: tu Java puede ser el 8, el 17 o
+#  ninguno. El curso no lo usa ni lo toca.
 if command -v java >/dev/null 2>&1; then
-    VERSION_CRUDA="$(java -version 2>&1 | head -n 1)"
-    VERSION_MAYOR="$(printf '%s' "$VERSION_CRUDA" | sed -n 's/.*version "\([0-9][0-9]*\).*/\1/p')"
-    if [ -z "$VERSION_MAYOR" ]; then
-        paso_fail "No pude leer la versión de Java (dijo: $VERSION_CRUDA)" \
-                  "Reporta esta línea al instructor: es un formato que no conocíamos."
-    elif [ "$VERSION_MAYOR" -ge "$JAVA_MINIMO" ]; then
-        paso_ok "Java $VERSION_MAYOR (el curso pide $JAVA_MINIMO)"
-    else
-        paso_fail "Java $VERSION_MAYOR es muy antiguo; el curso pide $JAVA_MINIMO" \
-                  "Instala Temurin $JAVA_MINIMO desde https://adoptium.net y revisa tu JAVA_HOME."
-    fi
+    log_info "Java del sistema: $(java -version 2>&1 | head -n 1)  — el curso NO lo usa"
 else
-    paso_fail "No encuentro 'java' en el PATH" \
-              "Instala Temurin $JAVA_MINIMO desde https://adoptium.net (guía 01 del lab)."
+    log_info "No tienes Java instalado — y no lo necesitas: el curso trae el suyo"
 fi
 
 # -----------------------------------------------------------------------------
-#  2 · Git
+#  5 · El wrapper resuelve al Maven del repositorio
 # -----------------------------------------------------------------------------
-requiere_comando git "Instala Git desde https://git-scm.com (en Windows trae Git Bash, que es tu terminal)."
+if [ -x "$LAB01/mvnw" ]; then
+    SALIDA_MVN="$( cd "$LAB01" && ./mvnw -version 2>&1 )"
 
-# -----------------------------------------------------------------------------
-#  3 · Docker (o Podman) con el DEMONIO VIVO
-# -----------------------------------------------------------------------------
-#  Instalado no es lo mismo que corriendo. El 90 % de los "no me funciona" del
-#  primer día es Docker Desktop cerrado.
-if [ "$SIN_DOCKER" -eq 1 ]; then
-    paso_skip "Docker (modo --sin-docker)" \
-              "Sin Docker no correrás Testcontainers ni la imagen OCI: esos temas serán demo del relator."
+    # Se compara el FINAL de la ruta, no la ruta entera, y con los separadores
+    # normalizados. Es lo que este chequeo quiere saber de verdad: ¿el Maven que
+    # corrió es el del repositorio, o uno del sistema?
+    #
+    # Comparar la ruta completa contra $RAIZ era un falso negativo garantizado en
+    # Windows, y nos lo encontramos en una máquina real (SPEC-024 · A2.2): Git Bash
+    # conoce el repo como `/c/SPRINGBOOT/…` y Maven imprime `C:\SPRINGBOOT\…`. No es
+    # solo el separador: es que la misma carpeta se escribe de dos formas distintas,
+    # y ninguna contiene a la otra. El chequeo daba [ERROR] con todo funcionando.
+    #
+    # La normalización de separadores va por expansión de parámetros y no por
+    # `tr '\\' '/'`: es el mismo idioma que ya usa el shim (`${TAR_WIN//\\//}`),
+    # y el `tr` disparaba SC1003 en shellcheck, que el CI trata como fallo.
+    HOME_MVN="$(printf '%s' "$SALIDA_MVN" | grep -m1 '^Maven home:' \
+                | sed 's/^Maven home: *//' | tr -d '\r')"
+    HOME_MVN="${HOME_MVN//\\//}"
+    case "$HOME_MVN" in
+        */tools/maven|*/tools/maven/)
+            paso_ok "./mvnw usa el Maven del repositorio: $(printf '%s' "$SALIDA_MVN" | grep -m1 '^Apache Maven')"
+            ;;
+        "")
+            paso_fail "./mvnw no imprimió su 'Maven home'" \
+                      "Mándale al instructor la salida de:  cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -version"
+            ;;
+        *)
+            paso_fail "./mvnw está usando otro Maven: $HOME_MVN" \
+                      "Debería ser el de tools/maven del repositorio. Mándale esta línea al instructor."
+            ;;
+    esac
 else
-    MOTOR=""
-    command -v docker >/dev/null 2>&1 && MOTOR="docker"
-    [ -z "$MOTOR" ] && command -v podman >/dev/null 2>&1 && MOTOR="podman"
-
-    if [ -z "$MOTOR" ]; then
-        paso_fail "No encuentro ni 'docker' ni 'podman'" \
-                  "Instala Docker Desktop (https://docker.com). Si tu institución no lo autoriza, corre: ./bin/00-verificar.sh --sin-docker (ver T-04)."
-    elif "$MOTOR" info >/dev/null 2>&1; then
-        paso_ok "$MOTOR está instalado y su demonio responde"
-    else
-        paso_fail "$MOTOR está instalado, pero su demonio NO responde" \
-                  "Abre Docker Desktop y espera a que la ballena deje de moverse. Luego repite (ver T-03)."
-    fi
-fi
-
-# -----------------------------------------------------------------------------
-#  4 · El proyecto y su wrapper
-# -----------------------------------------------------------------------------
-if [ -x "$APP/mvnw" ]; then
-    if ( cd "$APP" && ./mvnw -q -version >/dev/null 2>&1 ); then
-        paso_ok "El Maven Wrapper funciona en dgt-tramites-api/"
-    else
-        paso_fail "./mvnw existe pero no corre" \
-                  "Suele ser JAVA_HOME apuntando a otra versión. Comprueba: java -version (ver T-02)."
-    fi
-else
-    paso_fail "No encuentro dgt-tramites-api/mvnw" \
+    paso_fail "No encuentro $LAB01/mvnw" \
               "¿Clonaste el repo completo? Corre este script desde labs/lab-00-estacion-base/."
 fi
 
 # -----------------------------------------------------------------------------
-#  5 · Conectividad: Maven Central
+#  6 · Espacio en disco
 # -----------------------------------------------------------------------------
-if curl -sf -o /dev/null --max-time 10 https://repo1.maven.org/maven2/ 2>/dev/null; then
-    paso_ok "Llegas a Maven Central"
-else
-    paso_fail "No llego a Maven Central (repo1.maven.org)" \
-              "Si estás tras un proxy corporativo, configúralo en ~/.m2/settings.xml (ver T-05)."
-fi
-
-# -----------------------------------------------------------------------------
-#  6 · Conectividad: Docker Hub
-# -----------------------------------------------------------------------------
-if [ "$SIN_DOCKER" -eq 1 ]; then
-    paso_skip "Docker Hub (modo --sin-docker)" "No descargarás imágenes."
-elif curl -sf -o /dev/null --max-time 10 https://hub.docker.com/ 2>/dev/null; then
-    paso_ok "Llegas a Docker Hub"
-else
-    paso_fail "No llego a Docker Hub" \
-              "Sin esto no podrás bajar PostgreSQL. Revisa proxy/firewall (ver T-05)."
-fi
-
-# -----------------------------------------------------------------------------
-#  7 · Espacio en disco (el curso baja ~3 GB entre imágenes y dependencias)
-# -----------------------------------------------------------------------------
+#  Bajó de 10 GB a 3: ya no hay imágenes de Docker que descargar. Lo que ocupa
+#  es el clon (~1,2 GB) más el JDK que se extrae al vuelo (~300 MB por plataforma).
 LIBRES_GB="$(df -g "$RAIZ" 2>/dev/null | awk 'NR==2 {print $4}')"
 if [ -z "$LIBRES_GB" ]; then
     LIBRES_GB="$(df -k "$RAIZ" 2>/dev/null | awk 'NR==2 {print int($4/1048576)}')"
 fi
 if [ -z "$LIBRES_GB" ]; then
-    paso_warn "No pude medir el espacio libre en disco" "Asegúrate de tener al menos 10 GB."
-elif [ "$LIBRES_GB" -ge 10 ]; then
+    paso_warn "No pude medir el espacio libre en disco" "Asegúrate de tener al menos 3 GB."
+elif [ "$LIBRES_GB" -ge 3 ]; then
     paso_ok "Espacio libre: ${LIBRES_GB} GB"
 else
-    paso_fail "Solo ${LIBRES_GB} GB libres; el curso necesita ~10 GB" \
-              "Libera espacio: las imágenes de Docker y ~/.m2 pesan."
+    paso_fail "Solo ${LIBRES_GB} GB libres; el curso necesita ~3 GB" \
+              "Libera espacio: el clon y el JDK extraído ocupan lo suyo."
 fi
+
+# -----------------------------------------------------------------------------
+#  Lo que YA NO se verifica, y por qué
+# -----------------------------------------------------------------------------
+#  · Docker y su demonio: el curso no lo usa (SPEC-022/023). PostgreSQL viaja
+#    como dependencia Maven y corre como proceso hijo del JVM.
+#  · Conectividad a Maven Central y a Docker Hub: no se descarga nada. Todo
+#    viaja en el repositorio. Este script no toca la red, y es a propósito —
+#    puedes correrlo con el cable desenchufado y tiene que dar verde igual.
+#  · "¿Tienes Java 25?": ya no se le pregunta a tu máquina (paso 3).
 
 # -----------------------------------------------------------------------------
 #  Veredicto
 # -----------------------------------------------------------------------------
-if [ "$SIN_DOCKER" -eq 1 ]; then
-    resumen_final "ESTACIÓN LISTA (MODO SIN DOCKER: capacidades reducidas)" \
-                  "ESTACIÓN INCOMPLETA"
-else
-    resumen_final "ESTACIÓN LISTA" "ESTACIÓN INCOMPLETA"
-fi
+resumen_final "ESTACIÓN LISTA" "ESTACIÓN INCOMPLETA"
 VEREDICTO=$?
 
 printf '\n'
-if [ "$VEREDICTO" -eq 0 ] && [ "$SIN_DOCKER" -eq 1 ]; then
-    # Sin Docker no hay PostgreSQL, y sin PostgreSQL la API no arranca. Decirlo
-    # ahora es honesto; dejar que el alumno choque contra start-lab.sh, no.
-    log_info "Tu estación sirve para leer, compilar y correr los tests unitarios."
-    log_info "NO podrás levantar la app (necesita PostgreSQL en un contenedor):"
-    log_info "eso lo verás como demo del relator. Habla con el instructor."
-elif [ "$VEREDICTO" -eq 0 ]; then
+if [ "$VEREDICTO" -eq 0 ]; then
     log_info "Siguiente paso:  ./bin/start-lab.sh"
 else
     log_info "Arregla los [ERROR] y vuelve a correr este script. Si te atascas,"

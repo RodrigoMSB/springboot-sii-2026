@@ -467,6 +467,32 @@ emitirse la regla se auditaron los existentes (`tools/verificar-tamanos.sh` y
 *medir sin mostrar*. Las dos protegen lo mismo — que el veredicto sea auditable por alguien que
 no estaba delante cuando se generó.
 
+#### Coda · el pariente: fallar por una razón que no es la que dices
+
+> Añadida el 13 de agosto de 2026, dos días después de A-04, por un segundo caso.
+
+El Lab 00 comprobaba que `./mvnw` resolviera al Maven del repositorio comparando la salida del
+comando contra la ruta absoluta del repo. En macOS funcionaba. En Windows daba `[ERROR]` con
+todo perfectamente funcionando: Git Bash conoce el repo como `/c/SPRINGBOOT/…` y Maven imprime
+`C:\SPRINGBOOT\…`. No es solo el separador — es que **la misma carpeta se escribe de dos
+formas y ninguna contiene a la otra**.
+
+A-04 prohíbe medir sin mostrar. Esto es el reverso: **mostrar un veredicto que no corresponde a
+lo que se midió**. La regla que cierra el triángulo:
+
+> **Un validador solo puede fallar por la razón que dice.** Si el mensaje culpa a X y la causa
+> real es un artefacto de la comparación, es una mentira igual que un `[OK]` regalado — y peor
+> de tratar, porque manda a quien la lee a buscar donde no hay nada.
+
+En la práctica, para este material: **nunca compares rutas absolutas entre plataformas.**
+Compara el sufijo que te importa, con los separadores normalizados. La ruta completa es la forma
+más fácil de escribir una comparación que solo funciona en la máquina donde la escribiste.
+
+Que los dos casos —el `[OK]` regalado de la SPEC-FIX-05 y este falso negativo— aparecieran en la
+misma semana no es casualidad: los dos salieron al correr el material en una máquina que no era
+la de su autor. Es el argumento entero a favor de las pruebas en Windows real y de los vuelos en
+modo avión.
+
 ---
 
 ## 5. Resumen de la verificación

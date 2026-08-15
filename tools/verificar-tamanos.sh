@@ -21,10 +21,13 @@ cd "$DIR_RAIZ" || exit 2
 
 printf '\n  Guard de tamaños (umbral: %s MB)\n\n' "$UMBRAL_MB"
 
-# Solo lo que de verdad viaja en el repositorio: `target/` y `.git` no cuentan
-# —el primero es basura de compilación que el .gitignore ya descarta—.
+# Solo lo que de verdad viaja en el repositorio. Lo que el .gitignore descarta no
+# cuenta, porque no llega a GitHub: `target/` (basura de compilación) y
+# `tools/jdk/runtime/` (el JDK que el shim ensambla al vuelo — su `lib/modules`
+# pesa 137 MB y es derivable de los trozos que sí viajan).
 podar() {
-    find . \( -name .git -o -name target -o -name node_modules \) -prune -o "$@"
+    find . \( -name .git -o -name target -o -name node_modules \
+              -o -path ./tools/jdk/runtime \) -prune -o "$@"
 }
 
 GRANDES="$(podar -type f -size +${UMBRAL_MB}M -print 2>/dev/null)"

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-04.*
+*Última actualización: SPEC-024 (tag `material-v0.4.0`).*
 
 ---
 
@@ -202,6 +202,71 @@ migración. El que les da nombre: un `99-destruir.sh` que declaraba `[OK] Archiv
 
 Cero código Java tocado. Informe en `docs/specs/informes/INFORME-SPEC-FIX-05.md`.
 
+## 1.e · El Java viaja en la maleta (SPEC-024)
+
+Quedó demostrado en vivo el 13 de agosto: la VM Windows del PO tenía **Java 17** y el curso pide
+25. Ese era el último eslabón donde el material le pedía algo a la máquina del alumno — y todo
+lo que se le pide a dieciocho máquinas distintas falla en alguna. La sesión 1 fue eso.
+
+**El JDK 25 viaja ahora dentro del repositorio.** Eclipse Temurin `jdk-25.0.4+7`, para Windows
+x64 y Mac Apple Silicon, partido en trozos de 80 MB porque GitHub rechaza los archivos de más de
+100. El shim `./mvnw` los junta la primera vez, **verifica el sha256 contra el que publica
+Temurin**, extrae, y usa ese JDK **ignorando cualquier Java que la máquina tenga**. Si la firma
+no cuadra, aborta: un JDK que no se puede verificar no se usa.
+
+Nada de esto toca el entorno del alumno: `JAVA_HOME` y `PATH` se configuran solo para el proceso
+de Maven. Ni `.bashrc`, ni variables de usuario, ni permisos de administrador.
+
+**La lista de prerrequisitos del curso quedó en una palabra: Git.**
+
+La prueba que lo resume, con `JAVA_HOME` apuntando a un GraalVM 21 y ese Java primero en el
+`PATH`: `Java version: 25.0.4, vendor: Eclipse Adoptium` y la suite del Lab 01 en verde, 46
+tests. El problema «N alumnos con N Javas distintos» pasó a ser cero problemas.
+
+**El Lab 00 se migró con él.** Fuera Docker, Docker Hub, Maven Central y el requisito de tener
+Java; dentro, Git, la integridad del clon y el ensamblado real del JDK. Da `5/5 · ESTACIÓN
+LISTA` con el cable desenchufado, y el Java del sistema baja a informativo: *«el curso NO lo
+usa»*.
+
+Y hay **guion para la próxima sesión**: `docs/guion-reinicio-de-sala.md` — clon fresco y no
+`pull`, cómo deshacer el parche de emergencia de la sesión 1, la secuencia de arranque con su
+salida esperada, y el plan B con los tres sospechosos de las máquinas corporativas.
+
+**Volado y verificado** (vuelo 4, 13 de agosto, nueve minutos): el Lab 00 y los siete labs, con
+el cable desenchufado **y con un `JAVA_HOME` hostil apuntando a un Java 21 durante todo el
+vuelo**. Quince suites, **cero descargas**, `ESTACIÓN LISTA` y las siete soluciones APROBADO. El
+JDK se ensambló **dentro del avión**, en tres segundos.
+
+El número para la sala: **38 segundos** desde el `git clone` hasta la aplicación sirviendo, con
+todo frío — sin `target/`, sin caché de binarios, sin JDK ensamblado y sin red. El clon pasa a
+1,0 GB.
+
+**Probado en Windows real, en cuatro vueltas.** Encontraron tres defectos que desde macOS eran
+invisibles —el `tar` de Git Bash que no abre ZIP, un chequeo del Lab 00 que comparaba rutas
+absolutas entre plataformas y daba `[ERROR]` con todo funcionando, y el cartel del Firewall— y
+los tres están cerrados. `mvnw.cmd` en `cmd.exe`: **46/46 · BUILD SUCCESS en 40 s**. El
+desmontaje mata el JVM nativo, verificado con `netstat` y `tasklist`. Y la app se ata a
+`localhost`, así que Windows ya no pide un permiso de administrador que el alumno no tiene.
+
+Ninguno de esos tres se podía cazar razonando: es el argumento entero a favor de probar en la
+máquina del alumno.
+
+**Y confirmado en la máquina que más se parece a la sala** (14 de agosto): VM corporativa de
+Netec, **Windows 11 x64 nativo**, MINGW64, con un **Temurin 17 instalado de sistema** y antivirus
+corporativo. Todo a la primera y **cero defectos nuevos**: `git clone` de 475 MB en **21 s**, Lab
+00 **5/5 ESTACIÓN LISTA**, `./mvnw verify` en frío **BUILD SUCCESS · 46 + 7/7 IT · 1m28s** con
+PostgreSQL 16.14, `start-lab.sh` **sin cartel del Firewall**, y el desmontaje dejando el 8099 sin
+un solo `LISTENING`.
+
+Con eso el tour queda completo sobre **tres plataformas** —Mac, Windows ARM y Windows x64
+corporativo— y **tres Javas hostiles derrotados**: GraalVM 21, Temurin 17.0.13 y Temurin 17.0.20.
+Que la tercera plataforma no encontrara nada es lo que convierte los tres arreglos anteriores en
+correcciones reales y no en parches de una máquina.
+
+Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
+
+**Mergeado a `main` y etiquetado `material-v0.4.0`** (PR #30).
+
 ## 2 · Qué falta
 
 **Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
@@ -225,6 +290,26 @@ correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
 
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
+
+**⚠️ El CI de `main` está rojo en un job, y es un rojo honesto.** `deriva · labs en sincronía con
+su base` falla desde el **PR #27** (SPEC-022) — el tag `material-v0.3.1` ya estaba puesto sobre él.
+Causa: `lab-08` deriva de `lab-07`, y las SPEC-022/023/024 migraron el `lab-07` (`mvnw`,
+`mvnw.cmd`, `pom.xml`, los `application-*.yml`, las IT de Zonky) sin migrar el `lab-08`, que es
+Fase 2; el guard cuenta 13 archivos divergiendo sin declararse. **No se declararon a propósito**:
+esos archivos no divergen por decisión, divergen porque el lab-08 va atrasado, y declararlos
+convertiría un guard que dice la verdad en uno que calla. **Se apaga migrando el lab-08 en la
+Fase 2**, no editando su `derivacion-solucion.txt`. Los otros siete jobs están en verde.
+
+**Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** El diálogo de Windows
+Defender **reaparece en la fase de tests de integración**, visto en las dos máquinas Windows. La
+A2.3 ató la aplicación a `localhost`, pero solo en el perfil `dev`: los 16 archivos que llevan
+`address: localhost` son todos `application-dev.yml`, y ningún `application-test.yml` lo tiene.
+**Es cosmético y no bloquea**: el PO le dio Cancel a propósito en la VM de Netec y el build
+terminó verde igual —`46 + 7/7 IT`—, así que el alumno sin permisos de administrador completa la
+suite entera; y el guion de sala ya cubre el caso. Falta identificar **qué proceso** abre el
+socket antes de poner el candado: hay dos lecturas vivas (el Tomcat de las IT con `RANDOM_PORT`,
+o el `postgres.exe` que Zonky arranca) y solo se distinguen mirando la máquina Windows. Detalle,
+evidencia y plan en §15 del `INFORME-SPEC-024.md`. **Trabajo de la próxima SPEC.**
 
 ## 3 · Qué viene ahora
 
