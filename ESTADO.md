@@ -291,6 +291,15 @@ correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
+**⚠️ El CI de `main` está rojo en un job, y es un rojo honesto.** `deriva · labs en sincronía con
+su base` falla desde el **PR #27** (SPEC-022) — el tag `material-v0.3.1` ya estaba puesto sobre él.
+Causa: `lab-08` deriva de `lab-07`, y las SPEC-022/023/024 migraron el `lab-07` (`mvnw`,
+`mvnw.cmd`, `pom.xml`, los `application-*.yml`, las IT de Zonky) sin migrar el `lab-08`, que es
+Fase 2; el guard cuenta 13 archivos divergiendo sin declararse. **No se declararon a propósito**:
+esos archivos no divergen por decisión, divergen porque el lab-08 va atrasado, y declararlos
+convertiría un guard que dice la verdad en uno que calla. **Se apaga migrando el lab-08 en la
+Fase 2**, no editando su `derivacion-solucion.txt`. Los otros siete jobs están en verde.
+
 **Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** El diálogo de Windows
 Defender **reaparece en la fase de tests de integración**, visto en las dos máquinas Windows. La
 A2.3 ató la aplicación a `localhost`, pero solo en el perfil `dev`: los 16 archivos que llevan

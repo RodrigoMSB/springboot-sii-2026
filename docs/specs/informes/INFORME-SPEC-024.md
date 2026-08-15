@@ -467,13 +467,20 @@ quiere saber de verdad: ¿el Maven que corrió es el del repositorio o uno del s
 
 ```bash
 HOME_MVN="$(printf '%s' "$SALIDA_MVN" | grep -m1 '^Maven home:' \
-            | sed 's/^Maven home: *//' | tr -d '\r' | tr '\\' '/')"
+            | sed 's/^Maven home: *//' | tr -d '\r')"
+HOME_MVN="${HOME_MVN//\\//}"
 case "$HOME_MVN" in
     */tools/maven|*/tools/maven/)  paso_ok  … ;;
     "")                            paso_fail "no imprimió su 'Maven home'" … ;;
     *)                             paso_fail "está usando otro Maven: $HOME_MVN" … ;;
 esac
 ```
+
+**Corrección posterior, en el cierre (§16).** La primera versión de este arreglo normalizaba con
+`tr '\\' '/'` dentro del pipe, y eso **puso el CI en rojo**: shellcheck lo marca `SC1003` y el
+job `labs-sh` trata cualquier salida no limpia como fallo. Se cambió a la expansión de parámetros
+de arriba —el mismo idioma que ya usaba el shim (`${TAR_WIN//\\//}`)— que es shellcheck-limpia y
+se comporta igual. La tabla de abajo se volvió a pasar contra la versión corregida.
 
 Probado contra las formas reales:
 
@@ -836,7 +843,65 @@ Queda anotado también en `ESTADO.md`.
 
 ---
 
-## 16 · Cierre
+## 16 · El CI, mirado de frente antes del merge
+
+Nada de esto estaba en el informe hasta el momento del merge, y **debía haber estado**: la SPEC se
+declaró «en posición de merge» sin citar el estado del CI. Se corrige aquí, con los dos hechos
+separados y medidos.
+
+### El rojo que era nuestro — corregido
+
+El job `labs-sh · andamiaje (ubuntu-latest)` fallaba **en los ocho commits de la rama**, y el
+culpable era el propio arreglo de A2.2:
+
+```
+In labs/lab-00-estacion-base/bin/00-verificar.sh line 146:
+                | sed 's/^Maven home: *//' | tr -d '\r' | tr '\\' '/')"
+                                                               ^-- SC1003 (info)
+[ERROR] labs/lab-00-estacion-base/bin/00-verificar.sh
+[ERROR] 1 script(s) con problemas
+```
+
+Es doblemente incómodo porque §3 de este informe presumía de «shellcheck limpio». Lo era antes de
+A2.2 y dejó de serlo con él. Arreglado con la expansión de parámetros (§11), y verificado como lo
+verifica el CI:
+
+```
+$ shellcheck -x labs/lab-00-estacion-base/bin/00-verificar.sh   →  limpio, exit=0
+$ for f in $(find labs -name '*.sh' | sort); do shellcheck -x "$f"; done
+  scripts con problemas: 0
+```
+
+La conducta no cambió — las seis entradas de la tabla de §11 dan el mismo veredicto sobre bash
+3.2.57, incluida una con finales CRLF — y el Lab 00 completo vuelve a dar `5/5 · ESTACIÓN LISTA ·
+EXIT=0` en el Mac.
+
+### El rojo que no es nuestro — declarado, no silenciado
+
+El job `deriva · labs en sincronía con su base` falla, **y también falla en `main`**:
+
+```
+main @ 191b008 (merge del PR #29)     deriva: failure      (los otros 7 jobs: success)
+rama @ d9ae8d2                        deriva: failure
+```
+
+Es rojo desde el **PR #27** (SPEC-022); el tag `material-v0.3.1` está puesto sobre un `main` rojo.
+La causa es estructural y conocida: `lab-08` deriva de `lab-07`, y las SPEC-022/023/024 migraron
+el `lab-07` —`mvnw`, `mvnw.cmd`, `pom.xml`, los `application-*.yml`, las IT de Zonky— sin migrar
+el `lab-08`, que es Fase 2. El guard cuenta 13 archivos divergiendo sin declararse.
+
+**Y tiene razón.** Se decidió **no** declararlos en `derivacion-solucion.txt`, que era el atajo
+disponible: esos archivos no divergen *a propósito*, divergen **porque el lab-08 va atrasado**.
+Declararlos convertiría a un guard que dice la verdad en uno que calla — exactamente el defecto
+que la SPEC-FIX-05 pasó una semana desmontando. El rojo es honesto y se apaga migrando el lab-08,
+no editando su declaración.
+
+**El merge de esta SPEC no empeora `main`:** entra con el mismo único job rojo que `main` ya
+tenía, y devuelve `labs-sh` al verde. Queda anotado en `ESTADO.md` como deuda de Fase 2.
+
+---
+
+## 17 · Cierre
 
 Ocho verificaciones cerradas. Tres anotaciones A2.x implementadas y verificadas en fierro. Un
 vuelo en modo avión, cuatro vueltas en Windows ARM y una validación limpia en Windows x64

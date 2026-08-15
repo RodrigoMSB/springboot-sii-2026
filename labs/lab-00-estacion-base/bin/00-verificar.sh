@@ -142,8 +142,13 @@ if [ -x "$LAB01/mvnw" ]; then
     # conoce el repo como `/c/SPRINGBOOT/…` y Maven imprime `C:\SPRINGBOOT\…`. No es
     # solo el separador: es que la misma carpeta se escribe de dos formas distintas,
     # y ninguna contiene a la otra. El chequeo daba [ERROR] con todo funcionando.
+    #
+    # La normalización de separadores va por expansión de parámetros y no por
+    # `tr '\\' '/'`: es el mismo idioma que ya usa el shim (`${TAR_WIN//\\//}`),
+    # y el `tr` disparaba SC1003 en shellcheck, que el CI trata como fallo.
     HOME_MVN="$(printf '%s' "$SALIDA_MVN" | grep -m1 '^Maven home:' \
-                | sed 's/^Maven home: *//' | tr -d '\r' | tr '\\' '/')"
+                | sed 's/^Maven home: *//' | tr -d '\r')"
+    HOME_MVN="${HOME_MVN//\\//}"
     case "$HOME_MVN" in
         */tools/maven|*/tools/maven/)
             paso_ok "./mvnw usa el Maven del repositorio: $(printf '%s' "$SALIDA_MVN" | grep -m1 '^Apache Maven')"
