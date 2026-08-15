@@ -1,0 +1,16 @@
+server:
+  # Cada proyecto de este lab tiene su puerto, así que `practica` (8081) y
+  # `solucion` (8082) pueden correr a la vez sin pisarse.
+  port: 8081
+
+spring:
+  application:
+    name: lab01-web
+
+logging:
+  level:
+    root: WARN
+    # Lo nuestro sí se ve: de aquí salen las líneas "Starting" y "Started".
+    cl.dgt: INFO
+    # Y esta, que es la que dice en qué puerto quedó escuchando el servidor.
+    org.springframework.boot.tomcat: INFO
