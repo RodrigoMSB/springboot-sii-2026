@@ -109,6 +109,19 @@ sitio, las ocho llamadas comentadas y los ocho `// escribe aquí` intactos.
 | **V6** | Derivación y CI | **26 eslabones en sincronía**, único rojo la frontera 07→08 — exactamente como `main` |
 | **V7** | `ls labs/lab-03c-jpa` | `PASOS.md README.md practica solucion` |
 
+**Un rojo que sí fue nuestro, y se corrigió.** El job `siembra` exige que todo lab con sucesor
+tenga un `TEORIA.md` que siembre el módulo siguiente (P-18), y este lab no lleva ninguno: su
+documento de enseñanza es `PASOS.md`.
+
+```
+[ERROR] labs/lab-03c-jpa no tiene TEORIA.md
+```
+
+Se resolvió **enseñándole el nombre al gate** —si no hay `TEORIA.md`, mira `PASOS.md`, con la
+misma exigencia— y, sobre todo, haciendo la siembra de verdad: `PASOS.md` cierra ahora con las
+dos preguntas que quedan abiertas y que son el Lab 04, incluida la que este lab no llegó a
+tocar: *¿qué pasa cuando una entidad apunta a otra?*
+
 **V6, con detalle:** el lab nuevo no entra en la cadena de derivación y no debe entrar — no
 deriva del tronco, es un proyecto aparte con su propio paquete (`cl.dgt.jpa`). El verificador
 recorre `labs/lab-NN-*` con `solucion/`+`starter/`; `lab-03c-jpa` tiene `practica/`, así que ni

@@ -290,3 +290,18 @@ contarlas. Con dos filas da igual; con quinientas mil, no.
 
 `practica/` imprime exactamente lo mismo que `solucion/`. Si algo no cuadra, `solucion/` está
 ahí para comparar archivo por archivo.
+
+### Lo que siembra este lab
+
+Hoy quedaron dos preguntas sin responder, y las dos son el Lab 04.
+
+La primera salió en el paso 4: `findAll` no lleva `where`, y con quinientas mil filas eso deja
+de ser gratis. La segunda es más honda y todavía no se ha visto: **¿qué pasa cuando una entidad
+apunta a otra?** Pedir una observación podría traer también a su autor, y con él lo suyo, y así
+hacia abajo.
+
+> **¿Y si trae de más?** — Traer de más no da error. Da lentitud. Y la lentitud no aparece con
+> tres filas de prueba: aparece en producción.
+
+El Lab 04 convierte esa pregunta en un número: un contador de consultas y un presupuesto que no
+se puede cruzar.
