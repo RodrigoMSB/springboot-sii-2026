@@ -1,21 +1,55 @@
 # =============================================================================
 #  Perfil dev — tu portátil
 # -----------------------------------------------------------------------------
-#  Boot levanta el compose.yaml y cablea el DataSource solo. Tú no escribes
-#  ninguna cadena de conexión, y por tanto no hay ninguna que filtrar.
+#  Fíjate en lo que NO hay aquí: ninguna cadena de conexión. La base de datos la
+#  levanta BaseDeDatosEmbebida — PostgreSQL de verdad, empaquetado como una
+#  dependencia Maven más y corriendo como proceso hijo. Tú no escribes url,
+#  usuario ni contraseña, y por tanto no hay ninguna que filtrar.
 #
-#  La credencial de laboratorio vive en compose.yaml, versionada a propósito:
-#  abre una base desechable que muere con `docker compose down -v`.
+#  Antes esto levantaba un compose.yaml. Docker salió del curso (SPEC-022): las
+#  máquinas del SII no lo tienen y no pueden instalarlo.
+#
+# -----------------------------------------------------------------------------
+#  ⚠️  NOTA DEL PECADO ORIGINAL — léela antes de acusarnos de hipócritas.
+#
+#  El compose.yaml que vivía aquí traía una contraseña (`dgt-dev`) versionada A
+#  PROPÓSITO. Era una credencial de LABORATORIO, para una base DESECHABLE que
+#  solo existía en el portátil del alumno y moría al terminar el ejercicio.
+#  Versionarla era lo correcto: hacía el entorno reproducible y no protegía nada
+#  que valiera la pena proteger.
+#
+#  El crimen del Lab 01 es OTRO: credenciales de PRODUCCIÓN en `application.yml`,
+#  que quedan al alcance de cualquiera con acceso al proyecto y de todo servidor
+#  que lo descargue. Por eso `application.yml` no contiene ninguna credencial
+#  (D-012).
+#
+#  La diferencia no es el archivo. Es qué protege el secreto y qué pasa si se
+#  filtra.
+#
+#  Nota de 2026: hoy este perfil ya no tiene NINGUNA contraseña que versionar,
+#  ni buena ni mala. La base embebida no la necesita. El pecado original se
+#  quedó sin cuerpo del delito — pero la distinción que enseñaba sigue siendo la
+#  que separa el Lab 01 de un incidente de seguridad real.
 # =============================================================================
-spring:
-  docker:
-    compose:
-      enabled: true
-      lifecycle-management: start_and_stop
-
-# El secreto de firma del JWT. Default de UTILERÍA solo en dev, como la credencial del
-# compose.yaml: abre una base de juguete, no firma nada de producción. En prod NO hay
-# default (ver application-prod.yml y VerificadorDeSecretosProd): la variable es obligatoria.
 dgt:
+  base-embebida:
+    enabled: true
+  # El secreto de firma del JWT. Default de UTILERÍA solo en dev: abre una base de
+  # juguete y no firma nada de producción. En prod NO hay default (ver
+  # application-prod.yml y VerificadorDeSecretosProd): la variable es obligatoria.
   jwt:
     secret: ${DGT_JWT_SECRET:clave-de-laboratorio-hs256-no-usar-en-produccion-2026}
+
+# -----------------------------------------------------------------------------
+#  A qué interfaz se ata la aplicación
+# -----------------------------------------------------------------------------
+#  `localhost` y no todas las interfaces. Sin esto, Tomcat se ata a 0.0.0.0 y
+#  Windows saca el cartel del Firewall —«Windows Defender ha bloqueado algunas
+#  características de esta aplicación»— pidiendo permiso de administrador que el
+#  alumno de una máquina corporativa no tiene. Un cartel que no puede aceptar, en
+#  el primer minuto de clase (SPEC-024 · A2.3).
+#
+#  No se pierde nada: el laboratorio se usa desde la propia máquina. Y de paso la
+#  app deja de estar publicada en la red de la institución, que tampoco es malo.
+server:
+  address: localhost
