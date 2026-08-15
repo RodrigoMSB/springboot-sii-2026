@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-024 (tag `material-v0.4.0`).*
+*Última actualización: SPEC-026 (nace el Lab 3.5).*
 
 ---
 
@@ -20,6 +20,14 @@
   de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
 - **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
   enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
+- **Lab 3.5** (`labs/lab-03b-el-apostrofe/`): **la persistencia, desde cero.** El hueco mayor
+  que tenía el curso: nadie enseñaba JPA, y el alumno venía usando entidades desde el Lab 01 sin
+  saber qué eran. El crimen es un DAO de JDBC crudo heredado «del practicante» que funciona… y
+  al que le basta un apóstrofe en el RUT para devolver las observaciones internas de otro
+  contribuyente. Se mata con una entidad, un repositorio con consulta derivada, y el guardián
+  AU-03b que prohíbe el JDBC a pelo. De paso siembra la seguridad del Lab 07 y explica cómo leer
+  el SQL que Hibernate genera, que es el piso que el Lab 04 daba por supuesto.
+  **Estrena el empaquetado nuevo** (§1.f).
 - **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
   corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.
 - **Lab 05** (`labs/lab-05-once-segundos/`): el clímax. El N+1 medido con un contador de
@@ -266,6 +274,24 @@ correcciones reales y no en parches de una máquina.
 Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 
 **Mergeado a `main` y etiquetado `material-v0.4.0`** (PR #30).
+
+## 1.f · El piloto de empaquetado (SPEC-026)
+
+El Lab 3.5 estrena un formato nuevo, y si convence, los demás se reempaquetan en una SPEC
+aparte. **El alumno ve exactamente tres cosas: `README.md`, el código con sus TODOs, y `bin/`.**
+
+- **Un solo documento** de sesión (≤120 líneas): el crimen, la secuencia, los TODOs con su
+  ubicación y tiempo, y los comandos.
+- **No hay `guia/`.** Lo operativo —qué hacer, la pista, qué test lo verifica— vive en un
+  comentario junto a cada `TODO_N`, **en el archivo donde se hace el trabajo**. El alumno no
+  cambia de ventana.
+- **`PARA-EL-SABADO.md`** recoge lo que hacía el viejo `TEORIA.md`: profundización post-clase.
+  En sala, la teoría es la PPT del instructor.
+- **Las notas del instructor salen del lab**: `docs/instructor/lab-03b.md`.
+- Tono sobrio en todo lo nuevo: la narrativa DGT se mantiene —el practicante, el código
+  heredado— pero el personaje no declama.
+
+Medido: la carpeta del lab tiene **exactamente 2 archivos `.md`**.
 
 ## 2 · Qué falta
 
