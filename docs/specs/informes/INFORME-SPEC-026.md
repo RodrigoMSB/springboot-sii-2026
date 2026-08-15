@@ -256,6 +256,29 @@ todos los labs. No son documentación de este lab.
 | shellcheck · `bash -n` | limpios en los scripts nuevos y adaptados |
 | Labs 05–13 y 14 | **cero archivos tocados** |
 
+### El CI, medido sobre la rama
+
+**7 de 8 jobs en verde.** El único rojo es `deriva`, y es el **mismo que `main` ya tenía**: la
+frontera 07→08, porque el Lab 08 no está migrado. Esta SPEC no lo empeora ni lo toca.
+
+Un job sí se puso rojo por culpa nuestra y se corrigió: **`siembra`**. La regla P-18 exige que
+todo lab con sucesor tenga un `TEORIA.md` que siembre el módulo siguiente… y el empaquetado
+piloto prohíbe precisamente ese archivo, porque su rol lo cumple `PARA-EL-SABADO.md`.
+
+```
+[ERROR] labs/lab-03b-el-apostrofe no tiene TEORIA.md
+[ERROR] 1 lab(s) sin siembra. Ver P-18 en docs/adn/adn-cypress.md.
+```
+
+Se resolvió **enseñándole el nombre nuevo al gate**, no debilitándolo ni exceptuando al lab: si
+no hay `TEORIA.md`, mira `PARA-EL-SABADO.md`, y le exige exactamente lo mismo. P-18 habla de
+sembrar el módulo siguiente, no del nombre del archivo. Es una decisión que el reempaquetado va a
+heredar, así que conviene que conste aquí.
+
+De paso, la siembra del Lab 04 pasó a ser **explícita**, con su propio subtítulo en §9 de
+`PARA-EL-SABADO.md`: la pregunta «¿y si trae de más?» y el enganche con el `LAZY` que el alumno
+acaba de escribir sin saber todavía por qué importa.
+
 ---
 
 ## 6 · Un detalle que costó, y que conviene recordar
