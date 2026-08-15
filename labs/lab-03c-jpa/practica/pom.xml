@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lab 3.5 — JPA.
+
+  Proyecto mínimo y autónomo: solo lo que hace falta para guardar y recuperar
+  objetos. Sin web, sin seguridad, sin tests. Se corre con:
+
+      ./mvnw spring-boot:run
+
+  PostgreSQL llega como dependencia Maven (Zonky) y corre como proceso hijo del
+  JVM: sin Docker, sin instalar nada, sin permisos de administrador.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>lab35-jpa</artifactId>
+  <version>0.1.0</version>
+  <name>lab35-jpa</name>
+  <description>Lab 3.5 — JPA: guardar y recuperar objetos</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <!-- Zonky: PostgreSQL de verdad, empaquetado como artefacto Maven. La versión
+         de los BINARIOS (16.x) es independiente de la del envoltorio Java. -->
+    <zonky.version>2.2.2</zonky.version>
+    <zonky.binarios.version>16.14.0</zonky.binarios.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.zonky.test.postgres</groupId>
+        <artifactId>embedded-postgres-binaries-bom</artifactId>
+        <version>${zonky.binarios.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- Boot 4 sacó las autoconfiguraciones a módulos: `flyway-core` por sí solo
+         NO enciende Flyway al arrancar. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-flyway</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- PostgreSQL embebido: el motor de verdad, como dependencia. -->
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>${zonky.version}</version>
+    </dependency>
+    <!-- Los binarios, uno por plataforma. Se declaran los dos: el alumno del SII
+         va en Windows y el material se prepara en un Mac con Apple Silicon. -->
+    <dependency>
+      <groupId>io.zonky.test.postgres</groupId>
+      <artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test.postgres</groupId>
+      <artifactId>embedded-postgres-binaries-darwin-arm64v8</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
