@@ -192,6 +192,45 @@ resultado intermedio y no lo cumple deja al instructor colgado en mitad de la cl
 | **Guarda de 95 MB** | ✅ El archivo más grande de los cuatro labs es `lab-03-errores/PASOS.md`, **13,0 KB** |
 | **`du -sh repo-maven`** | **230 MB**, sin cambios: los cuatro labs no añadieron ni un artefacto — todo lo que usan (`starter`, `starter-web`, `starter-validation` 4.1.0) ya viajaba |
 
+### El CI, y el gate que hubo que enseñar
+
+Primera corrida sobre la rama: **`siembra` en rojo**, con tres errores exactos:
+
+```
+[ERROR] labs/lab-01-web no tiene TEORIA.md
+[ERROR] labs/lab-02-di no tiene TEORIA.md
+[ERROR] labs/lab-03-errores no tiene TEORIA.md
+[ERROR] 3 lab(s) sin siembra.
+```
+
+La réplica local había dado 0 fallos, y la diferencia estaba en **de dónde salió cada copia del
+gate**: el fallback a `PASOS.md` lo introdujo la SPEC-027 y vive en su rama, **sin mergear**. Esta
+rama sale de `main`, donde el gate solo conoce `TEORIA.md`.
+
+Se aplicó **el mismo arreglo, escrito igual** que en `spec-027-lab-3-5-jpa`, para que las dos ramas
+converjan sin pelea al mergear. Ningún lab queda exento por serlo: P-18 exige sembrar el módulo
+siguiente, no un nombre de archivo, y se le exige lo mismo al documento que exista.
+
+Resultado tras el arreglo — corrida `31910698603`:
+
+| Job | |
+|---|---|
+| `app · dgt-tramites-api (verify)` | ✅ |
+| `grpc · la demo del Lab 08` | ✅ |
+| `lab14 · el sistema de microservicios` | ✅ |
+| `labs-sh · andamiaje (ubuntu-latest)` | ✅ |
+| `labs-sh · andamiaje (windows-latest)` | ✅ |
+| `siembra · toda TEORIA.md con sucesor…` | ✅ |
+| `temario · coherencia .md ↔ .docx` | ✅ |
+| `deriva · labs en sincronía con su base` | ❌ **el rojo que ya traía `main`** |
+
+**El rojo de `deriva` no es nuevo, y se comprobó en vez de suponerlo:** se compararon los `[ERROR]`
+de la última corrida de `main` con los de esta rama y son **los mismos** — `1 eslabon(es) con deriva
+silenciosa`, `13 archivo(s) divergieron sin declararse`, y la misma lista (`mvnw`, `mvnw.cmd`,
+`pom.xml`, `application-dev.yml`…). Es el `lab-08` atrasado respecto del `lab-07` desde el PR #27,
+documentado en `ESTADO.md` §2, y se apaga migrando el lab-08 (PR #31), no declarando divergencias.
+**7 de 8 en verde, cero rojos nuevos.**
+
 ---
 
 ## 6 · Decisiones tomadas al ejecutar
@@ -216,6 +255,10 @@ Sin ellos, el paso 1 solo mostraría `{"status":500,"error":"Internal Server Err
 perdería. **El paso 5 los quita** y `solucion/` no los tiene.
 
 **D-028-5 · El Lab 03 tiene un cuarto handler que la SPEC no pedía.** Ver §7.3: hizo falta.
+
+**D-028-7 · El gate `siembra` aprende `PASOS.md` también en esta rama.** Es el mismo cambio que la
+SPEC-027 hizo para el 3.5c, replicado literalmente porque esta rama sale de `main` y allí no está.
+Ver §5.
 
 **D-028-6 · `logging.level.cl.dgt: INFO` junto a `root: WARN`.** La SPEC pide `root: WARN` para que
 la consola muestre lo del lab. Pero con solo eso desaparecen también las líneas `Starting` y
