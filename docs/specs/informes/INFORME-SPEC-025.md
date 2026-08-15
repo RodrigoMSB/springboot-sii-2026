@@ -15,9 +15,10 @@ dos demos en vivo que de verdad usaban Docker se conservan enteros y medidos, y 
 queda es la frontera 11→12, que es la que la SPEC autoriza a dejar roja. Con esto, **del Lab 00 al
 Lab 11 el curso entero corre sin demonio, sin administrador y sin red**.
 
-Dos cosas que no estaban en la SPEC y hay que leer: **A2.4 tiene media respuesta y el sospechoso
-principal quedó refutado** (§6), y apareció **A3.1, un defecto preexistente de la SPEC-024** que
-toca lo que aquella prometió (§7).
+Dos cosas que no estaban en la SPEC y hay que leer: **A2.4 tiene media respuesta y su sospechoso
+principal quedó refutado** (§6), y **A3.1 —que este informe llegó a declarar como un defecto
+preexistente de la SPEC-024— resultó ser un fallo de mi propio arnés de medición, y está resuelta
+con evidencia** (§7). El material siempre hizo lo correcto; el registro del vuelo 4 era exacto.
 
 ---
 
@@ -343,59 +344,152 @@ quita superficie en vez de añadirla**.
 
 ---
 
-## 7 · A3.1 · el JVM que Maven bifurca no usa el JDK embebido
+## 7 · A3.1 · resuelta — el defecto estaba en el arnés, no en el material
 
-**No es de esta SPEC, y es más grave que A2.4.** Apareció al intentar el ciclo `start-lab` del
-Lab 08 y se declara aquí porque toca el corazón de lo que la SPEC-024 prometió.
+La primera versión de este informe declaró A3.1 como un defecto preexistente de la SPEC-024: los
+JVM que Maven bifurca no usarían el JDK embebido. **Era falso, y la contradicción con el vuelo 4
+era la pista correcta.** El PO mandó resolverla primero. Aquí está el mecanismo, con su evidencia.
 
-### El síntoma
+### El repro mínimo, en el mismo shell
+
+```
+JAVA_HOME = /Users/rodrigosilva/.sdkman/candidates/java/current   (Java 21 GraalVM)
+
+$ ./mvnw -version
+  Maven home:   …/tools/maven
+  Java version: 25.0.4 … runtime: …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home
+
+$ ./mvnw -B verify                     ->  exit=0   BUILD SUCCESS
+$ timeout 900 ./mvnw -B verify         ->  exit=1   class file version 69.0 … up to 65.0
+```
+
+**La diferencia es `timeout`.** Lo demás del entorno no interviene, y los cuatro sospechosos que
+el PO puso en fila quedan descartados uno por uno:
+
+| Sospechoso | Medición |
+|---|---|
+| `~/.m2/toolchains.xml` | **no existe** (`ls`: *No such file or directory*) |
+| `MAVEN_OPTS` / `MAVEN_ARGS` | no están; solo `MAVEN_HOME`, y el lanzador la **sobrescribe** en su línea 71 desde la ruta del script |
+| `.mvn/jvm.config` | ninguno en todo el árbol |
+| `<jvm>` de surefire/failsafe en los poms | ninguno |
+
+### El mecanismo
+
+Instrumentando el propio shim para que dijera qué exporta:
+
+```
+--- SIN timeout ---
+  JAVA_HOME = …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home
+  java PATH = …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home/bin/java
+--- CON timeout ---
+  JAVA_HOME = /Users/rodrigosilva/.sdkman/candidates/java/current
+  java PATH = /usr/bin/java
+```
+
+Bajo `timeout` el shim **no entra en su bloque del JDK**. Y la razón es de una simplicidad
+incómoda:
+
+```
+$ file /usr/local/bin/timeout
+  /usr/local/bin/timeout: Mach-O 64-bit executable x86_64
+
+$ uname -m              ->  arm64
+$ timeout 10 uname -m   ->  x86_64
+```
+
+`/usr/local` es el prefijo del Homebrew **de Intel**. Ese `timeout` es un binario x86_64, corre
+bajo **Rosetta 2**, y todo hijo suyo hereda la personalidad x86_64. El shim detecta plataforma
+así:
+
+```bash
+case "$(uname -s)" in
+    Darwin)
+        if [ "$(uname -m)" = "arm64" ]; then JDK_PLATAFORMA="macos-aarch64"; fi
+```
+
+Con `uname -m` devolviendo `x86_64`, `JDK_PLATAFORMA` queda vacía, el bloque entero se salta y el
+shim **se cae al Java del sistema — que es exactamente su comportamiento diseñado** para un Mac
+Intel (SPEC-024 §7.3). El material hizo lo correcto: creyó estar en la máquina que `uname` le
+dijo que era.
+
+De paso, esto explica los dos códigos de error distintos que se vieron: con `JAVA_HOME` puesto, el
+lanzador usa `$JAVA_HOME/bin/java` (Java 21 → *up to 65*); con `env -u JAVA_HOME`, usa el `java`
+del PATH, que en esta máquina es `/usr/bin/java` (Java 17 → *up to 61*). Encaja entero.
+
+### La contradicción con el vuelo 4, resuelta
+
+**El registro del vuelo 4 era correcto.** Ese script llama a `./mvnw` directamente; nunca lo
+envuelve en `timeout`. Corría en arm64 nativo, el shim detectaba la plataforma y usaba el JDK
+embebido. Quien introdujo `timeout` en la cadena fui yo, en el arnés de esta SPEC.
+
+### La re-verificación · V3-hostil
+
+`JAVA_HOME` apuntando al GraalVM 21 y el PATH ensuciado con ese Java y con `/usr/bin` por delante.
+Sin `timeout`. Se cita el `java` **efectivo** de los procesos bifurcados, muestreado con `pgrep`
+mientras corría la suite:
+
+```
+===== Lab 07 · el de main, 0 archivos difieren =====
+  JAVA_HOME hostil : openjdk version "21.0.1" 2023-10-17
+  java del PATH    : …/21.0.1-graalce/bin/java (openjdk version "21.0.1")
+  Maven corre sobre: Java version: 25.0.4
+  java EFECTIVO de los forks:
+      …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home/bin/java
+  resultado: exit=0  BUILD SUCCESS      Tests run: 22, Failures: 0, Errors: 0
+
+===== Lab 08 · el de esta rama =====
+  (mismas condiciones)
+  Maven corre sobre: Java version: 25.0.4
+  java EFECTIVO de los forks:
+      …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home/bin/java
+  resultado: exit=0  BUILD SUCCESS      Tests run: 27, Failures: 0, Errors: 0
+```
+
+Y la tercera forma de fork, `spring-boot:run`, con las mismas condiciones hostiles:
 
 ```
 $ ./bin/start-lab.sh --dir solucion
-[ERROR] La DGT no respondió en 120 segundos
-
-$ tail .estado/dgt.log
-UnsupportedClassVersionError: ... has been compiled by a more recent version of the Java
-Runtime (class file version 69.0), this version of the Java Runtime only recognizes class
-file versions up to 65.0
+  el java EFECTIVO de la app levantada:
+      …/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home/bin/java
+  health = 200
 ```
 
-Class file 69 es Java 25; 65 es Java 21. Las clases se compilan con el JDK embebido y **el JVM que
-Maven bifurca arranca con el Java de la máquina**. Pasa igual con `surefire` y `failsafe`: los
-labs 05, 06 y 07 mueren en `verify` con el mismo error.
+**Las tres formas de bifurcación —surefire, failsafe y `spring-boot:run`— usan el JDK embebido con
+la máquina en contra.** Lo que la SPEC-024 prometió se cumple, y ahora está medido citando el
+binario, no la ausencia de errores.
 
-### Que NO es de la SPEC-025, medido
+### El candado
 
-Se reproduce **idéntico en el Lab 07 de `main`**, que esta SPEC no tocó ni un byte. Y desaparece
-en cuanto `JAVA_HOME` apunta al JDK embebido:
+**El material no necesita ninguno**: hace lo correcto. El candado va donde estaba el defecto —el
+arnés— y son dos cosas, ambas ya aplicadas:
 
+1. **Nunca envolver `./mvnw` ni `./bin/*.sh` en el `timeout` de Intel.** Todas las mediciones de
+   esta SPEC se rehicieron sin él.
+2. **El vuelo 5 comprueba la arquitectura efectiva antes de despegar** y aborta si `uname -m` no
+   dice `arm64`, explicando por qué. Además cita el `java` efectivo de un fork y falla con nombre
+   propio (`FORK-NO-USA-EL-JDK-EMBEBIDO`) si algún día dejara de ser el embebido. Un arnés que
+   puede mentirle al shim tiene que comprobarse a sí mismo primero.
+
+### Lo único real que queda, y es una recomendación, no un arreglo
+
+El fallback es **silencioso**. En una máquina donde el shim no reconoce la plataforma —un Mac
+Intel de verdad, o cualquier cadena bajo Rosetta— el material no avisa: usa el Java del sistema y,
+si es viejo, el alumno recibe un `UnsupportedClassVersionError` que no dice nada. Una línea lo
+arreglaría:
+
+```bash
+else
+    printf '[INFO]  Esta plataforma (%s/%s) no lleva JDK en la maleta:
+' "$(uname -s)" "$(uname -m)" >&2
+    printf '        se usará el Java de la máquina. El curso pide 25.
+' >&2
+fi
 ```
-JAVA_HOME=<el de la máquina, un Java 21>   ->  labs 05/06/07: BUILD FAILURE
-JAVA_HOME=<tools/jdk/runtime/.../Home>     ->  labs 05/06/07: BUILD SUCCESS (10, 11 y 22 tests)
-```
 
-### Lo que NO se pudo cerrar, y se declara
-
-El mecanismo. Hay una observación que no encaja y que no conviene esconder: `./mvnw -version`
-informa `Java version: 25.0.4 … runtime: tools/jdk/runtime/…` —o sea, Maven corriendo sobre el JDK
-embebido— mientras que `./mvnw -X -o validate`, en la misma carpeta y en el mismo shell, muestra
-un banner que dice `Java version: 21.0.1, vendor: GraalVM Community`. Se comprobó que el shim
-exporta bien: un hijo suyo ve `JAVA_HOME` y el `java` del PATH apuntando al JDK embebido. No hay
-`~/.mavenrc`, ni `MAVEN_OPTS`, ni `.mvn/jvm.config`, y el `toolchains.xml` es la plantilla vacía de
-Maven. **No tengo explicación, y prefiero decirlo a inventarla.**
-
-**Y hay una contradicción con el registro:** el vuelo 4 de la SPEC-024 corrió con un `JAVA_HOME`
-hostil apuntando a ese mismo GraalVM 21 y dio los siete labs en verde. Hoy, con esa misma
-configuración, fallan. **Resolver esa contradicción es lo primero**, porque una de las dos
-evidencias está mal y necesitamos saber cuál.
-
-### Qué se hizo mientras tanto
-
-Todas las verificaciones de esta SPEC que arrancan un JVM se corrieron con `JAVA_HOME` apuntando
-al **JDK embebido**, y queda declarado aquí en vez de escondido en una nota. El vuelo 5 no lo
-asume en ningún sentido: **lo mide en una sonda, antes de despegar** (§9).
-
----
+**No se aplica en esta SPEC, y a propósito:** `mvnw` es un archivo compartido por el tronco y los
+diecisiete proyectos; cambiarlo solo en los labs 08–11 los haría divergir de su base sin motivo
+pedagógico, y cambiarlo en todos es tocar labs 01–07, que esta rama ha mantenido intactos —cero
+archivos, verificado—. Es una SPEC-FIX de una línea, uniforme, y el parche ya está escrito arriba.
 
 ## 8 · Estado del CI
 
@@ -437,9 +531,12 @@ usada por los labs 09, 10 y 12— con su porqué escrito al lado.
 `tools/vuelo-5-modo-avion.sh`. Mismo protocolo probado: espera el corte, vigila recontaminación,
 caja negra con timestamps, veredicto, restaura `~/.m2` y **no relanza Docker**.
 
-Cubre: la **sonda A3.1** antes de despegar (§7), el Lab 06 como regresión, N1–N5 de los cuatro
-labs migrados, **los dos demos en vivo** —el `--db-caida` del 10 y el `--instancias 2` del 11, en
-sus dos caras— y el simulacro del alumno con las cachés frías.
+Cubre: la **sonda de arquitectura** antes de despegar —aborta si `uname -m` no dice `arm64`, que
+es lo que le pasó a mi arnés (§7), y cita el `java` efectivo de un fork—, el Lab 06 como
+regresión, N1–N5 de los cuatro labs migrados, **los dos demos en vivo** —el `--db-caida` del 10 y
+el `--instancias 2` del 11, en sus dos caras— y el simulacro del alumno con las cachés frías.
+
+**No envuelve `./mvnw` ni `./bin/*.sh` en `timeout`**, por la razón de §7.
 
 **Duración estimada: ~30 minutos**, con los tiempos ya medidos de cada pieza.
 
@@ -460,9 +557,11 @@ verdad en los cuatro. La deuda de los labs **12 a 14 sigue declarada**.
 
 ### Lo que queda
 
-1. **A3.1** (§7) — la más urgente, porque es preexistente y toca la promesa de la SPEC-024.
-   Empezar por la contradicción con el vuelo 4.
-2. **A2.4** (§6) — media respuesta; falta la pregunta de un minuto en Windows.
+1. **A2.4** (§6) — media respuesta; falta la pregunta de un minuto en Windows: qué ejecutable
+   nombra el cartel.
+2. **El fallback silencioso del shim** (§7) — no es un defecto de comportamiento, es de
+   diagnóstico: en una plataforma que el shim no reconoce, usa el Java de la máquina sin decirlo.
+   SPEC-FIX de una línea, uniforme sobre los diecisiete proyectos; el parche está escrito.
 3. **Lab 12** — RabbitMQ amputado. Su circuit breaker devuelve 503: **cuidado con D-025-3**, la
    trampa del transporte que reintenta.
 4. **Lab 13** — Jib, y qué significa un lab de contenedores en un curso sin Docker. Decisión del
@@ -488,8 +587,11 @@ corre sin Docker, sin administrador y sin red. Los dos demos que hacían de Dock
 —matar una base y levantar dos servidores contra una sola— siguen funcionando, y siguen
 enseñando lo mismo.
 
-Queda una anotación abierta con media respuesta (A2.4) y una nueva que no es nuestra pero es peor
-(A3.1).
+Queda una anotación abierta con media respuesta (A2.4). La otra, A3.1, se cerró resolviendo la
+contradicción que el PO señaló: no había defecto en el material — había un `timeout` de Intel
+corriendo bajo Rosetta que le hacía creer al shim que esta máquina era un Mac Intel. La lección se
+queda igual: **un arnés que puede mentirle al material tiene que comprobarse a sí mismo primero**,
+y por eso el vuelo 5 ahora empieza mirándose al espejo.
 
 En posición de merge y tag `material-v0.5.0` cuando el PO lo autorice, y con el vuelo 5 esperando
 en pista.

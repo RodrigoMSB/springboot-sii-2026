@@ -336,16 +336,20 @@ quedaría vive en archivos que comparten el tronco y los labs 01–11. Lo que fa
 pregunta, en Windows: **qué ejecutable nombra el cartel**. Detalle en §6 del
 `INFORME-SPEC-025.md`.
 
-**⚠️ Anotación NUEVA · A3.1 — el JVM que Maven bifurca no usa el JDK embebido.** Con un
-`JAVA_HOME` apuntando a un Java viejo, `./mvnw verify` y `./bin/start-lab.sh` mueren con
-*«class file version 69.0 … only recognizes up to 65.0»*: Maven compila con el JDK 25 embebido,
-pero los JVM que BIFURCA —surefire, failsafe y `spring-boot:run`— arrancan con el Java de la
-máquina. Con `JAVA_HOME` apuntando al JDK embebido, todo pasa. **Es PREEXISTENTE, no de la
-SPEC-025**: se reproduce igual en el Lab 07 de `main`, que esta SPEC no tocó. Y **choca con el
-registro del vuelo 4**, que dio verde con un `JAVA_HOME` hostil — esa contradicción es lo primero
-que hay que resolver. Toca el corazón de lo que la SPEC-024 prometió («el material ignora el Java
-de la máquina»), así que merece SPEC propia. Detalle y reproducción en §7 del
+**A3.1 — cerrada, y no era del material.** Durante la SPEC-025 pareció que los JVM que Maven
+bifurca ignoraban el JDK embebido: las suites morían con *«class file version 69.0 … up to 65.0»*.
+La causa era el arnés de medición, no el curso: envolvía `./mvnw` en `timeout`, y el `timeout` de
+esta máquina es el binario **x86_64 del Homebrew de Intel**, que corre bajo Rosetta y hace que
+`uname -m` devuelva `x86_64`. El shim creía estar en un Mac Intel y se caía al Java del sistema —
+su comportamiento **diseñado** (SPEC-024 §7.3). Re-verificado con `JAVA_HOME` hostil y sin
+`timeout`: las tres formas de fork —surefire, failsafe y `spring-boot:run`— usan el JDK embebido,
+citando el binario. **El registro del vuelo 4 era correcto.** Detalle en §7 del
 `INFORME-SPEC-025.md`.
+
+**Queda una recomendación, no un defecto:** el fallback del shim es **silencioso**. En un Mac
+Intel de verdad, el alumno recibiría un `UnsupportedClassVersionError` sin pista. Una línea de
+`[INFO]` lo arregla; es una SPEC-FIX uniforme sobre los diecisiete proyectos y el parche ya está
+escrito en el informe.
 
 ## 3 · Qué viene ahora
 

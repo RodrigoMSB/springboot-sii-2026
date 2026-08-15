@@ -13,20 +13,21 @@
 #          · simulacro del alumno cronometrado, con todas las cachas frias
 #
 #  ---------------------------------------------------------------------------
-#  LEE ESTO ANTES DE LANZARLO — la sonda A3.1
+#  LEE ESTO ANTES DE LANZARLO — la sonda de ARQUITECTURA
 #  ---------------------------------------------------------------------------
-#  El vuelo 4 corria con un JAVA_HOME HOSTIL (el GraalVM 21 de la maquina) y lo
-#  daba todo por verde. Durante la SPEC-025 se midio que, con ese mismo JAVA_HOME
-#  hostil, los JVM que Maven BIFURCA (surefire, failsafe, spring-boot:run) usan
-#  el Java de la maquina y no el JDK embebido, y las suites mueren con
-#  "class file version 69.0 ... only recognizes up to 65.0". Es PREEXISTENTE: se
-#  reproduce en el Lab 07 de `main`, que la SPEC-025 no toco.
+#  Durante la SPEC-025 se perdieron horas persiguiendo un fantasma: las suites
+#  morian con "class file version 69.0 ... only recognizes up to 65.0" y parecia
+#  que los JVM bifurcados ignoraban el JDK embebido. No era eso. El arnes de
+#  medicion envolvia `./mvnw` en `timeout`, y el `timeout` de esta maquina es el
+#  binario x86_64 del Homebrew de Intel (/usr/local/bin): corre bajo Rosetta y
+#  sus hijos heredan la personalidad x86_64, asi que `uname -m` devuelve
+#  x86_64 en vez de arm64. El shim entonces cree estar en un Mac Intel, no
+#  detecta plataforma y se cae al Java del sistema — que es su comportamiento
+#  DISENADO (SPEC-024 §7.3).
 #
-#  Como no se pudo cerrar el diagnostico, este vuelo NO lo asume en ningun
-#  sentido: lo MIDE, en la sonda A3.1, antes de despegar. Y luego vuela con el
-#  JAVA_HOME hostil de todas formas, porque ese es el escenario real de la sala.
-#  Si la sonda sale mal, el veredicto lo dira con su nombre y sabremos que lo que
-#  falla es A3.1 y no la migracion.
+#  Por eso este vuelo hace dos cosas: (1) NO envuelve `./mvnw` en `timeout`, y
+#  (2) comprueba antes de despegar que la arquitectura efectiva es la que el shim
+#  espera. Si esa sonda sale mal, todo lo que siga mide otra maquina.
 #
 #  NO relanza Docker al aterrizar. El cable lo corta el PO.
 #
@@ -42,8 +43,6 @@ CAJA=/tmp/caja-negra-vuelo5.log
 VEREDICTO=/tmp/veredicto-vuelo5.txt
 ESPERA_MAX=3600
 
-# El JDK que el material dice usar. Se calcula, no se escribe a mano.
-JDK_EMBEBIDO="$RAIZ/tools/jdk/runtime/macos-aarch64/jdk-25.0.4+7/Contents/Home"
 # JAVA_HOME HOSTIL a proposito: el 21 de la maquina, y primero en el PATH.
 JAVA_HOSTIL="$HOME/.sdkman/candidates/java/21.0.1-graalce"
 export JAVA_HOME="$JAVA_HOSTIL"
@@ -99,28 +98,37 @@ printf -- '--- java HOSTIL de la maquina ---\n'; printf 'JAVA_HOME=%s\n' "$JAVA_
 printf -- '--- y el que el shim dice que va a usar ---\n'
 ( cd "$CLON/labs/lab-08-diplomacia-con-tesoreria/solucion" && ./mvnw -version 2>&1 | grep -E 'Java version' )
 
-# --------------------------------------------------------------- sonda A3.1 ---
-# Se mide ANTES de los labs para que el veredicto pueda separar "la migracion
-# esta mal" de "el JAVA_HOME hostil rompe los forks". Una suite corta basta.
-titulo "SONDA A3.1 · ¿el JVM bifurcado usa el JDK embebido o el de la maquina?"
-cd "$CLON/labs/lab-06-dos-folios-un-numero/solucion" || exit 1
-./mvnw -B verify > /tmp/w5-sonda-hostil.log 2>&1; E_HOSTIL=$?
-printf 'con JAVA_HOME hostil : EXIT=%s  %s\n' "$E_HOSTIL" \
-    "$(grep -m1 -oE 'class file version [0-9.]+.*up to [0-9.]+' /tmp/w5-sonda-hostil.log || echo 'sin error de version de clase')"
-JAVA_HOME="$JDK_EMBEBIDO" ./mvnw -B verify > /tmp/w5-sonda-embebido.log 2>&1; E_EMB=$?
-printf 'con el JDK embebido  : EXIT=%s\n' "$E_EMB"
-if [ "$E_HOSTIL" -ne 0 ] && [ "$E_EMB" -eq 0 ]; then
-    printf 'A3.1 CONFIRMADA: el fork usa el Java de la maquina. El resto del vuelo lo compensa.\n'
-    falla "A3.1-CONFIRMADA"
-    export JAVA_HOME="$JDK_EMBEBIDO"
-    printf 'JAVA_HOME pasa al JDK embebido PARA PODER SEGUIR. Queda declarado.\n'
-elif [ "$E_HOSTIL" -eq 0 ]; then
-    printf 'A3.1 NO se reproduce hoy: el material vuela con la maquina en contra.\n'
-else
-    printf 'La sonda fallo por AMBOS lados: no es A3.1, es otra cosa. Mira los logs.\n'
-    falla "SONDA-AMBIGUA"
+# ------------------------------------------------------- sonda de arquitectura ---
+# Barata y va primero: si la arquitectura efectiva no es la que el shim espera,
+# el shim se cae al Java del sistema por diseño y TODO lo que siga mide otra cosa.
+titulo "SONDA DE ARQUITECTURA · ¿ve el shim la maquina que es?"
+printf 'uname -s = %s   uname -m = %s\n' "$(uname -s)" "$(uname -m)"
+if [ "$(uname -m)" != "arm64" ]; then
+    printf 'ABORTADO: uname -m dice "%s". En un Mac Apple Silicon eso significa que\n' "$(uname -m)"
+    printf 'algo de este arnes corre bajo Rosetta (un binario x86_64 en la cadena).\n'
+    printf 'El shim se caeria al Java del sistema y el vuelo no mediria nada util.\n'
+    printf 'VUELO 5 ABORTADO — arquitectura efectiva x86_64\n' | tee "$VEREDICTO"
+    exit 2
 fi
-vigilar_red sonda-a31
+printf 'arquitectura correcta: el shim va a usar el JDK embebido.\n'
+
+# Y se cita el java EFECTIVO de un fork, que es lo que de verdad importa: con el
+# JAVA_HOME hostil puesto, ¿sobre que arranca el JVM de los tests?
+cd "$CLON/labs/lab-06-dos-folios-un-numero/solucion" || exit 1
+( for _ in $(seq 1 200); do
+    pgrep -fl 'bin/java' 2>/dev/null | grep -oE '/[^ ]*/bin/java' >> /tmp/w5-forks.txt
+    sleep 0.3
+  done ) & VIG=$!
+: > /tmp/w5-forks.txt
+./mvnw -B verify > /tmp/w5-sonda.log 2>&1; E_SONDA=$?
+kill "$VIG" 2>/dev/null
+printf 'JAVA_HOME hostil : %s\n' "$JAVA_HOME"
+printf 'Maven corre sobre: %s\n' "$(./mvnw -version 2>&1 | grep -m1 -oE 'Java version: [0-9.]+')"
+printf 'java EFECTIVO de los forks:\n'; sort -u /tmp/w5-forks.txt | sed 's/^/    /'
+printf 'suite del Lab 06 : EXIT=%s\n' "$E_SONDA"
+[ "$E_SONDA" -eq 0 ] || falla "SONDA-LAB06"
+sort -u /tmp/w5-forks.txt | grep -q 'tools/jdk/runtime' || falla "FORK-NO-USA-EL-JDK-EMBEBIDO"
+vigilar_red sonda-arquitectura
 
 # ------------------------------------------------------------------ labs ---
 suite() {  # suite <lab> <proyecto> <verde|rojo>
