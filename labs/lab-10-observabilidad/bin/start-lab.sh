@@ -11,9 +11,9 @@
 #  MECANISMO DE `--db-caida` (declarado, SPEC-016 §5)
 #  ---------------------------------------------------------------------------
 #  La app arranca NORMAL —con su PostgreSQL arriba, migraciones aplicadas y todo
-#  en orden— y solo DESPUÉS se detiene el contenedor de la base:
+#  en orden— y solo DESPUÉS se mata el proceso de la base:
 #
-#      docker compose stop postgres
+#      kill -9 <el postgres embebido de ESTA app>
 #
 #  Se hace en ese orden a propósito, y el orden ES la lección:
 #
@@ -25,9 +25,14 @@
 #     dependencia con la aplicación ya en pie. Es, además, lo que pasa de verdad:
 #     nadie despliega sin base; la base se cae un martes a las tres de la tarde.
 #
-#  Se usa `stop`, no `down`: el contenedor queda detenido pero existente, así que
-#  `docker compose start postgres` lo revive y puedes repetir el experimento sin
-#  volver a sembrar. Lo levanta de vuelta el 99-destruir.sh, o tú a mano.
+#  ¿Y cómo se sabe cuál matar? Se anotan los PostgreSQL embebidos que había ANTES
+#  de arrancar, y se mata el que apareció después. Nunca `pkill postgres`: eso se
+#  llevaría por delante la base del trabajo del alumno y la de cualquier otro
+#  curso, sin avisar. Se mata por PID o no se mata (post-ALCHEMIA).
+#
+#  Para repetir el experimento: `./bin/99-destruir.sh` y volver a arrancar. La
+#  base embebida se siembra sola en cada arranque, así que no hay nada que
+#  restaurar a mano.
 # =============================================================================
 set -uo pipefail
 
@@ -76,10 +81,14 @@ if puerto_ocupado "$PUERTO"; then
     printf '\n'; exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" "Abre Docker Desktop y espera a que arranque (T-03 del Lab 00)."
-    printf '\n'; exit 1
-fi
+# Aquí vivía el guard de Docker. Ya no hace falta nada de eso: PostgreSQL y TESO
+# viajan dentro del proyecto y arrancan con la aplicación (SPEC-022 y SPEC-025).
+
+# Los PostgreSQL embebidos que YA estaban corriendo antes de que arrancáramos
+# nada. Se guardan para poder distinguir DESPUÉS cuál es el nuestro: es lo que
+# permite que `--db-caida` mate exactamente una base y no la de nadie más.
+PG_PATRON='embedded-pg/PG-.*/bin/postgres'
+PG_ANTES="$(pgrep -f "$PG_PATRON" 2>/dev/null | sort | tr '\n' ' ')"
 
 log_info "Arrancando… (log en $LOG)"
 ( cd "$APP" && exec nohup ./mvnw -q spring-boot:run \
@@ -125,9 +134,28 @@ if [ "$DB_CAIDA" -eq 1 ]; then
     printf '     GET /api/v1/tramites   ->  HTTP %s\n' "$(codigo_con_token "$TRAMITES" "$TOKEN")"
     printf '     GET /actuator/health   ->  %s\n\n' "$(cuerpo_de "$SALUD")"
 
-    log_info "Tumbando PostgreSQL (docker compose stop postgres)…"
-    ( cd "$APP" && docker compose stop postgres >/dev/null 2>&1 )
-    paso_ok "PostgreSQL detenido. La aplicación sigue corriendo (PID $(cat "$PID"))."
+    # Cuál de los PostgreSQL embebidos es el NUESTRO: el que no estaba antes.
+    # Se mata por PID, nunca por nombre. `pkill postgres` se llevaría por delante
+    # la base del trabajo del alumno, la de otro curso y la de este laboratorio,
+    # todas a la vez — y el alumno no tendría ni cómo saberlo.
+    PG_NUESTROS=""
+    for _pid in $(pgrep -f "$PG_PATRON" 2>/dev/null); do
+        case " $PG_ANTES " in
+            *" $_pid "*) : ;;                       # ya estaba: no es nuestro
+            *) PG_NUESTROS="$PG_NUESTROS $_pid" ;;
+        esac
+    done
+
+    if [ -z "$PG_NUESTROS" ]; then
+        paso_warn "No encontré el PostgreSQL embebido de esta aplicación" \
+                  "Sin él no puedo montar el crimen. Míralos con:  pgrep -fl 'embedded-pg/PG-'"
+    else
+        log_info "Tumbando el PostgreSQL embebido de esta app (PID$PG_NUESTROS)…"
+        # SIGKILL y no SIGTERM: se quiere una base que MUERE, no una que se
+        # despide ordenadamente. Es el martes a las tres de la tarde.
+        for _pid in $PG_NUESTROS; do kill -9 "$_pid" 2>/dev/null; done
+        paso_ok "PostgreSQL detenido. La aplicación sigue corriendo (PID $(cat "$PID"))."
+    fi
 
     printf '\n  DESPUÉS (la base está muerta):\n\n'
 
@@ -155,7 +183,7 @@ if [ "$DB_CAIDA" -eq 1 ]; then
     esac
 
     printf '\n'
-    log_info "Para revivir la base:  ( cd $OBJETIVO && docker compose start postgres )"
+    log_info "Para repetir el experimento:  ./bin/99-destruir.sh && ./bin/start-lab.sh --db-caida"
 fi
 
 printf '\n'

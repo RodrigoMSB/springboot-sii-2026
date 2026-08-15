@@ -56,10 +56,8 @@ if puerto_ocupado "$PUERTO"; then
     printf '\n'; exit 1
 fi
 
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" "Abre Docker Desktop y espera a que arranque (T-03 del Lab 00)."
-    printf '\n'; exit 1
-fi
+# Aquí vivía el guard de Docker. Ya no hace falta nada de eso: PostgreSQL y TESO
+# viajan dentro del proyecto y arrancan con la aplicación (SPEC-022 y SPEC-025).
 
 # El WARN condicional: TESO lento y sin timeout es el escenario de la Guía 02.
 if [ "$TESO_LENTO" -gt 800 ]; then
