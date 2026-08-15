@@ -399,9 +399,9 @@ asume en ningún sentido: **lo mide en una sonda, antes de despegar** (§9).
 
 ## 8 · Estado del CI
 
-Se espera que los ocho jobs se comporten así:
+Corrido sobre la rama, **no supuesto**. Siete de ocho en verde:
 
-| Job | Esperado | Por qué |
+| Job | Resultado | |
 |---|---|---|
 | `app · dgt-tramites-api (verify)` | ✅ | el tronco no se tocó |
 | `deriva · labs en sincronía con su base` | ❌ **justificado** | ver abajo |
@@ -411,6 +411,15 @@ Se espera que los ocho jobs se comporten así:
 | `labs-sh · andamiaje (windows-latest)` | ✅ | ídem |
 | `siembra · toda TEORIA.md con sucesor` | ✅ | no se tocó teoría |
 | `temario · coherencia .md ↔ .docx` | ✅ | no se tocó el temario |
+
+El job `deriva` cuenta ahora **26 eslabones en sincronía** —eran 17 antes de esta SPEC— y falla en
+uno solo. El propio log dice cuál:
+
+```
+[ERROR] 20 archivo(s) divergieron sin declararse.
+        Si el cambio es intencional, decláralo en labs/lab-12-amortiguadores/derivacion-solucion.txt
+[ERROR] 1 eslabon(es) con deriva silenciosa.
+```
 
 **El rojo de `deriva` es el mismo de siempre, y se movió a donde tenía que moverse.** Venía del PR
 #27 porque el Lab 08 iba atrasado respecto del 07. Ahora la cadena está en sincronía **del tronco
