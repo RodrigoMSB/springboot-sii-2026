@@ -101,7 +101,13 @@ jobs:
 
           IFS=$'\n'
           for LAB in $LABS; do
+            # El documento donde el lab ENSENA. Casi todos lo llaman TEORIA.md; los
+            # labs de construccion guiada (el 3.5 y los del arco nuevo) no tienen
+            # teoria aparte: su documento es el guion de la sesion, PASOS.md.
+            # P-18 exige SEMBRAR el modulo siguiente, no un nombre de archivo, y se
+            # le exige lo mismo al que exista.
             TEORIA="$LAB/TEORIA.md"
+            [ -f "$TEORIA" ] || TEORIA="$LAB/PASOS.md"
 
             # Exclusión documentada: el Lab 00 es pre-curso. No computa horas, no
             # tiene módulo, no tiene teoría — es el chequeo de la máquina del alumno
@@ -136,7 +142,7 @@ jobs:
             fi
 
             if [ ! -f "$TEORIA" ]; then
-              echo "[ERROR] $LAB no tiene TEORIA.md"
+              echo "[ERROR] $LAB no tiene TEORIA.md ni PASOS.md"
               FALLOS=$((FALLOS + 1))
               continue
             fi
