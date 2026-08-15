@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-024 (tag `material-v0.4.0`).*
+*Última actualización: SPEC-029 — los labs 04, 05 y 06 del arco nuevo (PR #35, en draft).*
 
 ---
 
@@ -14,6 +14,17 @@
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
 - **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
   antes de la sesión 1.
+- **El arco nuevo de construcción guiada** — laboratorios con el formato del Lab 3.5c
+  (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores), donde el
+  alumno construye en vivo junto al instructor. **Conviven con los labs de siempre; no los
+  reemplazan.** Los tres de esta tanda enseñan con números medidos:
+  - `labs/lab-04-relaciones/` — `@ManyToOne`, `@OneToMany(mappedBy)`, LAZY y la
+    `LazyInitializationException`. El número: 1 SELECT con LAZY, **4 con EAGER**.
+  - `labs/lab-05-rendimiento/` — el N+1 con un contador de consultas en pantalla. El número:
+    **201 consultas contra 1**, con `JOIN FETCH`, `@EntityGraph` o proyección.
+  - `labs/lab-06-concurrencia/` — 20 emisiones simultáneas del mismo folio. El número: sin
+    candado salen **9 números distintos de 21** con `2026-0002` emitido cuatro veces; con
+    candado, 21 de 21.
 - **Lab 01** (`labs/lab-01-del-otro-lado-del-boton/`): una contraseña de producción en el
   historial de git — se rota, no se borra.
 - **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
@@ -269,9 +280,16 @@ Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 
 ## 2 · Qué falta
 
-**Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
-cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java») cerrado
-por el Lab 14.
+**Ningún laboratorio del arco original.** El curso está construido: **catorce labs**, los 35 temas
+oficiales cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java»)
+cerrado por el Lab 14.
+
+**Y hay una decisión pendiente del PO, no del ejecutor.** El arco nuevo de construcción guiada ya
+cubre relaciones, rendimiento y concurrencia con otro formato, así que hoy conviven **seis
+laboratorios para esos tres asuntos**: los nuevos (`lab-04-relaciones`, `lab-05-rendimiento`,
+`lab-06-concurrencia`) y los de siempre (`lab-04-el-arbol-de-tramites`, `lab-05-once-segundos`,
+`lab-06-dos-folios-un-numero`). Ninguno se ha tocado ni se ha borrado. **Qué se dicta y qué se
+retira es decisión suya.**
 
 Faltan las diapositivas y el material del instructor para sala.
 
@@ -281,6 +299,11 @@ está aplicada. Faltan también las diapositivas y el material del instructor.
 **Nota sobre las pruebas de aceptación:** las de los labs 00 a 07 se corren ahora **sin Docker
 y sin red**. Ya no hay que abrir Docker Desktop antes: `./mvnw` y los `bin/` funcionan tal cual
 sobre un clon recién hecho. Los labs 08 a 14 siguen necesitando Docker hasta la Fase 2.
+
+**Pendiente del PO — y en los labs de construcción guiada es LA prueba, no una más:** sentarse con
+`PASOS.md` y `practica/` y llegar al final **sin abrir `solucion/`**. Si siguiendo el guion no se
+llega al resultado, el guion está mal. Es la única prueba que el ejecutor no puede hacer por
+definición: quien escribió el guion no puede juzgar si se entiende.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
 de su README), y los Labs 01 a 14, cada uno con su Prueba del PO. Todas diferidas; los
@@ -314,7 +337,17 @@ evidencia y plan en §15 del `INFORME-SPEC-024.md`. **Trabajo de la próxima SPE
 ## 3 · Qué viene ahora
 
 **Ya no falta material de laboratorio.** Con el Lab 14 construido, los catorce laboratorios están
-escritos, verificados por el ejecutor y con su CI en verde.
+escritos, verificados por el ejecutor y con su CI en verde. Y el arco nuevo ya llega hasta la
+concurrencia.
+
+Hay **cuatro PRs en draft esperando firma**: #31 (SPEC-025, labs 08–11 sin Docker), #33 (SPEC-027,
+Lab 3.5c con las anotaciones A1), #34 (SPEC-028, labs 00–03 del arranque) y #35 (SPEC-029, labs
+04–06 del arco nuevo).
+
+> **Nota para quien mergee el primero:** los PRs #33, #34 y #35 llevan **el mismo arreglo** al job
+> `siembra` del CI —enseñarle que un lab de construcción guiada enseña con `PASOS.md` y no con
+> `TEORIA.md`—, escrito igual en los tres para que no peleen. En cuanto entre uno, los otros dos
+> traen ese trozo ya resuelto.
 
 Lo que falta es que el PO corra la fila de **pruebas de aceptación acumuladas** (Labs 00 a 14) y
 cierre los PRs abiertos. Los laboratorios están verificados por el ejecutor; ninguno lo ha corrido
