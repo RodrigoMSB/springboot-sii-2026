@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * o la clave: distinguir le regalaría a un atacante qué RUT existen.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @Import(BaseSeguridadIT.class)
 class E2_LoginIT {
 
