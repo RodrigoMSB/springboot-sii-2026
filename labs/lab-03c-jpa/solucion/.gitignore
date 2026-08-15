@@ -1,0 +1,4 @@
+# La base de datos del laboratorio. Persiste entre ejecuciones a propósito, pero
+# no viaja en git: son datos de tu máquina, y Flyway vuelve a crear la tabla.
+.datos-pg/
+target/

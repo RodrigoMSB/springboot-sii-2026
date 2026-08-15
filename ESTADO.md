@@ -27,6 +27,9 @@
   (`practica/` incompleto y `solucion/` terminada), un `README.md` y un `PASOS.md` con los ocho
   pasos. Ocho demos que se corren y se miran: guardar, buscar, listar, consultas derivadas,
   actualizar **sin llamar a `save`**, borrar y contar — con el SQL de cada una en la consola.
+  La base **persiste entre ejecuciones** (directorio de datos fijo) y escucha en un puerto fijo,
+  así que el alumno puede apagar el programa y comprobar que su dato sigue ahí, o mirar la tabla
+  con DBeaver mientras corre. Y hay cuatro endpoints para repetirlo desde Postman.
   Siembra el Lab 04 con la pregunta que lo abre: *¿y si trae de más?*
 - **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
   corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.

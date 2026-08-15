@@ -34,10 +34,15 @@ public class DemosJpa {
     //  toma el objeto, genera el INSERT con las columnas del mapeo, y lee de
     //  vuelta el id que generó la base para escribirlo en el objeto.
     //  El SQL: insert into observacion (autor, fecha, texto) values (?, ?, ?)
+    //  Empieza con deleteAll() porque la base PERSISTE entre ejecuciones: sin eso
+    //  cada corrida sumaría tres filas más. Se borra y se vuelve a sembrar, para
+    //  que el laboratorio arranque siempre desde el mismo punto.
     //  Para pensar: ¿por qué el INSERT no menciona la columna id?
     // =========================================================================
     public void guardar() {
         seccion(1, "GUARDAR · save()");
+
+        repositorio.deleteAll();
 
         Observacion nueva = new Observacion(
                 "Revisión anual sin hallazgos.", "Carolina", LocalDate.of(2026, 3, 10));

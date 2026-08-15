@@ -5,6 +5,10 @@
 #  Lab35Application como un proceso hijo (Zonky). Tú no escribes url, usuario ni
 #  contraseña.
 # =============================================================================
+server:
+  # El puerto HTTP de los endpoints del paso 10.
+  port: 8100
+
 spring:
   application:
     name: lab35-jpa

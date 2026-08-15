@@ -1,6 +1,6 @@
 # INFORME-SPEC-027 · Lab 3.5 «JPA» — rehecho con el formato del PO
 
-**SPEC:** SPEC-027 · **Ejecuta:** mocito · **Fecha:** 15 de agosto de 2026
+**SPEC:** SPEC-027 + **anotaciones A1** · **Ejecuta:** mocito · **Fecha:** 15 de agosto de 2026
 **Rama:** `spec-027-lab-3-5-jpa` · desde `main` (`b9bd2e4`, `material-v0.4.0`)
 **Máquina:** Mac Studio del PO — Darwin 25.5.0, `arm64`
 
@@ -8,10 +8,11 @@
 
 ## 1 · Veredicto en una línea
 
-**EL LAB EXISTE Y EL GUION FUNCIONA** — `practica/` arranca limpio tal como se entrega,
-`solucion/` corre las ocho demos con su SQL a la vista, y **seguir `PASOS.md` de principio a fin
-produce exactamente la misma salida que la solución**; el lab anterior quedó eliminado y la
-cadena de derivación está igual que en `main`, ni mejor ni peor.
+**EL LAB EXISTE, PERSISTE Y EL GUION FUNCIONA** — `practica/` arranca limpio tal como se entrega,
+`solucion/` corre las diez demostraciones con su SQL a la vista, **lo guardado sobrevive a apagar
+el programa**, la base se puede mirar desde DBeaver mientras corre, los cuatro endpoints
+responden, y **seguir `PASOS.md` de principio a fin produce exactamente la misma salida que la
+solución**; la cadena de derivación está igual que en `main`.
 
 ---
 
@@ -192,6 +193,137 @@ Hibernate: select count(o1_0.id) from observacion o1_0 where o1_0.autor=?
 
 Y la 8 deja el contraste servido: `count()` pide un número, `findAll().size()` se trae las filas
 enteras a memoria para contarlas. Con dos da igual; con quinientas mil, no.
+
+---
+
+## 6.b · Las anotaciones A1
+
+### A1.1 · La base persiste de verdad
+
+El Postgres embebido usa ahora un **directorio de datos fijo** dentro de cada proyecto
+(`.datos-pg/`, ignorado por git), con `setCleanDataDirectory(false)`. Antes nacía vacío en cada
+arranque, que es una base en memoria con pasos extra — y el lab se llama guardar y recuperar.
+
+**El duplicado, resuelto con `deleteAll()`.** Como la base persiste, las tres observaciones del
+paso 3 se sumarían en cada corrida. De las dos opciones que la anotación planteaba se eligió que
+`guardar()` limpie la tabla antes de sembrar, y por dos razones:
+
+- **Es visible y explicable en clase.** Está en la primera línea del método que el alumno escribe,
+  con tres líneas de comentario que dicen por qué. La alternativa —«borra el directorio cuando
+  quieras empezar de nuevo»— es una instrucción de mantenimiento que se olvida y que deja al
+  alumno con quince filas sin entender por qué.
+- **No toca el esquema.** `deleteAll()` borra filas; la tabla sigue siendo cosa de Flyway, como
+  manda la anotación. Nada de `create-drop`.
+
+El `PASOS.md` dice además dónde vive la base y que borrar `.datos-pg/` es la forma de volver a
+cero, para quien lo necesite.
+
+### A1.2 · Puerto fijo, y los dos proyectos a la vez
+
+| | `practica/` | `solucion/` |
+|---|---|---|
+| PostgreSQL | **55432** | **55433** |
+| HTTP | 8099 | 8100 |
+
+Puertos distintos y bases distintas: **pueden correr los dos al mismo tiempo**, y así el
+instructor puede tener la solución levantada mientras el alumno trabaja. Los datos de conexión
+completos —host, puerto, base, usuario, clave— están en la sección «Mirar la base por fuera» del
+README, con la frase que resume el punto: *ver el objeto en la consola es ver la memoria; ver la
+fila en la tabla es ver la persistencia*.
+
+### A1.3 · El controller
+
+Cuatro llamadas sobre `web/ObservacionController.java`, completo en `solucion/` y declarado con
+los cuerpos vacíos en `practica/`. Devuelve la entidad directamente, sin DTO, y el comentario lo
+dice en una línea.
+
+**Un detalle de construcción que hubo que resolver:** en `practica/` el controller no puede
+mencionar `Observacion` ni el repositorio, porque no existen todavía —el proyecto no compilaría—.
+Los métodos llegan con tipos comodín (`List<?>`, `ResponseEntity<?>`, `Map`) y el paso 10 dice
+explícitamente que cambiarlos por `Observacion` es parte del trabajo. Es la misma solución que
+`DemosJpa` usa para no referenciar lo que el alumno aún no escribió.
+
+### A1.5 · La aplicación se queda corriendo
+
+Entra `spring-boot-starter-web` en los dos poms. Es condición de A1.2 y A1.3: sin web la
+aplicación terminaba al acabar las demos, y no habría cómo conectarse con un cliente SQL ni
+llamar a los endpoints. Documentado en el README, en el encabezado de `PASOS.md` y en el javadoc
+de `Lab35Application`: **se apaga con Ctrl+C**.
+
+---
+
+## 6.c · Verificación de las anotaciones
+
+### V8 · lo guardado sobrevive al apagado
+
+Primera ejecución completa, después Ctrl+C, después arrancar con solo `listarTodas()`:
+
+```
+=== 3 · LISTAR TODAS · findAll() ===
+  3 observaciones:
+    Observacion{id=2, texto='Solicita certificado de situación.', autor='Carolina', fecha=2026-08-01}
+    Observacion{id=3, texto='Diferencias en el F29 de julio.', autor='Ignacio', fecha=2026-07-15}
+    Observacion{id=4, texto='Creada desde Postman.', autor='Rodrigo', fecha=2026-08-15}
+```
+
+Las mismas filas **sin haber vuelto a guardar nada**, incluida la que se creó por HTTP en la
+ejecución anterior. Y Flyway lo confirma a su manera:
+
+```
+Schema "public" is up to date. No migration necessary.
+```
+
+### V9 · la base, mirada desde fuera
+
+Con la aplicación corriendo, un cliente SQL externo contra `localhost:55433`
+(usuario y clave `postgres`):
+
+```
+ id | texto                                | autor    | fecha
+----+--------------------------------------+----------+-----------
+  2 | Solicita certificado de situación.   | Carolina | 2026-08-01
+  3 | Diferencias en el F29 de julio.      | Ignacio  | 2026-07-15
+  4 | Creada desde Postman.                | Rodrigo  | 2026-08-15
+```
+
+El `id=1` no está porque el paso 7 lo borró. La tabla dice exactamente lo que dijo la consola.
+
+### V10 · los cuatro endpoints
+
+```
+GET  /api/observaciones                 -> 200  [{…"id":2}, {…"id":3}]
+GET  /api/observaciones?autor=Carolina  -> 200  [{"texto":"Solicita certificado…","autor":"Carolina","id":2}]
+GET  /api/observaciones/2               -> 200  {"texto":"Solicita certificado…","id":2}
+GET  /api/observaciones/9999            -> 404
+POST /api/observaciones                 -> 201  {"texto":"Creada desde Postman.","autor":"Rodrigo","fecha":"2026-08-15","id":4}
+```
+
+### V11 · `practica/` en su estado de entrega
+
+Con el controller vacío incluido: **0 errores**, la aplicación queda arriba, la base escucha en
+55432, y `GET /api/observaciones` responde `200` con lista vacía —el controller todavía no
+consulta nada—. Los dos `.gitkeep`, las ocho llamadas comentadas, los ocho `// escribe aquí` de
+las demos y los tres del controller, intactos.
+
+### V12 · el guion completo, diez pasos
+
+Se siguió `PASOS.md` de principio a fin sobre `practica/` y se comparó contra `solucion/`:
+
+```
+$ diff <(consola de solucion) <(consola de practica seguida del guion)
+  SALIDAS IDENTICAS — 18 sentencias SQL cada una
+```
+
+Y los endpoints de `practica/` (puerto 8099) responden igual: `200` en los GET, `404` en el id
+inexistente y `201` en el POST.
+
+**Un tropiezo del arnés que conviene dejar escrito**, porque cuesta media hora la primera vez: al
+comparar las dos consolas aparecían tres `SELECT` de más en la solución. No era del lab — era el
+`curl` con el que yo esperaba a que la aplicación levantara, que entraba por el endpoint mientras
+las demos todavía corrían y metía su propio SQL en el log. Se rehicieron las dos corridas sin esa
+espera y el diff quedó limpio. Y el segundo, de la misma familia: un `cp -p` preservó la fecha de
+un archivo restaurado, quedó más antiguo que su `.class`, Maven no recompiló y corrió código
+viejo — exactamente lo que el propio `derivar-desde-tronco.sh` advierte en su comentario.
 
 ---
 
