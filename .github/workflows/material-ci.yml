@@ -101,7 +101,14 @@ jobs:
 
           IFS=$'\n'
           for LAB in $LABS; do
+            # El documento de teoria del lab. Se aceptan DOS nombres, y no es
+            # laxitud: el empaquetado piloto (SPEC-026) le cambio el nombre a
+            # `PARA-EL-SABADO.md` porque cambio su momento —se lee despues de la
+            # sesion, la teoria en sala es la PPT del instructor— pero cumple el
+            # mismo rol y esta regla le exige lo mismo. P-18 habla de SEMBRAR el
+            # modulo siguiente, no del nombre del archivo.
             TEORIA="$LAB/TEORIA.md"
+            [ -f "$TEORIA" ] || TEORIA="$LAB/PARA-EL-SABADO.md"
 
             # Exclusión documentada: el Lab 00 es pre-curso. No computa horas, no
             # tiene módulo, no tiene teoría — es el chequeo de la máquina del alumno
@@ -136,7 +143,7 @@ jobs:
             fi
 
             if [ ! -f "$TEORIA" ]; then
-              echo "[ERROR] $LAB no tiene TEORIA.md"
+              echo "[ERROR] $LAB no tiene TEORIA.md ni PARA-EL-SABADO.md"
               FALLOS=$((FALLOS + 1))
               continue
             fi

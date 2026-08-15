@@ -292,13 +292,19 @@ contribuyente se trae *cuando se pide*; si para entonces la sesión de persisten
 salta la excepción. Por eso el servicio lleva `@Transactional(readOnly = true)`. No es un conjuro:
 es «mantén la sesión abierta mientras dure este método».
 
-Las dos cosas son el mismo tema visto de los dos lados, y ese tema es el Lab 04 entero:
+Las dos cosas son el mismo tema visto de los dos lados, y ese tema es el Lab 04 entero.
+
+### La siembra del Lab 04
 
 > **«¿Y si trae de más?»** — Traer de más no da error. Da lentitud. Y la lentitud no aparece en
 > los tests con tres filas de semilla: aparece en producción, con treinta mil.
 
-El Lab 04 lo convierte en número: un contador de consultas, un presupuesto, y la diferencia
-medida entre hacerlo bien y hacerlo mal.
+Quédate con esa pregunta, porque el módulo siguiente empieza ahí. El Lab 04 la convierte en
+número: un contador de consultas, un presupuesto que no se puede cruzar, y la diferencia **medida**
+entre dos versiones del mismo código que hacen lo mismo y cuestan distinto.
+
+Hoy escribiste `fetch = FetchType.LAZY` porque el TODO_1 te lo pidió. En el Lab 04 vas a ver qué
+pasa cuando no está.
 
 ---
 
