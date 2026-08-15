@@ -1,0 +1,13 @@
+server:
+  # `practica` en el 8085 y `solucion` en el 8086: pueden correr a la vez.
+  port: 8086
+
+spring:
+  application:
+    name: lab03-errores-solucion
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO

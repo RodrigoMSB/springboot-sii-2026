@@ -1,0 +1,32 @@
+server:
+  # `practica` en el 8085 y `solucion` en el 8086: pueden correr a la vez.
+  port: 8085
+
+spring:
+  application:
+    name: lab03-errores
+
+  # ---------------------------------------------------------------------------
+  #  ESTOS TRES AJUSTES SE QUITAN EN EL PASO 5.
+  #
+  #  Hacen que la respuesta de error incluya el mensaje interno, la clase de la
+  #  excepción y la traza entera. Están puestos para que el paso 1 pueda VER lo
+  #  que se filtra cuando nadie se ocupa de los errores. En un sistema de verdad
+  #  no van, y el paso 5 explica por qué.
+  #
+  #  Ojo con el nombre: en Spring Boot 4 esto vive bajo `spring.web.error`. El
+  #  `server.error.include-*` de las versiones anteriores todavía se acepta sin
+  #  quejarse, pero no hace nada — se comprobó pidiendo el mismo error con una y
+  #  con otra.
+  # ---------------------------------------------------------------------------
+  web:
+    error:
+      include-message: always
+      include-exception: true
+      include-stacktrace: always
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
