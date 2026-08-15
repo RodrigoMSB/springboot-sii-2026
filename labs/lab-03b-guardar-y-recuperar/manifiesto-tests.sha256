@@ -1,0 +1,4 @@
+b14793e37db96ef4e14388e9a556ea2d6f577216cb85727d34eb490e9d741ad8  src/test/java/cl/dgt/tramites/enunciado/BaseObservacionesIT.java
+968799293902983fca72938c87f0ff51c28db72b0345173d0e7f3de26d5d1d38  src/test/java/cl/dgt/tramites/enunciado/E1_EntidadMapeadaIT.java
+a68e6d7012d5f089c823d06a02eab035eeb06a0ad0954f7c9207b196e2a04a84  src/test/java/cl/dgt/tramites/enunciado/E2_GuardarYRecuperarIT.java
+5750254d39b2bd64e393d6cbdd5be9e84cfe0a35a8d942100d0f361ef95667af  src/test/java/cl/dgt/tramites/enunciado/E3_ServicioConectadoIT.java

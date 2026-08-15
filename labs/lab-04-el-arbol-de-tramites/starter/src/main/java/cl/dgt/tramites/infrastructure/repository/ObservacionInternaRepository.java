@@ -6,16 +6,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 /**
- * Las cuarenta líneas del DAO heredado, en una.
+ * Guardar y buscar observaciones, sin escribir SQL.
  *
- * <p>El nombre del método ES la consulta. Spring Data lo lee —{@code findBy} + {@code
- * Contribuyente} + {@code Rut}— y genera el SELECT con su JOIN y su parámetro. No hay que
- * escribir SQL, y por eso no hay dónde concatenarlo.
+ * <p>Una interfaz, sin implementación. Spring Data la genera al arrancar, y con ella llegan
+ * gratis {@code save}, {@code findById}, {@code findAll}, {@code delete}, paginación y orden.
+ * {@code save} es el que convierte un objeto en una fila: le hace el {@code INSERT} y le
+ * escribe de vuelta el {@code id} que generó el motor.
  *
- * <p><strong>Y ahí muere el apóstrofe.</strong> El RUT viaja como PARÁMETRO, no como texto
- * pegado a la consulta: si alguien manda {@code 11111111-1' OR '1'='1}, el motor busca un
- * contribuyente cuyo RUT sea exactamente esa cadena rara. No lo encuentra, y devuelve vacío.
- * El dato dejó de poder convertirse en código.
+ * <p><strong>Y el método de abajo lo escribes tú, pero no su consulta.</strong> El nombre ES la
+ * consulta: Spring Data lo parte en {@code findBy} + {@code Contribuyente} + {@code Rut}, sigue
+ * la relación declarada en la entidad y arma el {@code SELECT} con su {@code JOIN}. Si el
+ * nombre no cuadra con las propiedades de la entidad, la aplicación no arranca y el error dice
+ * cuál no encontró.
  *
  * <p>Vive en {@code infrastructure} y no en {@code domain} por lo que AU-03 hace cumplir:
  * extiende Spring Data, y el dominio no conoce a Spring.

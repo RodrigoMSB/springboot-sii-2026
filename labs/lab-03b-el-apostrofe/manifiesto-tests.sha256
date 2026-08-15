@@ -1,5 +1,0 @@
-73d229d65dfff514a4c4f3f31965d183e5d3b0d876476c35817cbb755e79f5ef  src/test/java/cl/dgt/tramites/enunciado/BaseObservacionesIT.java
-968799293902983fca72938c87f0ff51c28db72b0345173d0e7f3de26d5d1d38  src/test/java/cl/dgt/tramites/enunciado/E1_EntidadMapeadaIT.java
-f0e80a009c2505baefe63a1012d786cad7f19b17cbb590b0f05421a23a3afe6f  src/test/java/cl/dgt/tramites/enunciado/E2_ConsultaDerivadaIT.java
-adec6b5ecdb3083e29c877ab61663d0dcfa79c5a066fa31dfbb83380365247a4  src/test/java/cl/dgt/tramites/enunciado/E3_EndpointMigradoIT.java
-1452e795ed6809ae11027bef45675d203698be3201673329d08549a851c6db56  src/test/java/cl/dgt/tramites/enunciado/E4_GuardianJdbcTest.java

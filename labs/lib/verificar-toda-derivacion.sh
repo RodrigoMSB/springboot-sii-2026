@@ -28,7 +28,7 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-03b-el-apostrofe labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-03b-guardar-y-recuperar labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
 
     # ------------------------------------------------------------------------
     #  TERCERA FORMA de lab: el SISTEMA que no deriva de nadie (Lab 14).
