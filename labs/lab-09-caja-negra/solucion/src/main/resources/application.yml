@@ -47,8 +47,11 @@ dgt:
     # Dónde se guardan los archivos subidos. Fuera del repo; en dev, un directorio temporal.
     dir: ${DGT_ADJUNTOS_DIR:${java.io.tmpdir}/dgt-adjuntos}
   teso:
-    # URL del servicio de Tesorería. La define cada perfil (dev: el WireMock del compose;
-    # test: el contenedor de Testcontainers). El default apunta al WireMock del compose (dev).
+    # URL del servicio de Tesorería. La define cada perfil: en dev, el WireMock in-process que
+    # levanta TesoSimuladoDev en el 8089; en los tests, el WireMock que cada contexto arranca en
+    # un puerto que elige el sistema y publica por @DynamicPropertySource. El default apunta al
+    # de dev. En prod se pone la de Tesorería de verdad por DGT_TESO_URL, y el simulador no
+    # existe: su @Configuration es @Profile("dev").
     base-url: ${DGT_TESO_URL:http://localhost:8089}
   institucion: Dirección General de Tributación
   folio:

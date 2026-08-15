@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * CERRADA: es la prueba de que la lista blanca es de puertas abiertas, no de cerradas.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @Import(BaseSeguridadIT.class)
 class E1_PuertaCerradaIT {
 

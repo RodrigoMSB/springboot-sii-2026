@@ -1,5 +1,6 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -13,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -21,28 +21,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Base de los tests de observabilidad: PostgreSQL real (contenedor singleton, ver Lab 08) + login,
- * y un helper para CAPTURAR los logs con un appender en memoria —no se lee un archivo—. Así el test
+ * Base de los tests de observabilidad: PostgreSQL real (embebido, ver Lab 08) + login, y un
+ * helper para CAPTURAR los logs con un appender en memoria —no se lee un archivo—. Así el test
  * inspecciona el evento de log (su MDC, su mensaje) directamente.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 abstract class BaseObservabilidadIT {
 
     static final String CLAVE = "dgt-2026";
     static final String CAROLINA = "9876543-2";
 
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine3.24");
-
-    static {
-        POSTGRES.start();
-    }
-
     @DynamicPropertySource
     static void propiedades(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registro.add("spring.datasource.username", POSTGRES::getUsername);
-        registro.add("spring.datasource.password", POSTGRES::getPassword);
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort
