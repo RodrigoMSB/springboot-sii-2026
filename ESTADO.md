@@ -20,13 +20,12 @@
   de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
 - **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
   enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
-- **Lab 3.5** (`labs/lab-03b-el-apostrofe/`): **la persistencia, desde cero.** El hueco mayor
-  que tenía el curso: nadie enseñaba JPA, y el alumno venía usando entidades desde el Lab 01 sin
-  saber qué eran. El crimen es un DAO de JDBC crudo heredado «del practicante» que funciona… y
-  al que le basta un apóstrofe en el RUT para devolver las observaciones internas de otro
-  contribuyente. Se mata con una entidad, un repositorio con consulta derivada, y el guardián
-  AU-03b que prohíbe el JDBC a pelo. De paso siembra la seguridad del Lab 07 y explica cómo leer
-  el SQL que Hibernate genera, que es el piso que el Lab 04 daba por supuesto.
+- **Lab 3.5** (`labs/lab-03b-guardar-y-recuperar/`): **la persistencia, desde cero.** El hueco
+  mayor que tenía el curso: nadie enseñaba JPA, y el alumno venía usando entidades desde el Lab
+  01 sin saber qué eran. No hay crimen que arreglar — hay algo que no existe: una tabla vacía y
+  el código Java que la conecta con la aplicación. En tres TODOs el alumno mapea la entidad,
+  arma el repositorio que guarda y busca, conecta el servicio, y **mira el SQL que Hibernate
+  escribió por él**. Siembra el Lab 04 con la pregunta que lo abre: *¿y si trae de más?*
   **Estrena el empaquetado nuevo** (§1.f).
 - **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
   corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.
