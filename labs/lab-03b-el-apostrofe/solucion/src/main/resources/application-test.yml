@@ -1,0 +1,13 @@
+# =============================================================================
+#  Perfil test — la suite automatizada
+# -----------------------------------------------------------------------------
+#  PROVISORIO SPEC-022: rediseño en Fase 1.
+#
+#  La base embebida del perfil dev se apaga aquí: la suite arranca la suya
+#  —una sola por JVM, ver PostgresEmbebido— y la cablea con
+#  @DynamicPropertySource. Dos bases compitiendo por el mismo DataSource sería
+#  una base de más y un puerto perdido.
+# =============================================================================
+dgt:
+  base-embebida:
+    enabled: false

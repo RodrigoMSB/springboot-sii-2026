@@ -4,6 +4,9 @@
 # -----------------------------------------------------------------------------
 #  Recorre la CADENA de derivacion y verifica que nada divergio en silencio:
 #    tronco -> Lab01 solucion -> Lab02 solucion -> ...   (encadenamiento)
+#
+#  El Lab 3.5 («lab-03b») se inserta entre el 03 y el 04 SIN renumerar a nadie: el
+#  churn de renombrar del 04 al 13 no se paga por un orden alfabetico (D-026-1).
 #    cada solucion -> su propio starter                  (los huecos + el crimen)
 #
 #  Cada eslabon declara sus divergencias intencionales en un allowlist. Correr
@@ -25,7 +28,7 @@ TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
-for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
+for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-03b-el-apostrofe labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
 
     # ------------------------------------------------------------------------
     #  TERCERA FORMA de lab: el SISTEMA que no deriva de nadie (Lab 14).

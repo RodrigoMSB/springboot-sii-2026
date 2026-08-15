@@ -1,0 +1,10 @@
+# starter/ vs solucion/ del Lab 3.5. Los cuatro huecos de la sesion, y nada mas.
+#
+# Ademas, el starter tiene un archivo que la solucion NO tiene: el DAO heredado
+# (infrastructure/legacy/ReporteInternoLegacyDao.java). Enterrarlo es el TODO_4.
+#
+# Archivos COMPARTIDOS que cambian a proposito:
+src/main/java/cl/dgt/tramites/domain/entity/ObservacionInterna.java
+src/main/java/cl/dgt/tramites/infrastructure/repository/ObservacionInternaRepository.java
+src/main/java/cl/dgt/tramites/application/ObservacionInternaService.java
+src/test/java/cl/dgt/tramites/arquitectura/ReglasDelApostrofe.java

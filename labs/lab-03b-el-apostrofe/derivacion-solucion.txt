@@ -1,0 +1,19 @@
+# solucion/ Lab 3.5 vs solucion/ Lab 03. La persistencia desde cero: el DAO de JDBC crudo
+# muere y en su lugar quedan una entidad, un repositorio y un guardian.
+#
+# Archivos NUEVOS (adiciones), y son TODOS los cambios de este lab:
+#   src/main/resources/db/migration/V3__observacion_interna.sql   la tabla y su semilla
+#   domain/entity/ObservacionInterna.java                         la entidad (TODO_1)
+#   infrastructure/repository/ObservacionInternaRepository.java   el repositorio (TODO_2)
+#   application/ObservacionInternaVista.java                      lo que sale por la API
+#   application/ObservacionInternaService.java                    el servicio (TODO_3)
+#   web/controller/ObservacionInternaController.java              el endpoint dev-only
+#   test/arquitectura/ReglasDelApostrofe.java                     AU-03b (TODO_4)
+#   test/arquitectura/fixtures/violaciones/jdbc/...               su mordida
+#   test/enunciado/*                                              E1..E4 (excluidos del guard)
+#
+# Este lab NO modifica ni un solo archivo COMPARTIDO con su base, y es a proposito.
+# Cualquier cambio en un archivo que venga del tronco —ReglasDeLaCasa, los application*.yml—
+# tendria que propagarse por toda la cadena hasta el Lab 13 para no romper la derivacion, y
+# esta SPEC tiene prohibido tocar del 05 en adelante. Por eso AU-03b nace en su PROPIO
+# archivo en vez de sumarse a las siete de la casa: asi viaja como adicion.
