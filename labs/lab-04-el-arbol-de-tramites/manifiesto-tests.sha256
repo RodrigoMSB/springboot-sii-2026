@@ -1,6 +1,0 @@
-feab6de7a43c85c58775906836cf409bdd657976eb7e3a68b9c6c9b654c575ab  src/test/java/cl/dgt/tramites/enunciado/BasePersistenciaIT.java
-bc15abd740e5bef88b28894937bf067fc9244e1baf2c31a0fe6368db001f111d  src/test/java/cl/dgt/tramites/enunciado/E1_RelacionesLazyIT.java
-797687da34af7e4bbe9344c9df6ae40c6c6b685d9a8a9788726d6313f4de6fa1  src/test/java/cl/dgt/tramites/enunciado/E2_ConsultasDerivadasIT.java
-2034228732fc1e2b3ccb0f22520d80ca8e3690d263f485bbb00fe1ba85e9cec2  src/test/java/cl/dgt/tramites/enunciado/E3_JpqlMultiEntidadIT.java
-871f3c1758480eafb71acdc30b75449647ee2ca985474a05c9f4adc09a1c0fb8  src/test/java/cl/dgt/tramites/enunciado/E4_ReporteJdbcIT.java
-7cc26857f1325f601f8ca0b88dad2ec4e24f822f132d6376007ebd4a56567508  src/test/java/cl/dgt/tramites/enunciado/E5_AU04InstaladaTest.java

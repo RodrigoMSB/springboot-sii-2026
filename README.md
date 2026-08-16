@@ -5,6 +5,42 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 > 📌 **Por qué este curso se enseña así → [`MANIFIESTO.md`](MANIFIESTO.md)**
 > Léelo antes de dictar una sola sesión.
 
+## Los laboratorios
+
+### El arco vigente · construcción guiada
+
+Ocho laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
+misma forma: `README.md`, `PASOS.md` (el guion de la sesión), `practica/` donde se trabaja y
+`solucion/` al lado para comparar. Se corren con `./mvnw spring-boot:run` y **no necesitan
+Docker ni instalar nada**: Java, Maven y —donde hace falta— PostgreSQL viajan dentro del
+repositorio.
+
+| Lab | Tema | Qué se lleva |
+|---|---|---|
+| [`lab-00-hola-mundo`](labs/lab-00-hola-mundo/) | Que Spring Boot arranque | Una clase, una anotación y un `main`. Nada más |
+| [`lab-01-web`](labs/lab-01-web/) | El primer endpoint | Ruta, parámetro y cuerpo; y el código de estado como parte de la respuesta |
+| [`lab-02-di`](labs/lab-02-di/) | Inyección de dependencias | **Qué es Spring**: tú declaras qué necesitas y el contenedor te lo entrega |
+| [`lab-03-errores`](labs/lab-03-errores/) | Errores con forma | El camino triste también es contrato: 404 con cuerpo, 400 con los campos |
+| [`lab-03c-jpa`](labs/lab-03c-jpa/) | Guardar y recuperar | Una clase y una tabla son la misma cosa. El SQL sale en la consola |
+| [`lab-04-relaciones`](labs/lab-04-relaciones/) | Relaciones JPA | LAZY dispara 1 SELECT; EAGER, 4. Y la `LazyInitializationException` |
+| [`lab-05-rendimiento`](labs/lab-05-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
+| [`lab-06-concurrencia`](labs/lab-06-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |
+
+### Del 07 en adelante · el arco antiguo
+
+Los laboratorios [`lab-07-el-portero`](labs/lab-07-el-portero/) a
+[`lab-14-la-dgt-se-parte-en-pedazos`](labs/lab-14-la-dgt-se-parte-en-pedazos/) siguen con el
+formato anterior —enunciado con TODOs, `bin/` de validación, ArchUnit, Docker— y cubren
+seguridad, resiliencia, observabilidad, mensajería, el examen de egreso y microservicios.
+
+> ⚠️ **Pendiente de decisión del PO.** La SPEC-030 retiró el arco antiguo hasta el Lab 06 y
+> dejó el arco nuevo en su lugar. Qué se hace con los labs 07 al 14 —migrarlos al formato
+> guiado, mantenerlos como están, o retirar parte— **no está decidido**. Mientras tanto siguen
+> íntegros y funcionando.
+
+Problemas de entorno: [`docs/troubleshooting.md`](docs/troubleshooting.md) ·
+[`docs/entorno-alumno.md`](docs/entorno-alumno.md).
+
 ## Protocolo SPEC
 
 El arquitecto emite especificaciones numeradas, versionadas en `docs/specs/`. Si la

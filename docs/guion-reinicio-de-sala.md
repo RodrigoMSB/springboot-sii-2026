@@ -54,8 +54,8 @@ Cuatro comandos. Léelos en voz alta y que los sigan a la vez:
 
 ```bash
 git clone <URL-del-repo>
-cd springboot-sii-2026/labs/lab-00-estacion-base
-./bin/00-verificar.sh
+cd springboot-sii-2026/labs/lab-00-hola-mundo/solucion
+./mvnw spring-boot:run
 ```
 
 Lo que tienen que ver:
@@ -140,7 +140,7 @@ medias. Qué hacer:
 
 ```bash
 rm -rf tools/jdk/runtime
-cd labs/lab-01-del-otro-lado-del-boton/starter && ./mvnw -version
+cd labs/lab-00-hola-mundo/solucion && ./mvnw -version
 ```
 
 Si vuelve a fallar dos veces seguidas, no insistas en sala: esa máquina necesita una exclusión

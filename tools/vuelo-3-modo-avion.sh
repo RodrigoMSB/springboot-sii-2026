@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+#
+# =============================================================================
+#  ⚠️  ARNES HISTORICO — YA NO SE PUEDE EJECUTAR TAL CUAL
+# -----------------------------------------------------------------------------
+#  Este vuelo recorre los labs 01 a 07 del ARCO ANTIGUO, que la SPEC-030 retiro
+#  del repositorio (labs 00 a 06). El script se conserva porque es el
+#  procedimiento con el que se obtuvieron las mediciones citadas en su informe,
+#  no porque siga siendo ejecutable: los directorios que recorre ya no existen.
+#
+#  Sus resultados estan en docs/specs/informes/. Para volar el arco nuevo hace
+#  falta un arnes nuevo, y eso es trabajo de otra SPEC.
+# =============================================================================
 # =============================================================================
 #  VUELO 3 · SPEC-023 — la primera mitad del curso en modo avión
 # -----------------------------------------------------------------------------
