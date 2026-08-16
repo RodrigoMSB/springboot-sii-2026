@@ -7,10 +7,11 @@
 #
 #  EL MISMO CRITERIO JUZGA A AMBOS. No hay dos verdades.
 #
-#  Este lab NECESITA DOCKER: el candado distribuido (TODO_2) se prueba contra un
-#  PostgreSQL real, con ocho hilos compitiendo — un doble en memoria no probaría
+#  Este lab NO necesita Docker, y sigue probando lo que tiene que probar: el
+#  candado distribuido (TODO_2) corre contra un PostgreSQL REAL —dependencia
+#  Maven, SPEC-022— con ocho hilos compitiendo. Un doble en memoria no probaría
 #  nada, porque lo que se afirma es que el MOTOR serializa. Corre `verify`, no
-#  `test`. Si no tienes Docker, te lo dice claro y no finge un veredicto.
+#  `test`.
 #
 #  De SOLO LECTURA y SIN `set -e`. En Java el criterio se verifica con TESTS
 #  COMPILADOS y ArchUnit; este script orquesta, jamás inspecciona tu código con
@@ -46,15 +47,11 @@ esac
 printf '\n  Lab 11 · validando %s\n\n' "$OBJETIVO"
 
 # -----------------------------------------------------------------------------
-#  0 · Docker vivo (lo necesitan los cuatro TODOs)
+#  0 · Aquí vivía el guard de Docker
 # -----------------------------------------------------------------------------
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" \
-              "Este lab prueba el candado distribuido contra una base real. Abre Docker Desktop (T-03 del Lab 00)."
-    resumen_final "no verificado" "no verificado" >/dev/null
-    printf '\n[ERROR] No puedo validar sin Docker.\n\n'
-    exit 1
-fi
+#  Ya no hace falta: PostgreSQL llega como dependencia Maven (SPEC-022) y TESO
+#  como librería in-process (SPEC-025). Este lab se valida entero sin demonio,
+#  sin permisos de administrador y sin red.
 
 # -----------------------------------------------------------------------------
 #  1 · El enunciado no se toca (manifiesto) — antes de compilar, es barato
@@ -70,7 +67,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-#  2 · `verify` — una sola vez (compila + tests + integración con Docker)
+#  2 · `verify` — una sola vez (compila + tests + integración, sin Docker)
 # -----------------------------------------------------------------------------
 SALIDA="$(mktemp)"
 trap 'rm -f "$SALIDA"' EXIT

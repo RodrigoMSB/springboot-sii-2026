@@ -1,4 +1,4 @@
-d414cf68188e595a80b9c80d5f29f8820df5747c1945df0a0442ae78faccf5c5  src/test/java/cl/dgt/tramites/enunciado/BaseLatidosIT.java
+0e36a5fa8a2c8cc5d0ef221bab384437d0070b081c1098b4885d90d24f787668  src/test/java/cl/dgt/tramites/enunciado/BaseLatidosIT.java
 a129821ee9dcd15bc208f8a4a4efe770f03d842d0ccebe7050f9b23fda1c606b  src/test/java/cl/dgt/tramites/enunciado/E1_ElRelojBienDeclaradoIT.java
 c24f637b00fabd98a371b4d5cc398aecf08aa8c78e3f4a5c1a092e75a9950fe0  src/test/java/cl/dgt/tramites/enunciado/E2_CandadoDistribuidoIT.java
 94ced616f5153171ddd8279dadbf8ff52dc4b8edfcc35a4e485beb0c64d2c8a8  src/test/java/cl/dgt/tramites/enunciado/E3_AsincroniaVirtualIT.java

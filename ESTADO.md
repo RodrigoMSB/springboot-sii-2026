@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-030 — un solo arco hasta el Lab 06 (tag `material-v0.5.0`).*
+*Última actualización: SPEC-025 — los labs 08 a 11 dejan Docker (tag `material-v0.6.0`).*
 
 ---
 
@@ -139,9 +139,11 @@ La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. 
 **Estado: Fase 0 ejecutada y verificada. Labs 01 y 02 convertidos.** El informe está en
 `docs/specs/informes/INFORME-SPEC-022.md`.
 
-- **Docker fuera de los labs 01 y 02.** PostgreSQL llega como dependencia Maven (Zonky): se
-  extrae a una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin.
-  Es PostgreSQL **de verdad** —16.14, el mismo motor— no un H2 disfrazado.
+- **Docker fuera del material.** PostgreSQL llega como dependencia Maven (Zonky): se extrae a
+  una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin. Es PostgreSQL
+  **de verdad** —16.14, el mismo motor— no un H2 disfrazado. Empezó en los labs que la SPEC-022
+  migró (ya retirados con el arco antiguo), hoy lo usan **los ocho labs del arco vigente** y los
+  labs **08 al 11**, que lo estrenaron en la SPEC-025.
 - **`repo-maven/` en la raíz**: 224 MB, 274 jars. Todas las dependencias de los dos labs.
 - **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
 - **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
@@ -168,11 +170,10 @@ tests de concurrencia del Lab 06 pasan sin un solo reintento.
 El peso apenas se movió: `repo-maven/` pasó de 225 a **230 MB** al sumar cinco labs. Los labs
 comparten casi todas sus dependencias.
 
-**Lo que falta (Fase 2):** los labs 08 a 14. El salto real está en el 08–11, que hoy levantan
-WireMock en contenedor y habría que pasar a in-process; y en el 13, que es un lab de
-contenedores en un curso sin Docker — eso es decisión del Arquitecto antes que técnica. Siguen
-anotados el rediseño de los `TODO_1`/`TODO_2` del perfil `dev` y la reconciliación de la
-frontera Lab 07 → Lab 08.
+**Lo que falta (Fase 2):** ya solo los labs 12, 13 y 14 — los 08 a 11 están hechos (§1.f). El
+13 sigue siendo un lab de contenedores en un curso sin Docker, y eso es decisión del Arquitecto
+antes que técnica; el 12 arrastra RabbitMQ. Siguen anotados el rediseño de los `TODO_1`/`TODO_2`
+del perfil `dev`.
 
 **Mergeado a `main` y etiquetado `material-v0.3.0`** (PRs #27 y #28, en ese orden).
 
@@ -270,6 +271,36 @@ Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 
 **Mergeado a `main` y etiquetado `material-v0.4.0`** (PR #30).
 
+## 1.f · La diplomacia también viaja en la maleta (SPEC-025)
+
+Desde el Lab 08 entra el segundo actor externo: **Tesorería (TESO)**, el servicio que confirma
+pagos. Se simulaba con **WireMock en un contenedor Docker** — imposible en el SII. Ahora WireMock
+llega como **librería Java corriendo dentro del mismo proceso**, que además es más simple que lo
+que había: WireMock nació librería y el contenedor era el envoltorio.
+
+**Los labs 08, 09, 10 y 11 quedaron sin Docker.** Con eso, **del Lab 00 al 11 el curso corre
+entero sin demonio, sin permisos de administrador y sin red**: PostgreSQL por Zonky, TESO por
+WireMock in-process, Maven y el JDK desde el propio repositorio.
+
+- **En los tests**, cada contexto levanta su TESO en un puerto que elige el sistema y lo gobierna
+  por **API Java directa** en vez de por HTTP contra su puerto de administración: si te equivocas
+  en el nombre de un método, ya no compila.
+- **En dev**, lo levanta la propia aplicación en el **8089 de siempre**, así que las guías, los
+  `curl` del alumno y el flag `--teso-lento` siguen siendo verdad palabra por palabra.
+- **Todo atado a `127.0.0.1`.** Y de paso se redujo exposición: el `compose.yaml` publicaba TESO
+  en *todas* las interfaces (`"8089:8080"`).
+
+**Los dos demos en vivo, que eran los que de verdad usaban Docker, se conservan enteros.** El
+`--db-caida` del Lab 10 mata la base embebida por PID —nunca por nombre— y el tablero sigue
+delatándola; el `--instancias 2` del Lab 11 levanta dos servidores contra **una sola** base, y el
+cierre nocturno corre una vez con el candado y dos sin él.
+
+**Y la cadena vuelve a estar en sincronía del Lab 07 al Lab 11**: el rojo de `deriva` era el Lab
+08 atrasado respecto del 07, y se apagó **migrando, no declarando** — medido, el Lab 08 pasó de 13
+divergencias a **cero**.
+
+Informe en `docs/specs/informes/INFORME-SPEC-025.md`.
+
 ## 2 · Qué falta
 
 **Ningún laboratorio del arco original.** El curso está construido: **catorce labs**, los 35 temas
@@ -287,7 +318,7 @@ está aplicada. Faltan también las diapositivas y el material del instructor.
 
 **Nota sobre las pruebas de aceptación:** las de los labs 00 a 07 se corren ahora **sin Docker
 y sin red**. Ya no hay que abrir Docker Desktop antes: `./mvnw` y los `bin/` funcionan tal cual
-sobre un clon recién hecho. Los labs 08 a 14 siguen necesitando Docker hasta la Fase 2.
+sobre un clon recién hecho. Los labs **12 a 14** siguen necesitando Docker; del 00 al 11, no.
 
 **Pendiente del PO — y en los labs de construcción guiada es LA prueba, no una más:** sentarse con
 `PASOS.md` y `practica/` y llegar al final **sin abrir `solucion/`**. Si siguiendo el guion no se
@@ -303,25 +334,46 @@ correrse desde `main` limpio, con Java 25 activo (`sdk env` en la raíz).
 **Pendiente de infraestructura:** `main` no tiene protección en el servidor (GitHub no la
 permite en repos privados del plan Free). El candado está especificado y congelado.
 
-**⚠️ El CI de `main` está rojo en un job, y es un rojo honesto.** `deriva · labs en sincronía con
-su base` falla desde el **PR #27** (SPEC-022) — el tag `material-v0.3.1` ya estaba puesto sobre él.
-Causa: `lab-08` deriva de `lab-07`, y las SPEC-022/023/024 migraron el `lab-07` (`mvnw`,
-`mvnw.cmd`, `pom.xml`, los `application-*.yml`, las IT de Zonky) sin migrar el `lab-08`, que es
-Fase 2; el guard cuenta 13 archivos divergiendo sin declararse. **No se declararon a propósito**:
-esos archivos no divergen por decisión, divergen porque el lab-08 va atrasado, y declararlos
-convertiría un guard que dice la verdad en uno que calla. **Se apaga migrando el lab-08 en la
-Fase 2**, no editando su `derivacion-solucion.txt`. Los otros siete jobs están en verde.
+**El CI: el rojo de `deriva` sigue ahí, pero se movió.** Falla desde el PR #27 (SPEC-022) porque
+el `lab-08` iba atrasado respecto del `lab-07`. La SPEC-025 lo apagó por la vía honesta —migrando
+el 08, el 09, el 10 y el 11— y **la cadena está en sincronía del Lab 07 al Lab 11**. La frontera
+roja pasó de 07→08 a **11→12**: el Lab 12 no está migrado, y el guard dice la verdad al señalarlo.
 
-**Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** El diálogo de Windows
-Defender **reaparece en la fase de tests de integración**, visto en las dos máquinas Windows. La
-A2.3 ató la aplicación a `localhost`, pero solo en el perfil `dev`: los 16 archivos que llevan
-`address: localhost` son todos `application-dev.yml`, y ningún `application-test.yml` lo tiene.
-**Es cosmético y no bloquea**: el PO le dio Cancel a propósito en la VM de Netec y el build
-terminó verde igual —`46 + 7/7 IT`—, así que el alumno sin permisos de administrador completa la
-suite entera; y el guion de sala ya cubre el caso. Falta identificar **qué proceso** abre el
-socket antes de poner el candado: hay dos lecturas vivas (el Tomcat de las IT con `RANDOM_PORT`,
-o el `postgres.exe` que Zonky arranca) y solo se distinguen mirando la máquina Windows. Detalle,
-evidencia y plan en §15 del `INFORME-SPEC-024.md`. **Trabajo de la próxima SPEC.**
+Hoy `deriva` falla por **dos eslabones**, y los dos están declarados:
+
+1. **El Lab 07 no tiene base verificable.** Su base era el Lab 06 del arco antiguo, retirado en la
+   SPEC-030. El gate lo dice con esas palabras en vez de compararlo contra el tronco, que no es su
+   base — hacerlo reportaría divergencias falsas. Se apaga cuando se decida qué pasa con los labs
+   07 al 14.
+2. **El Lab 12 va atrasado respecto del 11** (20 archivos). Se apaga migrando el 12, no declarando
+   divergencias que no lo son.
+
+Los otros siete jobs, en verde.
+
+**Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** Sigue abierta, pero con
+**una mitad resuelta**. La SPEC-025 midió qué escucha durante `verify` en macOS y el resultado
+descarta al sospechoso principal: **el Tomcat de los IT con `RANDOM_PORT` se ata a `127.0.0.1`**
+—los IT corren bajo el perfil `dev`, así que A2.3 sí les llega— y el PostgreSQL de Zonky se ata a
+`127.0.0.1` y `[::1]`. Ni un solo proceso del laboratorio escucha fuera de loopback. **No se
+aplicó candado**: no se toca a ciegas lo que no se puede reproducir aquí, y el único candado que
+quedaría vive en archivos que comparten el tronco y los labs 01–11. Lo que falta es una sola
+pregunta, en Windows: **qué ejecutable nombra el cartel**. Detalle en §6 del
+`INFORME-SPEC-025.md`.
+
+**A3.1 — cerrada, y no era del material.** Durante la SPEC-025 pareció que los JVM que Maven
+bifurca ignoraban el JDK embebido: las suites morían con *«class file version 69.0 … up to 65.0»*.
+La causa era el arnés de medición, no el curso: envolvía `./mvnw` en `timeout`, y el `timeout` de
+esta máquina es el binario **x86_64 del Homebrew de Intel**, que corre bajo Rosetta y hace que
+`uname -m` devuelva `x86_64`. El shim creía estar en un Mac Intel y se caía al Java del sistema —
+su comportamiento **diseñado** (SPEC-024 §7.3). Re-verificado con `JAVA_HOME` hostil y sin
+`timeout`: las tres formas de fork —surefire, failsafe y `spring-boot:run`— usan el JDK embebido,
+citando el binario. **El registro del vuelo 4 era correcto.** Detalle en §7 del
+`INFORME-SPEC-025.md`.
+
+**Queda una recomendación, no un defecto:** el fallback del shim es **silencioso**. En un Mac
+Intel de verdad, el alumno recibiría un `UnsupportedClassVersionError` sin pista. Una línea de
+`[INFO]` lo arregla; es una SPEC-FIX uniforme sobre los diecisiete proyectos y el parche ya está
+escrito en el informe.
 
 ## 3 · Qué viene ahora
 

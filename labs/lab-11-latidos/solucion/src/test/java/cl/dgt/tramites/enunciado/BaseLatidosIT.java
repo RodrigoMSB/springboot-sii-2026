@@ -1,17 +1,17 @@
 package cl.dgt.tramites.enunciado;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.Map;
 
 /**
- * Base del enunciado del Lab 11: PostgreSQL real (contenedor singleton, ver Lab 08) + login.
+ * Base del enunciado del Lab 11: PostgreSQL real (embebido, ver Lab 08) + login.
  *
  * <p><strong>El latido automático se apaga en los tests</strong> ({@code intervalo-ms} enorme y
  * {@code retardo-inicial-ms} mayor que cualquier suite). No es por comodidad: un planificador
@@ -24,7 +24,7 @@ import java.util.Map;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-                "spring.docker.compose.enabled=false",
+                "dgt.base-embebida.enabled=false",
                 "dgt.instancia=test-instancia",
                 "dgt.cierre.intervalo-ms=86400000",
                 "dgt.cierre.retardo-inicial-ms=86400000"
@@ -35,17 +35,14 @@ abstract class BaseLatidosIT {
     /** Carolina es FUNCIONARIO: emite folios. La semilla lo fija (V2). */
     static final String CAROLINA = "9876543-2";
 
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine3.24");
-
-    static {
-        POSTGRES.start();
-    }
 
     @DynamicPropertySource
     static void propiedades(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registro.add("spring.datasource.username", POSTGRES::getUsername);
-        registro.add("spring.datasource.password", POSTGRES::getPassword);
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort

@@ -2,12 +2,21 @@
 # 503, cliente declarativo (@HttpExchange), y el endurecimiento (CORS/cabeceras, la hora de M9).
 #
 # Archivos NUEVOS (adiciones): TesoreriaPort, ConfirmacionPago, PagoService (application);
-# TesoreriaClient, TesoreriaAdapter (infrastructure/teso); TesoreriaConfig (config);
-# TesoreriaNoDisponibleException (domain); teso-mappings/ (WireMock); los tests del enunciado de
-# resiliencia (enunciado/, excluidos). Los tests de seguridad del L7 se movieron a seguridad/.
+# TesoreriaClient, TesoreriaAdapter (infrastructure/teso); TesoreriaConfig, TesoSimuladoDev
+# (config); TesoreriaNoDisponibleException (domain); src/main/resources/teso/ (los mappings de
+# WireMock); los tests del enunciado de resiliencia (enunciado/, excluidos). Los tests de
+# seguridad del L7 se movieron a seguridad/.
+#
+# El compose.yaml YA NO EXISTE (SPEC-025): TESO era un servicio suyo y ahora es una libreria
+# in-process, asi que el lab se quedo sin nada que orquestar. Su entrada sale de esta lista.
 #
 # Archivos COMPARTIDOS que cambian a proposito:
-compose.yaml
+# --- El unico anadido de este lab sobre el pom del L7 es TESO, y son tres piezas que van juntas
+#     (SPEC-025): la dependencia `wiremock-jetty12` —la de base trae el servidor de Jetty 11 y
+#     Boot 4.1 va en Jetty 12—, el BOM que alinea Jetty a 12.0.16 para que el classpath no quede
+#     partido entre dos versiones, y la propiedad de failsafe que apaga el TESO simulado de dev
+#     durante la suite. El porque de cada una esta escrito en el propio pom.
+pom.xml
 src/main/resources/application.yml
 src/main/java/cl/dgt/tramites/config/SeguridadConfig.java
 src/main/java/cl/dgt/tramites/web/controller/TramiteController.java

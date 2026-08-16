@@ -16,7 +16,7 @@ import java.util.Base64;
  * del acto 2: allí, editar el payload te ascendía; aquí, te deja fuera.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @Import(BaseSeguridadIT.class)
 class E3_TokenFirmadoIT {
 

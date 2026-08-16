@@ -10,10 +10,6 @@
 #  tres de la mañana. Fallar rápido y fuerte es una decisión de diseño.
 # =============================================================================
 spring:
-  docker:
-    compose:
-      enabled: false
-
   datasource:
     url: ${DGT_DB_URL}
     username: ${DGT_DB_USER}

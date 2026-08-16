@@ -1,5 +1,5 @@
-d7d5277d56a2939a7fd81a77d1f3ce1a2515481ec9005a1014a0e5425c9a6361  src/test/java/cl/dgt/tramites/enunciado/BaseTableroIT.java
-b9f59dee6c409f401ceddabdd94549cb12853d1709b7579ee735629a1b2b2891  src/test/java/cl/dgt/tramites/enunciado/E1_HealthQueNoMienteIT.java
+5aaee5c18c385657d84db5380e793c1aa9f616c40c15570e983abdf2ca64fa89  src/test/java/cl/dgt/tramites/enunciado/BaseTableroIT.java
+c80f58915134bfdaa548536ddca068936dd41021e4b7fb9c589861c582a335e5  src/test/java/cl/dgt/tramites/enunciado/E1_HealthQueNoMienteIT.java
 8797be49df8acf5714e0c5b5ebb621b007f249797757138779f2b237025d2f04  src/test/java/cl/dgt/tramites/enunciado/E2_MetricasDeNegocioIT.java
 3ebd952a348bd5f07ffa910c8c215c7075e72a507ece38a50f1b72c1f3d34a82  src/test/java/cl/dgt/tramites/enunciado/E3_ExposicionConCriterioIT.java
 055b71a1ffd881ce0b10011d0ded4ef72367f11da20c140f459e346eed546d1c  src/test/java/cl/dgt/tramites/enunciado/E4_CacheMedidoIT.java

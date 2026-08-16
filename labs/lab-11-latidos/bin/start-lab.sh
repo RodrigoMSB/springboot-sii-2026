@@ -14,7 +14,7 @@
 #
 #   1. La instancia 1 arranca normal. Boot levanta el compose y siembra la base.
 #   2. Se descubre a qué puerto de host quedó PostgreSQL:
-#          docker compose port postgres 5432
+#          pgrep -fl 'embedded-pg/PG-'      (el puerto va en su linea de comandos)
 #      (el compose publica un puerto EFÍMERO a propósito, desde el Lab 01: un
 #      5432 fijo choca con el PostgreSQL que medio mundo ya tiene instalado).
 #   3. La instancia 2 arranca con el compose DESACTIVADO y la URL de esa misma
@@ -84,12 +84,16 @@ APP="$DIR_LAB/$OBJETIVO"
 mkdir -p "$ESTADO"
 printf '\n  Levantando la DGT (%s, %s instancia(s))\n\n' "$OBJETIVO" "$INSTANCIAS"
 
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" "Abre Docker Desktop y espera a que arranque (T-03 del Lab 00)."
-    printf '\n'; exit 1
-fi
+# Aquí vivía el guard de Docker. Ya no hace falta nada de eso: PostgreSQL y TESO
+# viajan dentro del proyecto y arrancan con la aplicación (SPEC-022 y SPEC-025).
 
-# --- Instancia 1: arranca normal, levanta el compose y siembra ----------------
+# Los PostgreSQL embebidos que YA estaban antes de arrancar nada. Sirven para
+# reconocer DESPUÉS cuál es el de este laboratorio: es lo que permite que las
+# instancias 2..N se conecten a la MISMA base que la 1, que es todo el punto.
+PG_PATRON='embedded-pg/PG-.*/bin/postgres'
+PG_ANTES="$(pgrep -f "$PG_PATRON" 2>/dev/null | sort | tr '\n' ' ')"
+
+# --- Instancia 1: arranca normal, levanta su base embebida y siembra ---------
 PUERTO1="$PUERTO"
 if puerto_ocupado "$PUERTO1"; then
     CULPABLE="$(quien_ocupa_puerto "$PUERTO1")"
@@ -120,23 +124,40 @@ _n=2
 while [ "$_n" -le "$INSTANCIAS" ]; do
     PUERTO_N=$((PUERTO1 + _n - 1))
 
-    # ¿A qué puerto de host quedó PostgreSQL? El compose publica uno efímero.
-    MAPEO="$( cd "$APP" && docker compose port postgres 5432 2>/dev/null )"
-    PUERTO_DB="${MAPEO##*:}"
+    # ¿A qué puerto quedó la base de la instancia 1? Zonky elige uno libre y lo
+    # escribe en la línea de comandos del proceso (`-p 61565`), así que se lee de
+    # ahí. Y se mira SOLO el postgres que apareció después de arrancar nosotros:
+    # el alumno puede tener otros suyos, y conectarnos al equivocado sería
+    # escribirle en una base que no es de este curso.
+    PUERTO_DB=""
+    for _pid in $(pgrep -f "$PG_PATRON" 2>/dev/null); do
+        case " $PG_ANTES " in
+            *" $_pid "*) continue ;;                # ya estaba: no es nuestro
+        esac
+        PUERTO_DB="$(ps -o command= -p "$_pid" 2>/dev/null | sed -n 's/.* -p \([0-9][0-9]*\).*/\1/p')"
+        [ -n "$PUERTO_DB" ] && break
+    done
     if [ -z "$PUERTO_DB" ]; then
-        paso_fail "No pude descubrir el puerto de PostgreSQL" \
-                  "Comprueba:  ( cd $OBJETIVO && docker compose port postgres 5432 )"
+        paso_fail "No pude descubrir el puerto de la base embebida de la instancia 1" \
+                  "Míralo a mano con:  pgrep -fl 'embedded-pg/PG-'"
         printf '\n'; exit 1
     fi
-    [ "$_n" -eq 2 ] && log_info "PostgreSQL del compose está en localhost:$PUERTO_DB — la instancia 2 se conecta ahí"
+    [ "$_n" -eq 2 ] && log_info "La base de la instancia 1 está en localhost:$PUERTO_DB — la instancia 2 se conecta ahí"
 
+    # Las instancias 2..N no levantan infraestructura propia, y las dos razones son
+    # la misma: en el mundo del compose había UNA base y UN TESO, compartidos por
+    # todos. Aquí los publica la instancia 1 y las demás se cuelgan de ellos.
+    #   · la base    -> dgt.base-embebida.enabled=false + la URL de la instancia 1
+    #   · TESO       -> dgt.teso-simulado.enabled=false; el 8089 ya lo sirve la 1
+    #                   (sin esto, la instancia 2 muere con "Address already in use")
+    #   · Flyway     -> apagado: la instancia 1 ya migró esa base
     LOG_N="$ESTADO/dgt-$_n.log"
     log_info "Instancia $_n (dgt-$_n) en el puerto ${PUERTO_N}… (log en $LOG_N)"
     ( cd "$APP" && DGT_INSTANCIA="dgt-$_n" \
         DGT_CIERRE_RETARDO_MS="$RETARDO_MS" DGT_CIERRE_INTERVALO_MS="$INTERVALO_MS" \
         DGT_CIERRE_CRON="$CRON_DEMO" \
         exec nohup ./mvnw -q spring-boot:run \
-          -Dspring-boot.run.arguments="--server.port=$PUERTO_N --spring.docker.compose.enabled=false --spring.datasource.url=jdbc:postgresql://localhost:$PUERTO_DB/dgt --spring.datasource.username=dgt --spring.datasource.password=dgt-dev --spring.flyway.enabled=false" \
+          -Dspring-boot.run.arguments="--server.port=$PUERTO_N --dgt.base-embebida.enabled=false --dgt.teso-simulado.enabled=false --spring.datasource.url=jdbc:postgresql://localhost:$PUERTO_DB/postgres --spring.datasource.username=postgres --spring.datasource.password=postgres --spring.flyway.enabled=false" \
           </dev/null >"$LOG_N" 2>&1 ) &
     echo $! > "$ESTADO/dgt-$_n.pid"
 
@@ -156,7 +177,32 @@ if [ "$INSTANCIAS" -ge 2 ]; then
     printf '\n  --- El crimen: dos servidores, y los dos se creyeron el único ---\n\n'
     log_info "Esperando el latido del cierre nocturno…"
 
-    consulta() { ( cd "$APP" && docker compose exec -T postgres psql -U dgt -d dgt -tAc "$1" 2>/dev/null ); }
+    # Preguntarle a la base desde el shell. Zonky NO empaqueta `psql` (su bin/ trae
+    # initdb, pg_ctl y postgres, y nada más: comprobado), así que la consulta va por
+    # JDBC con las dos cosas que ya viajan en el repo — el JDK embebido y el driver
+    # de PostgreSQL. Ver bin/ConsultaSql.java.
+    RAIZ_REPO="$(cd "$DIR_LAB/../.." && pwd)"
+
+    # El primero de la lista que exista de verdad. Se resuelve por globbing del
+    # shell y no con `ls`: shellcheck lo exige (SC2012) y el CI trata cualquier
+    # aviso suyo como un fallo.
+    primer_existente() {
+        for _f in "$@"; do
+            [ -e "$_f" ] && { printf '%s' "$_f"; return 0; }
+        done
+        return 1
+    }
+
+    DRIVER="$(primer_existente "$RAIZ_REPO"/repo-maven/org/postgresql/postgresql/*/postgresql-*.jar)"
+    # El java del REPOSITORIO, no el de la máquina: es el mismo criterio del shim
+    # `mvnw` (SPEC-024). El primer patrón es macOS (bundle), el segundo Windows y Linux.
+    JAVA_EMB="$(primer_existente "$RAIZ_REPO"/tools/jdk/runtime/*/*/Contents/Home/bin/java \
+                                 "$RAIZ_REPO"/tools/jdk/runtime/*/*/bin/java)"
+    [ -x "$JAVA_EMB" ] || JAVA_EMB="$(command -v java)"
+    consulta() {
+        "$JAVA_EMB" --class-path "$DRIVER" "$DIR_BIN/ConsultaSql.java" \
+            "jdbc:postgresql://localhost:$PUERTO_DB/postgres" postgres postgres "$1" 2>/dev/null
+    }
 
     # MARCA: el último id de cierre ANTES de empezar a contar. Solo se cuentan los posteriores.
     # Sin esta marca, un cierre disparado por la instancia 1 mientras la 2 todavía arrancaba

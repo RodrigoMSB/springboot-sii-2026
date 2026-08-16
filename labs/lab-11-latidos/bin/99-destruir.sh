@@ -58,26 +58,34 @@ for PROYECTO in starter solucion; do
     fi
 done
 
-if docker info >/dev/null 2>&1; then
-    BAJADOS=0
-    for PROYECTO in starter solucion; do
-        if [ -f "$DIR_LAB/$PROYECTO/compose.yaml" ]; then
-            ( cd "$DIR_LAB/$PROYECTO" && docker compose down -v >/dev/null 2>&1 ) && BAJADOS=$((BAJADOS + 1))
-        fi
-    done
-    if [ "$BAJADOS" -gt 0 ]; then
-        paso_ok "PostgreSQL del laboratorio detenido ($BAJADOS compose)"
-    else
-        paso_skip "No había ningún compose del lab levantado que bajar"
-    fi
-
-    SOBRANTES="$(docker ps -q --filter label=org.testcontainers 2>/dev/null | wc -l | tr -d ' ')"
-    if [ "${SOBRANTES:-0}" -gt 0 ]; then
-        log_info "Veo $SOBRANTES contenedor(es) de Testcontainers, de un './mvnw verify'."
-        log_info "No los toco: no los levantó este laboratorio. Cómo limpiarlos: ver T-11 del Lab 00."
-    fi
+# Las DOS piezas embebidas de este lab viven dentro del JVM de la app, y por eso
+# aquí no hay nada que bajar: solo que comprobar que se fueron.
+#
+#   · PostgreSQL (Zonky) es proceso HIJO del JVM: el bean lo apaga al cerrarse el
+#     contexto de Spring y el proceso se va con él.
+#   · TESO (WireMock) ni siquiera es un proceso: corre DENTRO del JVM, así que
+#     muere con él por definición. Lo que se comprueba de TESO es su puerto.
+#
+# Y ojo con la tentación de `pkill postgres` o `pkill java`: eso mataría la base
+# del proyecto del trabajo, la de otro curso y cualquier cosa que el alumno tenga
+# levantada. Se MIRAN, no se matan. Es la misma regla que aplicábamos a los
+# contenedores ajenos, y la razón por la que existe.
+HUERFANOS="$(pgrep -f 'embedded-pg/PG-.*/bin/postgres' 2>/dev/null | wc -l | tr -d ' ')"
+if [ "${HUERFANOS:-0}" -eq 0 ]; then
+    paso_ok "PostgreSQL embebido detenido: no quedó ningún proceso"
 else
-    paso_skip "Docker no responde: no hay contenedores del lab que bajar"
+    paso_warn "Veo $HUERFANOS proceso(s) de PostgreSQL embebido todavía vivos"
+    log_info "No los mato por nombre: podrían ser de otro proyecto tuyo."
+    log_info "Míralos con:   pgrep -fl 'embedded-pg/PG-'"
+    log_info "Si son de este lab, ciérralos por PID:   kill <pid>"
+fi
+
+# TESO: lo que importa es que su puerto quede libre para el próximo arranque.
+if command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP:8089 -sTCP:LISTEN >/dev/null 2>&1; then
+    paso_warn "El puerto 8089 (TESO simulado) sigue ocupado"
+    log_info "Míralo con:   lsof -nP -iTCP:8089 -sTCP:LISTEN"
+else
+    paso_ok "TESO simulado detenido: el puerto 8089 quedó libre"
 fi
 
 # Cada borrado responde si pudo o no; el veredicto suma esas respuestas en vez de

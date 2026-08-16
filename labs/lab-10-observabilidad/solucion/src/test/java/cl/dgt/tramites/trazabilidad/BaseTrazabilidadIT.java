@@ -1,5 +1,6 @@
 package cl.dgt.tramites.trazabilidad;
 
+import cl.dgt.tramites.PostgresEmbebido;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -13,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -32,23 +32,20 @@ import java.util.Map;
  * un lab ya ganó se queda en su paquete temático, corriendo para siempre.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 abstract class BaseTrazabilidadIT {
 
     static final String CLAVE = "dgt-2026";
     static final String CAROLINA = "9876543-2";
 
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine3.24");
-
-    static {
-        POSTGRES.start();
-    }
 
     @DynamicPropertySource
     static void propiedades(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registro.add("spring.datasource.username", POSTGRES::getUsername);
-        registro.add("spring.datasource.password", POSTGRES::getPassword);
+        // Una base recién creada para ESTE contexto: se pide una sola vez y se guarda.
+        String url = PostgresEmbebido.nuevaBase();
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", PostgresEmbebido::usuario);
+        registro.add("spring.datasource.password", PostgresEmbebido::clave);
     }
 
     @LocalServerPort

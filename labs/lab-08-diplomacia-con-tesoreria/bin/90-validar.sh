@@ -7,9 +7,10 @@
 #
 #  EL MISMO CRITERIO JUZGA A AMBOS. No hay dos verdades.
 #
-#  Este lab NECESITA DOCKER: dos de sus pruebas (la ficha contra base real y el
-#  contrato OpenAPI) levantan un PostgreSQL con Testcontainers. Corre `verify`,
-#  no `test`. Si no tienes Docker, te lo dice claro y no finge un veredicto.
+#  Este lab NO necesita Docker. Corre `verify`, no `test`, porque parte de sus
+#  pruebas son de integración: levantan un PostgreSQL de verdad (dependencia
+#  Maven, SPEC-022) y un TESO de verdad (WireMock in-process, SPEC-025). Las dos
+#  piezas viajan en el proyecto y arrancan solas.
 #
 #  De SOLO LECTURA y SIN `set -e`. En Java el criterio se verifica con TESTS
 #  COMPILADOS y ArchUnit; este script orquesta, jamás inspecciona tu código con
@@ -45,15 +46,11 @@ esac
 printf '\n  Lab 08 · validando %s\n\n' "$OBJETIVO"
 
 # -----------------------------------------------------------------------------
-#  0 · Docker vivo (lo necesitan T1 y T4)
+#  0 · Aquí vivía el guard de Docker
 # -----------------------------------------------------------------------------
-if ! docker info >/dev/null 2>&1; then
-    paso_fail "El demonio de Docker no responde" \
-              "Este lab prueba la ficha contra una base real. Abre Docker Desktop (T-03 del Lab 00)."
-    resumen_final "no verificado" "no verificado" >/dev/null
-    printf '\n[ERROR] No puedo validar sin Docker.\n\n'
-    exit 1
-fi
+#  Ya no hace falta: PostgreSQL llega como dependencia Maven (SPEC-022) y TESO
+#  como librería in-process (SPEC-025). Este lab se valida entero sin demonio,
+#  sin permisos de administrador y sin red.
 
 # -----------------------------------------------------------------------------
 #  1 · El enunciado no se toca (manifiesto) — antes de compilar, es barato
@@ -69,7 +66,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-#  2 · `verify` — una sola vez (compila + tests + integración con Docker)
+#  2 · `verify` — una sola vez (compila + tests + integración, sin Docker)
 # -----------------------------------------------------------------------------
 SALIDA="$(mktemp)"
 trap 'rm -f "$SALIDA"' EXIT

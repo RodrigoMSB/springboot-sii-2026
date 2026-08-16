@@ -10,8 +10,10 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,33 +31,45 @@ import static org.assertj.core.api.Assertions.assertThat;
  *       bucle de reinicios mientras el problema sigue en otra máquina.</li>
  * </ul>
  *
- * <p><strong>Por qué esta clase levanta su PROPIO contenedor</strong> y no usa el singleton de
- * {@code BaseTableroIT}: para probar «la base cayó» hay que <em>tumbar la base de verdad</em>. Con
- * el contenedor compartido, matarlo dejaría sin base a toda la suite. Aquí se levanta uno, se usa,
- * se mata, y el destrozo queda contenido en esta clase. Nada de simulacros con mocks: el crimen se
- * vive, también en los tests.
+ * <p><strong>Por qué esta clase levanta su PROPIO motor de PostgreSQL</strong> y no usa el
+ * compartido de {@code PostgresEmbebido}: para probar «la base cayó» hay que <em>tumbar la base de
+ * verdad</em>. El motor compartido lo usan todas las clases de la suite, y matarlo las dejaría sin
+ * base. Aquí se levanta uno propio, se usa, se mata, y el destrozo queda contenido en esta clase.
+ * Nada de simulacros con mocks: el crimen se vive, también en los tests.
+ *
+ * <p>Antes esto era un contenedor propio y ahora es un motor embebido propio (SPEC-025). La idea
+ * no cambió ni un milímetro —sigue siendo una base de verdad que se puede matar de verdad—; lo
+ * único que cambió es que ya no hace falta Docker para matarla.
  *
  * <p>El orden de los métodos es fijo ({@code @Order}) por la misma razón: primero se comprueba el
  * mundo sano, y solo después se rompe. Al revés no habría con qué comparar.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.docker.compose.enabled=false")
+        properties = "dgt.base-embebida.enabled=false")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("TODO_1 · el tablero dice la verdad: readiness cae y nombra el componente; liveness aguanta")
 class E1_HealthQueNoMienteIT {
 
-    /** Contenedor PROPIO de esta clase: se tumba a media prueba y nadie más lo sufre. */
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine3.24");
+    /** Motor de PostgreSQL PROPIO de esta clase: se tumba a media prueba y nadie más lo sufre. */
+    static final EmbeddedPostgres POSTGRES = arrancarMotorPropio();
 
-    static {
-        POSTGRES.start();
+    private static final String USUARIO = "postgres";
+
+    private static EmbeddedPostgres arrancarMotorPropio() {
+        try {
+            return EmbeddedPostgres.builder().start();
+        } catch (IOException e) {
+            throw new UncheckedIOException("No se pudo arrancar el PostgreSQL de esta prueba", e);
+        }
     }
 
     @DynamicPropertySource
     static void propiedades(DynamicPropertyRegistry registro) {
-        registro.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-        registro.add("spring.datasource.username", POSTGRES::getUsername);
-        registro.add("spring.datasource.password", POSTGRES::getPassword);
+        String url = POSTGRES.getJdbcUrl(USUARIO, USUARIO);
+        registro.add("spring.datasource.url", () -> url);
+        registro.add("spring.datasource.username", () -> USUARIO);
+        // Zonky arranca con autenticación `trust`: la contraseña no se verifica, pero el pool la pide.
+        registro.add("spring.datasource.password", () -> USUARIO);
     }
 
     @LocalServerPort
@@ -69,6 +83,14 @@ class E1_HealthQueNoMienteIT {
     private Map<String, Object> salud(String ruta) {
         return cliente().get().uri(ruta).exchange()
                 .expectBody(Map.class).returnResult().getResponseBody();
+    }
+
+    private static void cerrarLaBase() {
+        try {
+            POSTGRES.close();
+        } catch (IOException e) {
+            throw new UncheckedIOException("No se pudo tumbar el PostgreSQL de esta prueba", e);
+        }
     }
 
     @Test
@@ -110,7 +132,9 @@ class E1_HealthQueNoMienteIT {
     @SuppressWarnings("unchecked")
     void conLaBaseCaidaReadinessCaeYLivenessAguanta() {
         // El crimen, en vivo. A partir de aquí la aplicación sigue en pie pero no puede trabajar.
-        POSTGRES.stop();
+        // `close()` mata el proceso hijo de PostgreSQL: es el equivalente exacto del viejo
+        // `POSTGRES.stop()` del contenedor, y deja la base igual de muerta.
+        cerrarLaBase();
 
         Map<String, Object> readiness = salud("/actuator/health/readiness");
         assertThat(readiness)
