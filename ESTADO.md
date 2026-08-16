@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-029 — los labs 04, 05 y 06 del arco nuevo (PR #35, en draft).*
+*Última actualización: SPEC-029 — el arco nuevo llega hasta la concurrencia.*
 
 ---
 
@@ -14,6 +14,17 @@
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
 - **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
   antes de la sesión 1.
+- **El arranque del curso** — cuatro labs nuevos de construcción guiada, con el formato del
+  Lab 3.5c (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores).
+  Nacieron porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring
+  Boot** y que un tercio no programa en Java, y hasta ahora el material arrancaba reparando un
+  secreto filtrado. **Conviven con los labs 01–03 de siempre; no los reemplazan.**
+  - `labs/lab-00-hola-mundo/` — que arranque. Una clase, una anotación, un `main`. 15 min.
+  - `labs/lab-01-web/` — el primer endpoint. Ruta, parámetro, cuerpo, y `ResponseEntity`.
+  - `labs/lab-02-di/` — **el lab que explica qué es Spring**. Dos implementaciones de la misma
+    interfaz, la app que deja de arrancar, y `/productos/quien` diciendo cuál se inyectó.
+  - `labs/lab-03-errores/` — el camino triste con contrato: 404 con cuerpo, 400 con los campos
+    que fallaron, y el mensaje interno que nunca sale.
 - **El arco nuevo de construcción guiada** — laboratorios con el formato del Lab 3.5c
   (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores), donde el
   alumno construye en vivo junto al instructor. **Conviven con los labs de siempre; no los
@@ -31,6 +42,17 @@
   de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
 - **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
   enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
+- **Lab 3.5** (`labs/lab-03c-jpa/`): **JPA, desde cero.** El hueco mayor que tenía el curso:
+  nadie enseñaba persistencia, y el alumno venía usando entidades desde el Lab 01 sin saber qué
+  eran. **Formato distinto al resto**: no hay crimen ni TODOs ni validador — el alumno construye
+  las clases **en vivo, junto al instructor**, un paso a la vez. Dos proyectos ejecutables
+  (`practica/` incompleto y `solucion/` terminada), un `README.md` y un `PASOS.md` con los ocho
+  pasos. Ocho demos que se corren y se miran: guardar, buscar, listar, consultas derivadas,
+  actualizar **sin llamar a `save`**, borrar y contar — con el SQL de cada una en la consola.
+  La base **persiste entre ejecuciones** (directorio de datos fijo) y escucha en un puerto fijo,
+  así que el alumno puede apagar el programa y comprobar que su dato sigue ahí, o mirar la tabla
+  con DBeaver mientras corre. Y hay cuatro endpoints para repetirlo desde Postman.
+  Siembra el Lab 04 con la pregunta que lo abre: *¿y si trae de más?*
 - **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
   corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.
 - **Lab 05** (`labs/lab-05-once-segundos/`): el clímax. El N+1 medido con un contador de

@@ -1,0 +1,17 @@
+# -----------------------------------------------------------------------------
+#  La configuración de la aplicación. Es el archivo donde se cambian las cosas
+#  sin recompilar.
+# -----------------------------------------------------------------------------
+spring:
+  application:
+    # El nombre con el que la aplicación se presenta al arrancar. El paso 3 lo
+    # cambia y comprueba que la primera línea del arranque lo dice.
+    name: mi-primera-app
+
+logging:
+  level:
+    # Spring tiene mucho que contar y hoy no toca. WARN lo calla casi entero...
+    root: WARN
+    # ...menos lo nuestro, que sí queremos ver: las dos líneas de "Starting" y
+    # "Started" salen del logger de esta aplicación.
+    cl.dgt: INFO
