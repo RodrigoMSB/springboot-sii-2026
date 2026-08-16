@@ -1,4 +1,0 @@
-# solucion/ L5 vs solucion/ L4. El controlador gana el endpoint del listado y el repositorio
-# la proyeccion paginada (TODO_1). ListadoService, PaginaDto, TramiteResumenDto son nuevos.
-src/main/java/cl/dgt/tramites/web/controller/TramiteController.java
-src/main/java/cl/dgt/tramites/infrastructure/repository/TramiteRepository.java

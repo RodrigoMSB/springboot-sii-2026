@@ -1,9 +1,0 @@
-# Archivos del starter/ del Lab 02 que difieren de su solucion/ A PROPOSITO:
-# el CRIMEN (FichaController devuelve la entidad; @JsonIgnore que hace viva la
-# fuga) y la SUITE REDUCIDA (los guardianes AU-01/AU-02 los instala el alumno).
-# Base: labs/lab-02-.../solucion
-src/main/java/cl/dgt/tramites/web/controller/FichaController.java
-src/main/java/cl/dgt/tramites/domain/entity/Contribuyente.java
-src/test/java/cl/dgt/tramites/arquitectura/ReglasDeLaCasa.java
-src/test/java/cl/dgt/tramites/arquitectura/ArquitecturaTest.java
-src/test/java/cl/dgt/tramites/arquitectura/MordidaDeLosGuardianesTest.java

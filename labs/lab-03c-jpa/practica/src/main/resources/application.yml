@@ -1,0 +1,38 @@
+# =============================================================================
+#  Lab 3.5 — configuración
+# -----------------------------------------------------------------------------
+#  Fíjate en lo que NO hay: ninguna cadena de conexión. La base la levanta
+#  Lab35Application como un proceso hijo (Zonky). Tú no escribes url, usuario ni
+#  contraseña.
+# =============================================================================
+server:
+  # El puerto HTTP de los endpoints del paso 10.
+  port: 8099
+
+spring:
+  application:
+    name: lab35-jpa
+
+  jpa:
+    # LO IMPORTANTE DE ESTE ARCHIVO: mostrar el SQL que Hibernate genera.
+    # Todo el laboratorio consiste en escribir cero líneas de SQL y ver el SQL
+    # que aparece igual. Si esto estuviera en false, no se vería nada.
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    # El esquema lo crea Flyway (V1). Hibernate solo comprueba que la entidad
+    # cuadre con la tabla: si te falta una columna, lo dice al arrancar.
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+# El ruido de arranque, al mínimo: en la consola tiene que verse el SQL, no
+# doscientas líneas de Spring.
+logging:
+  level:
+    root: WARN
+    cl.dgt.jpa: INFO
+    org.flywaydb: INFO

@@ -24,7 +24,16 @@ chequear() {
 TRONCO="dgt-tramites-api"
 ANTERIOR="$TRONCO"
 
+# Se levanta cuando un lab de la cadena ya no esta en el repositorio. Sirve para
+# no comparar al siguiente contra una base que NO es la suya.
+CADENA_ROTA=0
+
 # La cadena de solucion/, en orden. Añade un lab aquí cuando nazca.
+#
+# Los labs 01 a 06 se retiraron en la SPEC-030 y SIGUEN EN ESTA LISTA a
+# proposito: es lo que hace que el bucle detecte que faltan y lo diga. Si se
+# borraran de aquí, el Lab 07 pasaría a compararse en silencio contra el tronco
+# —que no es su base— y el gate reportaría divergencias que nadie introdujo.
 for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtro labs/lab-03-red-de-seguridad labs/lab-04-el-arbol-de-tramites labs/lab-05-once-segundos labs/lab-06-dos-folios-un-numero labs/lab-07-el-portero labs/lab-08-diplomacia-con-tesoreria labs/lab-09-caja-negra labs/lab-10-observabilidad labs/lab-11-latidos labs/lab-12-amortiguadores labs/lab-13-capsula-y-egreso labs/lab-14-la-dgt-se-parte-en-pedazos; do
 
     # ------------------------------------------------------------------------
@@ -82,7 +91,39 @@ for LAB in labs/lab-01-del-otro-lado-del-boton labs/lab-02-el-folio-que-se-filtr
         continue
     fi
 
+    # ------------------------------------------------------------------------
+    #  UN ESLABON QUE YA NO ESTA.
+    #
+    #  La SPEC-030 retiro los labs 01 a 06 (el arco antiguo hasta la
+    #  concurrencia). Hasta ahora esto lo saltaba un `continue` mudo y ANTERIOR
+    #  se quedaba en el eslabon previo, asi que el siguiente lab acababa
+    #  comparandose contra una base que NO es la suya: el gate inventaba
+    #  divergencias que nadie habia introducido. Medido: el Lab 07 pasaba a
+    #  reportar 3 archivos "divergiendo" contra el tronco.
+    #
+    #  Un gate solo puede fallar por la razon que dice. Asi que se dice.
+    # ------------------------------------------------------------------------
+    if [ ! -d "$LAB" ]; then
+        echo "[INFO] $LAB ya no esta en el repositorio: la cadena se corta aqui."
+        CADENA_ROTA=1
+        continue
+    fi
+
     [ -d "$LAB/solucion" ] || continue
+
+    if [ "$CADENA_ROTA" -eq 1 ]; then
+        echo "[ERROR] $LAB no se puede verificar contra su base: la base ya no esta"
+        echo "        en el repositorio. NO se compara contra $ANTERIOR, que no es"
+        echo "        su base — eso reportaria divergencias falsas."
+        echo "        Pendiente de la decision del PO sobre los labs 07 a 14."
+        FALLOS=$((FALLOS + 1))
+        CADENA_ROTA=0
+        # La cadena se re-ancla aqui: de este lab en adelante si se puede verificar.
+        chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
+        ANTERIOR="$LAB/solucion"
+        continue
+    fi
+
     chequear "$ANTERIOR"      "$LAB/solucion" "$LAB/derivacion-solucion.txt"
     chequear "$LAB/solucion"  "$LAB/starter"  "$LAB/derivacion-starter.txt"
     # P-16: una segunda solución (el "antes" con N+1) que tambien deriva de solucion/.

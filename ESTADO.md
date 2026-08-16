@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-025 (labs 08–11 sin Docker).*
+*Última actualización: SPEC-025 — los labs 08 a 11 dejan Docker (tag `material-v0.6.0`).*
 
 ---
 
@@ -12,23 +12,26 @@
 - **La aplicación del curso**: `dgt-tramites-api/`. Es el backend de la DGT — lo que hay
   detrás del botón. Arranca, se conecta a su base de datos y responde. Tiene siete reglas
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
-- **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
-  antes de la sesión 1.
-- **Lab 01** (`labs/lab-01-del-otro-lado-del-boton/`): una contraseña de producción en el
-  historial de git — se rota, no se borra.
-- **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
-  de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
-- **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
-  enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
-- **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
-  corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.
-- **Lab 05** (`labs/lab-05-once-segundos/`): el clímax. El N+1 medido con un contador de
-  consultas, no contado. Dos soluciones conviven (P-16): `solucion-con-n1/` (13 consultas) y
-  `solucion/` (3) — mismo comportamiento, distinto costo.
-- **Lab 06** (`labs/lab-06-dos-folios-un-numero/`): la concurrencia. Dos emisiones a la vez se
-  llevan el mismo folio; se resuelve con bloqueo pesimista (`SELECT … FOR UPDATE`) en la misma
-  transacción, idempotencia por `tramiteId`, y la primera migración correctiva (un `CHECK` en
-  `linea_f29`). RN-01, RN-02 y RN-05 por fin con suelo, probadas con concurrencia real.
+- **EL ARCO VIGENTE — ocho labs de construcción guiada (00 a 06).** El alumno construye en
+  vivo junto al instructor: `README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni
+  validadores, y se corren con `./mvnw spring-boot:run` sin Docker ni instalar nada. Nacieron
+  porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring Boot** y
+  que un tercio no programa en Java, y el material arrancaba reparando un secreto filtrado.
+  - `labs/lab-00-hola-mundo/` — que arranque. Una clase, una anotación, un `main`. 15 min.
+  - `labs/lab-01-web/` — el primer endpoint. Ruta, parámetro, cuerpo, y `ResponseEntity`.
+  - `labs/lab-02-di/` — **el lab que explica qué es Spring**. Dos implementaciones de la misma
+    interfaz, la app que deja de arrancar, y `/productos/quien` diciendo cuál se inyectó.
+  - `labs/lab-03-errores/` — el camino triste con contrato: 404 con cuerpo, 400 con los campos
+    que fallaron, y el mensaje interno que nunca sale.
+  - `labs/lab-03c-jpa/` — **JPA desde cero**. Una clase y una tabla son la misma cosa; el SQL
+    sale en la consola y la base se puede mirar por fuera con DBeaver mientras corre.
+  - `labs/lab-04-relaciones/` — `@ManyToOne`, `@OneToMany(mappedBy)`, LAZY y la
+    `LazyInitializationException`. El número: 1 SELECT con LAZY, **4 con EAGER**.
+  - `labs/lab-05-rendimiento/` — el N+1 con un contador de consultas en pantalla. El número:
+    **201 consultas contra 1**, con `JOIN FETCH`, `@EntityGraph` o proyección.
+  - `labs/lab-06-concurrencia/` — 20 emisiones simultáneas del mismo folio. El número: sin
+    candado salen 9 o 10 números distintos de 21, con repetidos; con candado, **21 de 21**.
+
 - **Lab 07** (`labs/lab-07-el-portero/`): la seguridad. La API se cierra por defecto (Spring
   Security 7), hay login real contra la tabla de usuarios (BCrypt de la semilla), el JWT se
   valida por su firma (no se cree — un token adulterado da 401), y la emisión de folios exige
@@ -136,9 +139,11 @@ La conclusión: **todo lo que el curso necesita viaja DENTRO del repositorio**. 
 **Estado: Fase 0 ejecutada y verificada. Labs 01 y 02 convertidos.** El informe está en
 `docs/specs/informes/INFORME-SPEC-022.md`.
 
-- **Docker fuera de los labs 01 y 02.** PostgreSQL llega como dependencia Maven (Zonky): se
-  extrae a una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin.
-  Es PostgreSQL **de verdad** —16.14, el mismo motor— no un H2 disfrazado.
+- **Docker fuera del material.** PostgreSQL llega como dependencia Maven (Zonky): se extrae a
+  una carpeta temporal y corre como proceso hijo del JVM. Sin demonio, sin admin. Es PostgreSQL
+  **de verdad** —16.14, el mismo motor— no un H2 disfrazado. Empezó en los labs que la SPEC-022
+  migró (ya retirados con el arco antiguo), hoy lo usan **los ocho labs del arco vigente** y los
+  labs **08 al 11**, que lo estrenaron en la SPEC-025.
 - **`repo-maven/` en la raíz**: 224 MB, 274 jars. Todas las dependencias de los dos labs.
 - **`tools/maven/`**: la distribución de Maven, 10 MB, commiteada.
 - **`mvnw` ya no descarga nada**: es un shim que usa ese Maven y ese repositorio, en modo
@@ -290,16 +295,21 @@ WireMock in-process, Maven y el JDK desde el propio repositorio.
 delatándola; el `--instancias 2` del Lab 11 levanta dos servidores contra **una sola** base, y el
 cierre nocturno corre una vez con el candado y dos sin él.
 
-**Y el CI vuelve a estar en sincronía hasta el Lab 11**: el rojo de `deriva` era el Lab 08
-atrasado respecto del 07, y se apagó migrando, no declarando.
+**Y la cadena vuelve a estar en sincronía del Lab 07 al Lab 11**: el rojo de `deriva` era el Lab
+08 atrasado respecto del 07, y se apagó **migrando, no declarando** — medido, el Lab 08 pasó de 13
+divergencias a **cero**.
 
 Informe en `docs/specs/informes/INFORME-SPEC-025.md`.
 
 ## 2 · Qué falta
 
-**Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
-cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java») cerrado
-por el Lab 14.
+**Ningún laboratorio del arco original.** El curso está construido: **catorce labs**, los 35 temas
+oficiales cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java»)
+cerrado por el Lab 14.
+
+**Lo que sí queda por decidir, y es del PO:** qué se hace con los **labs 07 al 14**, que siguen
+con el formato antiguo (enunciado con TODOs, `bin/` de validación, ArchUnit, Docker). Migrarlos
+al formato guiado, mantenerlos, o retirar parte. La SPEC-030 no los tocó.
 
 Faltan las diapositivas y el material del instructor para sala.
 
@@ -309,6 +319,11 @@ está aplicada. Faltan también las diapositivas y el material del instructor.
 **Nota sobre las pruebas de aceptación:** las de los labs 00 a 07 se corren ahora **sin Docker
 y sin red**. Ya no hay que abrir Docker Desktop antes: `./mvnw` y los `bin/` funcionan tal cual
 sobre un clon recién hecho. Los labs **12 a 14** siguen necesitando Docker; del 00 al 11, no.
+
+**Pendiente del PO — y en los labs de construcción guiada es LA prueba, no una más:** sentarse con
+`PASOS.md` y `practica/` y llegar al final **sin abrir `solucion/`**. Si siguiendo el guion no se
+llega al resultado, el guion está mal. Es la única prueba que el ejecutor no puede hacer por
+definición: quien escribió el guion no puede juzgar si se entiende.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
 de su README), y los Labs 01 a 14, cada uno con su Prueba del PO. Todas diferidas; los
@@ -321,10 +336,19 @@ permite en repos privados del plan Free). El candado está especificado y congel
 
 **El CI: el rojo de `deriva` sigue ahí, pero se movió.** Falla desde el PR #27 (SPEC-022) porque
 el `lab-08` iba atrasado respecto del `lab-07`. La SPEC-025 lo apagó por la vía honesta —migrando
-el 08, el 09, el 10 y el 11— y ahora **la cadena está en sincronía desde el tronco hasta el Lab
-11**. La frontera roja pasó de 07→08 a **11→12**, por la misma razón de siempre: el Lab 12 no está
-migrado, y el guard dice la verdad al señalarlo. Se apagará migrando el 12, no declarando
-divergencias que no lo son. Los otros siete jobs, en verde.
+el 08, el 09, el 10 y el 11— y **la cadena está en sincronía del Lab 07 al Lab 11**. La frontera
+roja pasó de 07→08 a **11→12**: el Lab 12 no está migrado, y el guard dice la verdad al señalarlo.
+
+Hoy `deriva` falla por **dos eslabones**, y los dos están declarados:
+
+1. **El Lab 07 no tiene base verificable.** Su base era el Lab 06 del arco antiguo, retirado en la
+   SPEC-030. El gate lo dice con esas palabras en vez de compararlo contra el tronco, que no es su
+   base — hacerlo reportaría divergencias falsas. Se apaga cuando se decida qué pasa con los labs
+   07 al 14.
+2. **El Lab 12 va atrasado respecto del 11** (20 archivos). Se apaga migrando el 12, no declarando
+   divergencias que no lo son.
+
+Los otros siete jobs, en verde.
 
 **Anotación abierta · A2.4 — el cartel del Firewall durante `verify`.** Sigue abierta, pero con
 **una mitad resuelta**. La SPEC-025 midió qué escucha durante `verify` en macOS y el resultado
@@ -354,7 +378,17 @@ escrito en el informe.
 ## 3 · Qué viene ahora
 
 **Ya no falta material de laboratorio.** Con el Lab 14 construido, los catorce laboratorios están
-escritos, verificados por el ejecutor y con su CI en verde.
+escritos, verificados por el ejecutor y con su CI en verde. Y el arco nuevo ya llega hasta la
+concurrencia.
+
+Hay **cuatro PRs en draft esperando firma**: #31 (SPEC-025, labs 08–11 sin Docker), #33 (SPEC-027,
+Lab 3.5c con las anotaciones A1), #34 (SPEC-028, labs 00–03 del arranque) y #35 (SPEC-029, labs
+04–06 del arco nuevo).
+
+> **Nota para quien mergee el primero:** los PRs #33, #34 y #35 llevan **el mismo arreglo** al job
+> `siembra` del CI —enseñarle que un lab de construcción guiada enseña con `PASOS.md` y no con
+> `TEORIA.md`—, escrito igual en los tres para que no peleen. En cuanto entre uno, los otros dos
+> traen ese trozo ya resuelto.
 
 Lo que falta es que el PO corra la fila de **pruebas de aceptación acumuladas** (Labs 00 a 14) y
 cierre los PRs abiertos. Los laboratorios están verificados por el ejecutor; ninguno lo ha corrido
@@ -364,26 +398,28 @@ Después, las diapositivas y el material de sala.
 
 ## 4 · Si estás perdido
 
-Tres comandos. Diez minutos. Vas a ver la DGT funcionando:
+Dos comandos. Cinco minutos. Vas a ver arrancar tu primera aplicación:
 
 ```bash
-cd labs/lab-00-estacion-base
-
-./bin/00-verificar.sh     # ¿tu máquina está lista?
-./bin/start-lab.sh        # levanta la DGT
-./bin/99-destruir.sh      # y déjalo todo como estaba
+cd labs/lab-00-hola-mundo/solucion
+./mvnw spring-boot:run
 ```
 
-¿Quieres ver de qué trata el curso en un minuto? Ve el crimen del Lab 01:
+Sale el banner de Spring Boot y un `Hola, mundo`. No hace falta instalar nada: Java y Maven
+viajan dentro del repositorio.
+
+¿Quieres ver en un minuto de qué trata el curso? El Lab 02 tiene un endpoint que responde el
+nombre de la clase que Spring eligió y construyó, sin que nadie haya escrito un `new`:
 
 ```bash
-cd labs/lab-01-del-otro-lado-del-boton/starter
-git log --oneline -- src/main/resources/application.yml
-git show dc70ed6 -- src/main/resources/application.yml     # la contraseña, en pantalla
+cd labs/lab-02-di/solucion
+./mvnw spring-boot:run
+# en otra terminal:
+curl http://localhost:8084/productos/quien     # -> ProductoRepositoryLista
 ```
 
-Entre el segundo y el tercero, haz lo que el script te diga: pídele a la DGT que te hable
-de Valentina Rojas. Cuando te responda, ya viste de qué trata el curso.
+Cambia una anotación en `ProductoRepositoryLista` y esa respuesta cambia, sin tocar el
+controller. Eso es Spring, y es el Lab 02 entero.
 
-Si algo falla, `labs/lab-00-estacion-base/docs/troubleshooting.md` tiene una tabla con
-números. Cita el número.
+Si algo falla, [`docs/troubleshooting.md`](docs/troubleshooting.md) tiene una tabla con números.
+Cita el número.

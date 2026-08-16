@@ -101,7 +101,13 @@ jobs:
 
           IFS=$'\n'
           for LAB in $LABS; do
+            # El documento donde el lab ENSENA. Los labs del arco antiguo lo llaman
+            # TEORIA.md; los de construccion guiada no tienen teoria aparte y su
+            # documento es el guion de la sesion, PASOS.md. P-18 exige SEMBRAR el
+            # modulo siguiente, no un nombre de archivo, y se le exige lo mismo al
+            # que exista.
             TEORIA="$LAB/TEORIA.md"
+            [ -f "$TEORIA" ] || TEORIA="$LAB/PASOS.md"
 
             # Exclusión documentada: el Lab 00 es pre-curso. No computa horas, no
             # tiene módulo, no tiene teoría — es el chequeo de la máquina del alumno
@@ -136,7 +142,7 @@ jobs:
             fi
 
             if [ ! -f "$TEORIA" ]; then
-              echo "[ERROR] $LAB no tiene TEORIA.md"
+              echo "[ERROR] $LAB no tiene TEORIA.md ni PASOS.md"
               FALLOS=$((FALLOS + 1))
               continue
             fi
@@ -372,7 +378,7 @@ jobs:
   #  Linux, y los runners `windows-latest` hospedados no lo ofrecen (la misma
   #  razón por la que el job `app` es solo ubuntu). Garantizamos que el día que
   #  un alumno de Windows los corra, al menos no explotarán al leerse. El resto
-  #  lo advierte labs/lab-00-estacion-base/docs/entorno-alumno.md, §3.
+  #  lo advierte docs/entorno-alumno.md, §3.
   # ---------------------------------------------------------------------------
   labs-sh:
     name: labs-sh · andamiaje (${{ matrix.os }})
@@ -432,7 +438,7 @@ jobs:
           done
           [ "$fallos" -eq 0 ] || { echo "[ERROR] $fallos script(s) no parsean"; exit 1; }
           echo "[OK] Todo el andamiaje parsea en el bash del alumno Windows."
-          echo "[INFO] Recuerda: aquí NO se ejecutan. Ver entorno-alumno.md §3."
+          echo "[INFO] Recuerda: aquí NO se ejecutan. Ver docs/entorno-alumno.md §3."
 
       # -----------------------------------------------------------------------
       #  Ningún .sh puede llevar finales de línea de Windows.

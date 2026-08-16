@@ -1,5 +1,0 @@
-# Archivos de la solucion/ del Lab 01 que difieren del tronco A PROPOSITO.
-# Base: dgt-tramites-api  ·  verificado por el job `deriva`.
-src/main/resources/application.yml
-src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java
-src/main/java/cl/dgt/tramites/DgtTramitesApiApplication.java

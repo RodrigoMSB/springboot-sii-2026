@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lab 03 — Errores con forma.
+
+  Web, como el Lab 01, más `starter-validation`: es lo que hace que
+  `@NotBlank` y `@Positive` signifiquen algo en tiempo de ejecución. En
+  `practica/` esa dependencia ya viene puesta aunque no se usa hasta el paso 4.
+
+      ./mvnw spring-boot:run
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>lab03-errores</artifactId>
+  <version>0.1.0</version>
+  <name>lab03-errores</name>
+  <description>Lab 03 — Errores con forma: el camino triste también es contrato</description>
+
+  <properties>
+    <java.version>25</java.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Sin esto, las anotaciones del paso 4 son adorno: compilan y no hacen nada. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <!-- El `repackage` queda apagado a propósito.
+
+             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
+             aplicación y TODAS sus dependencias dentro — Spring, Tomcat, y lo
+             que haga falta—, y por eso pesa decenas de MB.
+
+             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
+             que ejecuta las clases directamente y no necesita empaquetar nada.
+             `./mvnw package` sigue funcionando y deja el jar normal, de unos
+             pocos KB.
+
+             Para volver a activarlo, borrar este bloque <executions>. -->
+        <executions>
+          <execution>
+            <id>repackage</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
