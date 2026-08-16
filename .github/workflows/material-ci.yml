@@ -101,10 +101,11 @@ jobs:
 
           IFS=$'\n'
           for LAB in $LABS; do
-            # El documento donde el lab ENSENA. Casi todos lo llaman TEORIA.md; el
-            # Lab 3.5 es de construccion guiada y el suyo es el guion de la sesion
-            # (PASOS.md). P-18 exige SEMBRAR el modulo siguiente, no un nombre de
-            # archivo, y se le exige lo mismo al que exista.
+            # El documento donde el lab ENSENA. Los labs del arco antiguo lo llaman
+            # TEORIA.md; los de construccion guiada no tienen teoria aparte y su
+            # documento es el guion de la sesion, PASOS.md. P-18 exige SEMBRAR el
+            # modulo siguiente, no un nombre de archivo, y se le exige lo mismo al
+            # que exista.
             TEORIA="$LAB/TEORIA.md"
             [ -f "$TEORIA" ] || TEORIA="$LAB/PASOS.md"
 

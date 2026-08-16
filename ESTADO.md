@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-027 (nace el Lab 3.5).*
+*Última actualización: SPEC-028 — los cuatro labs del arranque del curso (PR #34).*
 
 ---
 
@@ -14,6 +14,17 @@
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
 - **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
   antes de la sesión 1.
+- **El arranque del curso** — cuatro labs nuevos de construcción guiada, con el formato del
+  Lab 3.5c (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores).
+  Nacieron porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring
+  Boot** y que un tercio no programa en Java, y hasta ahora el material arrancaba reparando un
+  secreto filtrado. **Conviven con los labs 01–03 de siempre; no los reemplazan.**
+  - `labs/lab-00-hola-mundo/` — que arranque. Una clase, una anotación, un `main`. 15 min.
+  - `labs/lab-01-web/` — el primer endpoint. Ruta, parámetro, cuerpo, y `ResponseEntity`.
+  - `labs/lab-02-di/` — **el lab que explica qué es Spring**. Dos implementaciones de la misma
+    interfaz, la app que deja de arrancar, y `/productos/quien` diciendo cuál se inyectó.
+  - `labs/lab-03-errores/` — el camino triste con contrato: 404 con cuerpo, 400 con los campos
+    que fallaron, y el mensaje interno que nunca sale.
 - **Lab 01** (`labs/lab-01-del-otro-lado-del-boton/`): una contraseña de producción en el
   historial de git — se rota, no se borra.
 - **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
@@ -280,9 +291,13 @@ Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 
 ## 2 · Qué falta
 
-**Ningún laboratorio.** El curso está construido: **catorce labs**, los 35 temas oficiales
-cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java») cerrado
-por el Lab 14.
+**Ningún laboratorio del arco original.** El curso está construido: **catorce labs**, los 35 temas
+oficiales cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java»)
+cerrado por el Lab 14.
+
+Lo que sí se añadió después, y por una razón concreta —la encuesta a los 18 alumnos—, es **el
+arranque**: los cuatro labs 00–03 de construcción guiada. El curso ya no empieza reparando un
+secreto filtrado, sino viendo arrancar algo propio. **Esperan la firma del PO en el PR #34.**
 
 Faltan las diapositivas y el material del instructor para sala.
 
@@ -292,6 +307,12 @@ está aplicada. Faltan también las diapositivas y el material del instructor.
 **Nota sobre las pruebas de aceptación:** las de los labs 00 a 07 se corren ahora **sin Docker
 y sin red**. Ya no hay que abrir Docker Desktop antes: `./mvnw` y los `bin/` funcionan tal cual
 sobre un clon recién hecho. Los labs 08 a 14 siguen necesitando Docker hasta la Fase 2.
+
+**Pendiente del PO — y para los cuatro labs nuevos es LA prueba, no una más:** en los labs de
+construcción guiada (00–03 nuevos y el 3.5c) la aceptación es **sentarse con `PASOS.md` y
+`practica/` y llegar al final sin abrir `solucion/`**. Si siguiendo el guion no se llega al
+resultado, el guion está mal. Es la única prueba que el ejecutor no puede hacer por definición:
+quien escribió el guion no puede juzgar si se entiende.
 
 **Pendiente del PO:** correr las pruebas de aceptación acumuladas — Lab 00 (los tres comandos
 de su README), y los Labs 01 a 14, cada uno con su Prueba del PO. Todas diferidas; los
@@ -325,7 +346,11 @@ evidencia y plan en §15 del `INFORME-SPEC-024.md`. **Trabajo de la próxima SPE
 ## 3 · Qué viene ahora
 
 **Ya no falta material de laboratorio.** Con el Lab 14 construido, los catorce laboratorios están
-escritos, verificados por el ejecutor y con su CI en verde.
+escritos, verificados por el ejecutor y con su CI en verde. Y con los cuatro labs del arranque,
+el curso tiene primer día.
+
+Hay **tres PRs en draft esperando firma**: #31 (SPEC-025, labs 08–11 sin Docker), #33 (SPEC-027,
+Lab 3.5c con las anotaciones A1) y #34 (SPEC-028, los labs 00–03 del arranque).
 
 Lo que falta es que el PO corra la fila de **pruebas de aceptación acumuladas** (Labs 00 a 14) y
 cierre los PRs abiertos. Los laboratorios están verificados por el ejecutor; ninguno lo ha corrido
