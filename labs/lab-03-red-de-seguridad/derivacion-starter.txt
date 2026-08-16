@@ -1,7 +1,0 @@
-# starter/ del Lab 03 vs su solucion/. Los HUECOS de los TODOs A PROPOSITO:
-# el request sin anotaciones (TODO_1), el validador sin implementar (TODO_2), el advice
-# sin sus handlers (TODO_1 y TODO_3), y el andamio de la suite del alumno (TODO_4).
-src/main/java/cl/dgt/tramites/web/dto/CrearTramiteRequest.java
-src/main/java/cl/dgt/tramites/web/validacion/RutValidator.java
-src/main/java/cl/dgt/tramites/web/controller/ManejadorDeErrores.java
-src/test/java/cl/dgt/tramites/servicio/TramiteServiceTest.java

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-029 — el arco nuevo llega hasta la concurrencia.*
+*Última actualización: SPEC-030 — un solo arco hasta el Lab 06 (tag `material-v0.5.0`).*
 
 ---
 
@@ -12,56 +12,26 @@
 - **La aplicación del curso**: `dgt-tramites-api/`. Es el backend de la DGT — lo que hay
   detrás del botón. Arranca, se conecta a su base de datos y responde. Tiene siete reglas
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
-- **El pre-vuelo del alumno**: `labs/lab-00-estacion-base/`. El chequeo que hace en su casa
-  antes de la sesión 1.
-- **El arranque del curso** — cuatro labs nuevos de construcción guiada, con el formato del
-  Lab 3.5c (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores).
-  Nacieron porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring
-  Boot** y que un tercio no programa en Java, y hasta ahora el material arrancaba reparando un
-  secreto filtrado. **Conviven con los labs 01–03 de siempre; no los reemplazan.**
+- **EL ARCO VIGENTE — ocho labs de construcción guiada (00 a 06).** El alumno construye en
+  vivo junto al instructor: `README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni
+  validadores, y se corren con `./mvnw spring-boot:run` sin Docker ni instalar nada. Nacieron
+  porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring Boot** y
+  que un tercio no programa en Java, y el material arrancaba reparando un secreto filtrado.
   - `labs/lab-00-hola-mundo/` — que arranque. Una clase, una anotación, un `main`. 15 min.
   - `labs/lab-01-web/` — el primer endpoint. Ruta, parámetro, cuerpo, y `ResponseEntity`.
   - `labs/lab-02-di/` — **el lab que explica qué es Spring**. Dos implementaciones de la misma
     interfaz, la app que deja de arrancar, y `/productos/quien` diciendo cuál se inyectó.
   - `labs/lab-03-errores/` — el camino triste con contrato: 404 con cuerpo, 400 con los campos
     que fallaron, y el mensaje interno que nunca sale.
-- **El arco nuevo de construcción guiada** — laboratorios con el formato del Lab 3.5c
-  (`README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni validadores), donde el
-  alumno construye en vivo junto al instructor. **Conviven con los labs de siempre; no los
-  reemplazan.** Los tres de esta tanda enseñan con números medidos:
+  - `labs/lab-03c-jpa/` — **JPA desde cero**. Una clase y una tabla son la misma cosa; el SQL
+    sale en la consola y la base se puede mirar por fuera con DBeaver mientras corre.
   - `labs/lab-04-relaciones/` — `@ManyToOne`, `@OneToMany(mappedBy)`, LAZY y la
     `LazyInitializationException`. El número: 1 SELECT con LAZY, **4 con EAGER**.
   - `labs/lab-05-rendimiento/` — el N+1 con un contador de consultas en pantalla. El número:
     **201 consultas contra 1**, con `JOIN FETCH`, `@EntityGraph` o proyección.
   - `labs/lab-06-concurrencia/` — 20 emisiones simultáneas del mismo folio. El número: sin
-    candado salen **9 números distintos de 21** con `2026-0002` emitido cuatro veces; con
-    candado, 21 de 21.
-- **Lab 01** (`labs/lab-01-del-otro-lado-del-boton/`): una contraseña de producción en el
-  historial de git — se rota, no se borra.
-- **Lab 02** (`labs/lab-02-el-folio-que-se-filtro/`): un endpoint filtra el puntaje de riesgo
-  de un contribuyente; se tapa con un DTO (lista blanca) y se instalan los guardianes ArchUnit.
-- **Lab 03** (`labs/lab-03-red-de-seguridad/`): la suite llega en rojo — los tests son el
-  enunciado. Validaciones, RUT chileno, errores con contrato, y los primeros tests Mockito.
-- **Lab 3.5** (`labs/lab-03c-jpa/`): **JPA, desde cero.** El hueco mayor que tenía el curso:
-  nadie enseñaba persistencia, y el alumno venía usando entidades desde el Lab 01 sin saber qué
-  eran. **Formato distinto al resto**: no hay crimen ni TODOs ni validador — el alumno construye
-  las clases **en vivo, junto al instructor**, un paso a la vez. Dos proyectos ejecutables
-  (`practica/` incompleto y `solucion/` terminada), un `README.md` y un `PASOS.md` con los ocho
-  pasos. Ocho demos que se corren y se miran: guardar, buscar, listar, consultas derivadas,
-  actualizar **sin llamar a `save`**, borrar y contar — con el SQL de cada una en la consola.
-  La base **persiste entre ejecuciones** (directorio de datos fijo) y escucha en un puerto fijo,
-  así que el alumno puede apagar el programa y comprobar que su dato sigue ahí, o mirar la tabla
-  con DBeaver mientras corre. Y hay cuatro endpoints para repetirlo desde Postman.
-  Siembra el Lab 04 con la pregunta que lo abre: *¿y si trae de más?*
-- **Lab 04** (`labs/lab-04-el-arbol-de-tramites/`): todo en `EAGER` — un muro de JOINs. Se
-  corrige a LAZY, se instala AU-04, y se planta la bomba del Lab 05.
-- **Lab 05** (`labs/lab-05-once-segundos/`): el clímax. El N+1 medido con un contador de
-  consultas, no contado. Dos soluciones conviven (P-16): `solucion-con-n1/` (13 consultas) y
-  `solucion/` (3) — mismo comportamiento, distinto costo.
-- **Lab 06** (`labs/lab-06-dos-folios-un-numero/`): la concurrencia. Dos emisiones a la vez se
-  llevan el mismo folio; se resuelve con bloqueo pesimista (`SELECT … FOR UPDATE`) en la misma
-  transacción, idempotencia por `tramiteId`, y la primera migración correctiva (un `CHECK` en
-  `linea_f29`). RN-01, RN-02 y RN-05 por fin con suelo, probadas con concurrencia real.
+    candado salen 9 o 10 números distintos de 21, con repetidos; con candado, **21 de 21**.
+
 - **Lab 07** (`labs/lab-07-el-portero/`): la seguridad. La API se cierra por defecto (Spring
   Security 7), hay login real contra la tabla de usuarios (BCrypt de la semilla), el JWT se
   valida por su firma (no se cree — un token adulterado da 401), y la emisión de folios exige
@@ -306,12 +276,9 @@ Informe en `docs/specs/informes/INFORME-SPEC-024.md`.
 oficiales cubiertos, y el alcance del título del contrato («Desarrollo de Microservicios en Java»)
 cerrado por el Lab 14.
 
-**Y hay una decisión pendiente del PO, no del ejecutor.** El arco nuevo de construcción guiada ya
-cubre relaciones, rendimiento y concurrencia con otro formato, así que hoy conviven **seis
-laboratorios para esos tres asuntos**: los nuevos (`lab-04-relaciones`, `lab-05-rendimiento`,
-`lab-06-concurrencia`) y los de siempre (`lab-04-el-arbol-de-tramites`, `lab-05-once-segundos`,
-`lab-06-dos-folios-un-numero`). Ninguno se ha tocado ni se ha borrado. **Qué se dicta y qué se
-retira es decisión suya.**
+**Lo que sí queda por decidir, y es del PO:** qué se hace con los **labs 07 al 14**, que siguen
+con el formato antiguo (enunciado con TODOs, `bin/` de validación, ArchUnit, Docker). Migrarlos
+al formato guiado, mantenerlos, o retirar parte. La SPEC-030 no los tocó.
 
 Faltan las diapositivas y el material del instructor para sala.
 
@@ -379,26 +346,28 @@ Después, las diapositivas y el material de sala.
 
 ## 4 · Si estás perdido
 
-Tres comandos. Diez minutos. Vas a ver la DGT funcionando:
+Dos comandos. Cinco minutos. Vas a ver arrancar tu primera aplicación:
 
 ```bash
-cd labs/lab-00-estacion-base
-
-./bin/00-verificar.sh     # ¿tu máquina está lista?
-./bin/start-lab.sh        # levanta la DGT
-./bin/99-destruir.sh      # y déjalo todo como estaba
+cd labs/lab-00-hola-mundo/solucion
+./mvnw spring-boot:run
 ```
 
-¿Quieres ver de qué trata el curso en un minuto? Ve el crimen del Lab 01:
+Sale el banner de Spring Boot y un `Hola, mundo`. No hace falta instalar nada: Java y Maven
+viajan dentro del repositorio.
+
+¿Quieres ver en un minuto de qué trata el curso? El Lab 02 tiene un endpoint que responde el
+nombre de la clase que Spring eligió y construyó, sin que nadie haya escrito un `new`:
 
 ```bash
-cd labs/lab-01-del-otro-lado-del-boton/starter
-git log --oneline -- src/main/resources/application.yml
-git show dc70ed6 -- src/main/resources/application.yml     # la contraseña, en pantalla
+cd labs/lab-02-di/solucion
+./mvnw spring-boot:run
+# en otra terminal:
+curl http://localhost:8084/productos/quien     # -> ProductoRepositoryLista
 ```
 
-Entre el segundo y el tercero, haz lo que el script te diga: pídele a la DGT que te hable
-de Valentina Rojas. Cuando te responda, ya viste de qué trata el curso.
+Cambia una anotación en `ProductoRepositoryLista` y esa respuesta cambia, sin tocar el
+controller. Eso es Spring, y es el Lab 02 entero.
 
-Si algo falla, `labs/lab-00-estacion-base/docs/troubleshooting.md` tiene una tabla con
-números. Cita el número.
+Si algo falla, [`docs/troubleshooting.md`](docs/troubleshooting.md) tiene una tabla con números.
+Cita el número.

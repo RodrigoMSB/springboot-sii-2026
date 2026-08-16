@@ -378,7 +378,7 @@ jobs:
   #  Linux, y los runners `windows-latest` hospedados no lo ofrecen (la misma
   #  razón por la que el job `app` es solo ubuntu). Garantizamos que el día que
   #  un alumno de Windows los corra, al menos no explotarán al leerse. El resto
-  #  lo advierte labs/lab-00-estacion-base/docs/entorno-alumno.md, §3.
+  #  lo advierte docs/entorno-alumno.md, §3.
   # ---------------------------------------------------------------------------
   labs-sh:
     name: labs-sh · andamiaje (${{ matrix.os }})
@@ -438,7 +438,7 @@ jobs:
           done
           [ "$fallos" -eq 0 ] || { echo "[ERROR] $fallos script(s) no parsean"; exit 1; }
           echo "[OK] Todo el andamiaje parsea en el bash del alumno Windows."
-          echo "[INFO] Recuerda: aquí NO se ejecutan. Ver entorno-alumno.md §3."
+          echo "[INFO] Recuerda: aquí NO se ejecutan. Ver docs/entorno-alumno.md §3."
 
       # -----------------------------------------------------------------------
       #  Ningún .sh puede llevar finales de línea de Windows.
