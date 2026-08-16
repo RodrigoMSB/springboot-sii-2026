@@ -2,7 +2,7 @@
 <!--
   Lab 06 — Concurrencia.
 
-  Las mismas piezas del Lab 3.5: JPA, Flyway y un PostgreSQL de verdad que llega
+  Las mismas piezas del Lab 3b: JPA, Flyway y un PostgreSQL de verdad que llega
   como dependencia Maven y corre como proceso hijo. Sin Docker, sin instalar nada.
 
       ./mvnw spring-boot:run

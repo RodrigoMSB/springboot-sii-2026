@@ -10,8 +10,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!-- La versión del FORMATO del pom, no la del proyecto. -->
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- El padre pone las versiones de todo y la configuración del compilador. -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
@@ -30,8 +32,17 @@
   </properties>
 
   <dependencies>
-    <!-- Trae tres cosas de golpe: un servidor (Tomcat), el mecanismo que enruta
-         las peticiones a tus métodos, y el que convierte objetos Java en JSON. -->
+    <!--
+      LA MISMA DEPENDENCIA DEL LAB 01, Y NINGUNA MÁS.
+
+      Trae Tomcat, el enrutado de peticiones y Jackson. Y merece pararse un
+      segundo: la inyección de dependencias —todo lo que enseña este lab— NO se
+      pide aquí. Viene dentro del núcleo de Spring, que llega dentro de este
+      starter igual que llegaba dentro del `spring-boot-starter` del Lab 00.
+
+      Es decir: el contenedor lleva funcionando desde el primer laboratorio. Lo
+      único que cambia hoy es que se le pide algo.
+    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -40,6 +51,7 @@
 
   <build>
     <plugins>
+      <!-- El que aporta la meta `spring-boot:run`. -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

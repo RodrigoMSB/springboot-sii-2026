@@ -23,7 +23,7 @@
     interfaz, la app que deja de arrancar, y `/productos/quien` diciendo cuál se inyectó.
   - `labs/lab-03-errores/` — el camino triste con contrato: 404 con cuerpo, 400 con los campos
     que fallaron, y el mensaje interno que nunca sale.
-  - `labs/lab-03c-jpa/` — **JPA desde cero**. Una clase y una tabla son la misma cosa; el SQL
+  - `labs/lab-03b-jpa/` — **JPA desde cero**. Una clase y una tabla son la misma cosa; el SQL
     sale en la consola y la base se puede mirar por fuera con DBeaver mientras corre.
   - `labs/lab-04-relaciones/` — `@ManyToOne`, `@OneToMany(mappedBy)`, LAZY y la
     `LazyInitializationException`. El número: 1 SELECT con LAZY, **4 con EAGER**.
@@ -382,7 +382,7 @@ escritos, verificados por el ejecutor y con su CI en verde. Y el arco nuevo ya l
 concurrencia.
 
 Hay **cuatro PRs en draft esperando firma**: #31 (SPEC-025, labs 08–11 sin Docker), #33 (SPEC-027,
-Lab 3.5c con las anotaciones A1), #34 (SPEC-028, labs 00–03 del arranque) y #35 (SPEC-029, labs
+Lab 3b con las anotaciones A1), #34 (SPEC-028, labs 00–03 del arranque) y #35 (SPEC-029, labs
 04–06 del arco nuevo).
 
 > **Nota para quien mergee el primero:** los PRs #33, #34 y #35 llevan **el mismo arreglo** al job

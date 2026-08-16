@@ -2,7 +2,7 @@
 
 Dos tablas que se apuntan, declaradas en la clase. Y lo que cuesta traerlas.
 
-En el Lab 3.5 una clase era una tabla. Hoy son dos, y hay una flecha entre ellas: un **trámite**
+En el Lab 3b una clase era una tabla. Hoy son dos, y hay una flecha entre ellas: un **trámite**
 pertenece a un **contribuyente**. Lo que se aprende no es la anotación —son dos líneas—, sino
 **cuántos SELECT dispara cada forma de escribirla**.
 
@@ -49,7 +49,7 @@ cd practica          # o solucion
 ./mvnw spring-boot:run
 ```
 
-No hace falta instalar nada: PostgreSQL viaja dentro del proyecto, como en el Lab 3.5.
+No hace falta instalar nada: PostgreSQL viaja dentro del proyecto, como en el Lab 3b.
 
 El programa corre las demos, imprime… y **se queda corriendo**. **Se apaga con Ctrl+C.** La base
 **no se borra al apagar**: vive en `.datos-pg/`, dentro del propio proyecto.

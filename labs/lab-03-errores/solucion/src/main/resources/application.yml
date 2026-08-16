@@ -1,13 +1,38 @@
+# -----------------------------------------------------------------------------
+#  Configuración del Lab 03.
+#
+#  Lo más importante de este archivo es lo que NO tiene.
+#
+#  `practica/` arranca con tres ajustes bajo `spring.web.error` que hacen que la
+#  respuesta de error incluya el mensaje interno, la clase de la excepción y la
+#  traza entera — están puestos para que el paso 1 pueda VER lo que se filtra
+#  cuando nadie se ocupa de los errores. El paso 5 los quita, y aquí ya no están.
+#
+#  Nota para quien los busque: en Spring Boot 4 esas propiedades viven bajo
+#  `spring.web.error`. Escritas como `server.error.include-stacktrace`, que es
+#  como se escribían antes, la aplicación arranca igual y NO PASA NADA: se
+#  ignoran en silencio. Se comprobó pidiendo el mismo error con una y con otra.
+# -----------------------------------------------------------------------------
+
 server:
   # `practica` en el 8085 y `solucion` en el 8086: pueden correr a la vez.
   port: 8086
 
 spring:
   application:
+    # El nombre entre corchetes de cada línea de log.
     name: lab03-errores-solucion
 
 logging:
   level:
+    # Spring calla. Ojo: WARN no silencia los ERROR, así que la traza que el
+    # manejador general manda al log SÍ se ve en la consola — que es justo lo
+    # que el paso 5 quiere enseñar.
     root: WARN
+
+    # El paquete de esta aplicación: «Starting», «Started», y las líneas que
+    # escribe ManejadorDeErrores cuando atrapa algo no previsto.
     cl.dgt: INFO
+
+    # La que dice en qué puerto quedó Tomcat.
     org.springframework.boot.tomcat: INFO

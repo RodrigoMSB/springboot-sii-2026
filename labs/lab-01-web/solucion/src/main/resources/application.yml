@@ -1,16 +1,44 @@
+# -----------------------------------------------------------------------------
+#  Configuración del Lab 01.
+#
+#  Aparece una sección nueva respecto al Lab 00: `server`. Existe porque ahora
+#  hay un servidor web que configurar — antes no había nada que escuchara.
+# -----------------------------------------------------------------------------
+
 server:
-  # Cada proyecto de este lab tiene su puerto, así que `practica` (8081) y
-  # `solucion` (8082) pueden correr a la vez sin pisarse.
+  # ---------------------------------------------------------------------------
+  #  El puerto donde escucha Tomcat. Sin esta línea sería el 8080, que en una
+  #  máquina de trabajo lo ocupa medio mundo.
+  #
+  #  `practica` usa el 8081 y `solucion` el 8082, a propósito: así se pueden
+  #  tener los dos corriendo a la vez, en dos terminales, para comparar.
+  #  Con `port: 0` Spring elegiría uno libre al azar — útil en tests, inútil
+  #  aquí, donde hay que escribir la URL en el navegador.
+  # ---------------------------------------------------------------------------
   port: 8082
 
 spring:
   application:
+    # El nombre que sale entre corchetes en cada línea de log. Lleva el sufijo
+    # `-solucion` para distinguir de un vistazo cuál de los dos proyectos está
+    # escribiendo, cuando corren los dos a la vez.
     name: lab01-web-solucion
 
 logging:
   level:
+    # Spring calla casi entero; el ajuste más específico de abajo gana sobre este.
     root: WARN
-    # Lo nuestro sí se ve: de aquí salen las líneas "Starting" y "Started".
+
+    # El paquete de esta aplicación: de aquí salen «Starting» y «Started».
     cl.dgt: INFO
-    # Y esta, que es la que dice en qué puerto quedó escuchando el servidor.
+
+    # -------------------------------------------------------------------------
+    #  La que dice en qué puerto quedó escuchando:
+    #      Tomcat started on port 8082 (http) with context path '/'
+    #
+    #  El nombre del paquete importa y no es el que parece: en Spring Boot 4 la
+    #  clase `TomcatWebServer` vive en `org.springframework.boot.tomcat`. En las
+    #  versiones anteriores estaba en `...boot.web.embedded.tomcat`, y con ese
+    #  nombre esta línea no hace nada — ni avisa. Se comprobó midiendo.
+    # -------------------------------------------------------------------------
     org.springframework.boot.tomcat: INFO

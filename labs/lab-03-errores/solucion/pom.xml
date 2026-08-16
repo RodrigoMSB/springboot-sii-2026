@@ -11,8 +11,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!-- La versión del FORMATO del pom, no la del proyecto. -->
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- El padre pone las versiones de todo y la configuración del compilador. -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
@@ -31,12 +33,23 @@
   </properties>
 
   <dependencies>
+    <!-- La de siempre: Tomcat, el enrutado de peticiones y Jackson. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- Sin esto, las anotaciones del paso 4 son adorno: compilan y no hacen nada. -->
+    <!--
+      LA DEPENDENCIA NUEVA DE ESTE LAB.
+
+      Trae Jakarta Bean Validation y su implementación (Hibernate Validator).
+      Sin ella, las anotaciones @NotBlank y @Positive del DTO compilan y no hacen
+      absolutamente nada: son solo anotaciones, hace falta alguien que las lea.
+
+      Hacen falta las TRES piezas para que la validación ocurra: esta
+      dependencia, las anotaciones en el DTO, y el @Valid en el controller. Con
+      dos de las tres no pasa nada — y tampoco avisa.
+    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
@@ -45,6 +58,7 @@
 
   <build>
     <plugins>
+      <!-- El que aporta la meta `spring-boot:run`. -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

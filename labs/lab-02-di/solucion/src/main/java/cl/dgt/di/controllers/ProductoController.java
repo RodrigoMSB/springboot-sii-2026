@@ -16,6 +16,11 @@ import java.util.List;
  * <p>No sabe de dónde salen los productos. Ni siquiera sabe que existe un repositorio: le pide al
  * servicio, y el servicio se arregla. Esa ignorancia es la que permite cambiar la pieza de abajo
  * sin tocar este archivo — que es lo que se comprueba en el paso 5.
+ *
+ * <p>{@code @RequestMapping("/productos")} en la clase es un prefijo: se antepone a la ruta de
+ * cada método. Así {@code @GetMapping("/quien")} atiende {@code /productos/quien}, y el
+ * {@code @GetMapping} sin ruta atiende {@code /productos} a secas. Evita repetir el prefijo cinco
+ * veces y hace que cambiarlo sea una sola línea.
  */
 @RestController
 @RequestMapping("/productos")
@@ -23,11 +28,26 @@ public class ProductoController {
 
     private final ProductoService servicio;
 
+    // =========================================================================
+    //  EL CONSTRUCTOR ES LA DECLARACIÓN DE NECESIDADES
+    // -------------------------------------------------------------------------
+    //  Aquí no hay ningún `new`. Este constructor dice "para funcionar necesito
+    //  un ProductoService", y Spring lo lee al arrancar: busca quién cumple, lo
+    //  construye si hace falta, y lo pasa por este parámetro.
+    //  No lleva @Autowired y no le hace falta: cuando una clase tiene UN solo
+    //  constructor, Spring usa ese sin que nadie se lo diga.
+    //  Para pensar: ¿qué pasaría si hubiera dos constructores?
+    // =========================================================================
     public ProductoController(ProductoService servicio) {
         this.servicio = servicio;
     }
 
-    /** El catálogo. */
+    /**
+     * El catálogo, en {@code GET /productos}.
+     *
+     * <p>Devolver una {@code List} de records basta: Jackson la convierte en un array JSON, y el
+     * {@code Content-Type} pasa a {@code application/json} solo, por el tipo devuelto.
+     */
     @GetMapping
     public List<Producto> listar() {
         return servicio.catalogo();
@@ -48,7 +68,17 @@ public class ProductoController {
         return servicio.quienMeAtiende();
     }
 
-    /** Uno, o 404. Lo mismo que se aprendió en el Lab 01. */
+    // =========================================================================
+    //  UNO, O 404
+    // -------------------------------------------------------------------------
+    //  El Optional del repositorio llega hasta aquí sin abrirse, y es este
+    //  método el que decide qué significa en HTTP: `map` lo convierte en un 200
+    //  con el producto dentro si venía lleno, y `orElseGet` produce el 404 si
+    //  venía vacío. Ni un `if`, ni un `null`.
+    //  Spring convierte el "7" de la URL al Long del parámetro por su cuenta; si
+    //  se pidiera /productos/abc, respondería 400 sin llegar a este método.
+    //  Ese 404 sale con el cuerpo VACÍO. Darle forma es el Lab 03.
+    // =========================================================================
     @GetMapping("/{id}")
     public ResponseEntity<Producto> porId(@PathVariable Long id) {
         return servicio.porId(id)
