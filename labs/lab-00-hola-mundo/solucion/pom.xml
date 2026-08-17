@@ -6,32 +6,70 @@
   lo lee línea por línea. Una sola dependencia, sin web y sin base de datos.
 
       ./mvnw spring-boot:run
+
+  Un `pom.xml` es la lista de la compra del proyecto: qué necesita para
+  compilar, con qué versiones, y qué comandos sabe ejecutar. Maven lo lee y se
+  encarga del resto.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <!-- La versión del FORMATO del pom, no la del proyecto. Es 4.0.0 desde hace
+       más de quince años y no se toca nunca. -->
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- El "padre": trae las versiones de todo lo demás ya elegidas y probadas. -->
+  <!--
+    EL PADRE.
+
+    Heredar de `spring-boot-starter-parent` ahorra tres cosas que si no habría
+    que escribir a mano:
+
+     · las VERSIONES de todo lo que trae Spring Boot, ya elegidas y probadas
+       juntas — por eso las dependencias de abajo no llevan <version>;
+     · la configuración del compilador, de los tests y del empaquetado;
+     · valores por defecto sensatos, como compilar con `-parameters`, que es lo
+       que permitirá que los @PathVariable del Lab 01 funcionen por nombre.
+
+    Cambiar el 4.1.0 de aquí sube toda la pila de golpe.
+  -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>4.1.0</version>
+    <!-- Vacío a propósito: significa «no busques el pom del padre en una carpeta
+         de al lado, bájalo del repositorio». -->
     <relativePath/>
   </parent>
 
+  <!-- Las tres coordenadas que identifican este proyecto. Juntas forman el
+       nombre del jar que sale al empaquetar: lab00-hola-mundo-0.1.0.jar -->
   <groupId>cl.dgt</groupId>
   <artifactId>lab00-hola-mundo</artifactId>
   <version>0.1.0</version>
+
+  <!-- Solo para humanos: aparecen en los informes de Maven. No afectan a nada. -->
   <name>lab00-hola-mundo</name>
   <description>Lab 00 — que Spring Boot arranque</description>
 
   <properties>
+    <!-- Con qué versión de Java se compila. El JDK 25 viaja dentro del
+         repositorio (tools/jdk), así que esto vale igual en cualquier máquina,
+         tenga instalado lo que tenga. -->
     <java.version>25</java.version>
   </properties>
 
   <dependencies>
-    <!-- Lo mínimo para que exista un contenedor de Spring. Nada más. -->
+    <!--
+      LA ÚNICA DEPENDENCIA.
+
+      Un "starter" no es una librería: es un paquete de librerías que suelen ir
+      juntas. `spring-boot-starter` trae el núcleo —el contenedor, la lectura de
+      `application.yml`, el sistema de logs— y nada más. Sin web, sin base de
+      datos, sin nada que no haga falta hoy.
+
+      No lleva <version>: la pone el padre.
+    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -40,7 +78,12 @@
 
   <build>
     <plugins>
-      <!-- El que aporta la meta `spring-boot:run`. -->
+      <!--
+        EL PLUGIN DE SPRING BOOT.
+
+        Es lo que aporta la meta `spring-boot:run` que se usa todo el curso:
+        compila, arma el classpath y arranca la aplicación de un tirón.
+      -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

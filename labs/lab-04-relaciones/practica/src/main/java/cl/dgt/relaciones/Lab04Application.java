@@ -48,7 +48,7 @@ public class Lab04Application {
     //  La base de datos. No hace falta leer esto para el laboratorio.
     // -------------------------------------------------------------------------
     //  PostgreSQL de verdad, arrancado como proceso hijo de este programa, igual
-    //  que en el Lab 3.5. Directorio de datos fijo (.datos-pg/, aquí al lado) para
+    //  que en el Lab 3b. Directorio de datos fijo (.datos-pg/, aquí al lado) para
     //  que lo guardado sobreviva al apagado, y puerto fijo para poder conectarse
     //  con DBeaver o pgAdmin mientras corre. Cada lab tiene el suyo, así que
     //  varios pueden estar arriba a la vez sin pisarse.

@@ -10,8 +10,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!-- La versión del FORMATO del pom, no la del proyecto. -->
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- Igual que en el Lab 00: el padre pone las versiones de todo y la
+       configuración del compilador, para no repetirlas en cada proyecto. -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
@@ -30,8 +33,21 @@
   </properties>
 
   <dependencies>
-    <!-- Trae tres cosas de golpe: un servidor (Tomcat), el mecanismo que enruta
-         las peticiones a tus métodos, y el que convierte objetos Java en JSON. -->
+    <!--
+      LA LÍNEA QUE CAMBIA TODO EL LABORATORIO.
+
+      Respecto al Lab 00 solo cambia esto: `spring-boot-starter` pasa a ser
+      `spring-boot-starter-web`. Y trae tres cosas de golpe:
+
+       · TOMCAT embebido — el servidor. Por él la aplicación deja de terminar.
+       · SPRING WEB MVC — el mecanismo que lee las anotaciones @GetMapping y
+         enruta cada petición al método que le toca.
+       · JACKSON — el que convierte objetos Java en JSON y al revés. Es quien
+         hace que devolver un `record` se vea con llaves en el navegador.
+
+      Ninguna de las tres se pide por su nombre. Vienen dentro del starter, y
+      @EnableAutoConfiguration las encuentra en el classpath y las configura.
+    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -40,6 +56,7 @@
 
   <build>
     <plugins>
+      <!-- El que aporta la meta `spring-boot:run` que se usa todo el curso. -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

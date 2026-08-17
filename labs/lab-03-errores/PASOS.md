@@ -356,8 +356,8 @@ Con estos cuatro laboratorios la aplicación ya arranca, responde, se conecta so
 falla con educación. Lo que no hace es **acordarse de nada**: cada vez que se apaga, el producto
 creado con el POST desaparece. La lista vive en memoria, dentro de un objeto.
 
-> **La pregunta que abre el Lab 3.5** — ¿dónde se guarda lo que tiene que seguir ahí mañana?
+> **La pregunta que abre el Lab 3b** — ¿dónde se guarda lo que tiene que seguir ahí mañana?
 
-El Lab 3.5 mete una base de datos de verdad debajo, y esa lista de tres productos escrita a mano
+El Lab 3b mete una base de datos de verdad debajo, y esa lista de tres productos escrita a mano
 en el controller se convierte en una tabla. La misma pieza que hoy es un `ArrayList` pasa a ser
 un repositorio — y el nombre no es casualidad: es el mismo del Lab 02.

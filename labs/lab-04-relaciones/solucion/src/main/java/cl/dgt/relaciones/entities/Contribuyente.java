@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3.5: anotaciones,
+ * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3b: anotaciones,
  * id generado, constructor sin argumentos para JPA. Aquí llega hecha, porque es repaso.
  *
  * <p>Lo único nuevo está abajo del todo: la lista de trámites, que llegó en el paso 3.

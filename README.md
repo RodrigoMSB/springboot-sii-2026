@@ -21,7 +21,7 @@ repositorio.
 | [`lab-01-web`](labs/lab-01-web/) | El primer endpoint | Ruta, parámetro y cuerpo; y el código de estado como parte de la respuesta |
 | [`lab-02-di`](labs/lab-02-di/) | Inyección de dependencias | **Qué es Spring**: tú declaras qué necesitas y el contenedor te lo entrega |
 | [`lab-03-errores`](labs/lab-03-errores/) | Errores con forma | El camino triste también es contrato: 404 con cuerpo, 400 con los campos |
-| [`lab-03c-jpa`](labs/lab-03c-jpa/) | Guardar y recuperar | Una clase y una tabla son la misma cosa. El SQL sale en la consola |
+| [`lab-03b-jpa`](labs/lab-03b-jpa/) | Guardar y recuperar | Una clase y una tabla son la misma cosa. El SQL sale en la consola |
 | [`lab-04-relaciones`](labs/lab-04-relaciones/) | Relaciones JPA | LAZY dispara 1 SELECT; EAGER, 4. Y la `LazyInitializationException` |
 | [`lab-05-rendimiento`](labs/lab-05-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
 | [`lab-06-concurrencia`](labs/lab-06-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |

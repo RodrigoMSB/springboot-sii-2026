@@ -30,14 +30,29 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequestMapping("/productos")
 public class ProductoController {
 
+    // =========================================================================
+    //  EL ALMACÉN, EN MEMORIA
+    // -------------------------------------------------------------------------
+    //  `new ArrayList<>(...)` y no `List.of(...)` a secas: esta lista SÍ tiene
+    //  que poder crecer, porque el POST añade. `List.of` devuelve una lista
+    //  inmutable y el `add` reventaría con UnsupportedOperationException.
+    //  Es memoria, no base de datos: al apagar el programa se pierde todo. Que
+    //  el dato sobreviva es el Lab 3b.
+    // =========================================================================
     private final List<Producto> base = new ArrayList<>(List.of(
             new Producto(1L, "Resma de papel carta", 4990),
             new Producto(2L, "Tóner negro", 68900),
             new Producto(3L, "Silla ergonómica", 129900)));
 
+    // El generador de ids. `AtomicLong` y no un `long` normal porque a un
+    // controller le llegan varias peticiones A LA VEZ, cada una en su hilo:
+    // `getAndIncrement()` da un número distinto a cada una sin que se pisen. Con
+    // un `long++` dos peticiones simultáneas podrían llevarse el mismo id — que
+    // es exactamente el crimen del Lab 06.
+    // Empieza en 4 porque los tres de arriba ya ocuparon el 1, el 2 y el 3.
     private final AtomicLong siguienteId = new AtomicLong(4);
 
-    /** El catálogo. Nunca falla. */
+    /** El catálogo. Nunca falla, y por eso no aparece en ningún paso del guion. */
     @GetMapping
     public List<Producto> listar() {
         return base;
@@ -74,7 +89,11 @@ public class ProductoController {
     // =========================================================================
     @GetMapping("/{id}/cuota")
     public int cuota(@PathVariable Long id, @RequestParam int cuotas) {
+        // Reutiliza el método de arriba, así que un id inexistente aquí también
+        // acaba en la excepción propia y en su 404 — sin repetir la búsqueda.
         Producto producto = porId(id);
+        // La división entera de Java: con `cuotas` a cero lanza ArithmeticException,
+        // que nadie escribió ni previó. Ese es el error del paso 5.
         return producto.precio() / cuotas;
     }
 
@@ -90,8 +109,12 @@ public class ProductoController {
     // =========================================================================
     @PostMapping
     public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoNuevoDto nuevo) {
+        // El id lo pone el servidor, no quien llama: por eso el DTO de entrada
+        // no lo trae y el de salida sí.
         Producto producto = new Producto(siguienteId.getAndIncrement(), nuevo.nombre(), nuevo.precio());
         base.add(producto);
+        // 201 y no 200: la petición no solo respondió, creó algo. Y se devuelve
+        // el producto ya con su id, para que quien llama no tenga que pedirlo.
         return ResponseEntity.status(HttpStatus.CREATED).body(producto);
     }
 }

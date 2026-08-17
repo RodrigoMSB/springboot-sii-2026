@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3.5: anotaciones,
+ * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3b: anotaciones,
  * id generado, constructor sin argumentos para JPA. Aquí llega hecha, porque es repaso.
  *
  * <p>Le falta una cosa, y es del paso 3: el lado espejo de la relación, para poder ir de un
