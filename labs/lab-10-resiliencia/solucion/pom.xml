@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>lab10-resiliencia-solucion</artifactId>
+  <version>0.1.0</version>
+  <name>lab10-resiliencia-solucion</name>
+  <description>Lab 10 — Resiliencia: la solución</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <resilience4j.version>2.3.0</resilience4j.version>
+    <wiremock.version>3.13.1</wiremock.version>
+    <!-- El Jetty que WireMock 3.13.1 espera. Ver el dependencyManagement de abajo. -->
+    <jetty.wiremock.version>12.0.16</jetty.wiremock.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- El NÚCLEO de Resilience4j, sin su starter de Boot 3: el starter está escrito contra APIs
+         que Boot 4 reorganizó. El núcleo es Java puro y no puede desalinearse (SPEC-018 §9).
+         Y pedagógicamente es mejor: el circuito se declara a mano y sus estados quedan a la vista. -->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-circuitbreaker</artifactId>
+      <version>${resilience4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-retry</artifactId>
+      <version>${resilience4j.version}</version>
+    </dependency>
+
+    <!-- Tesorería, el servicio de al lado. WireMock como LIBRERÍA dentro del mismo proceso:
+         sin Docker y sin un segundo terminal (D-025-1). -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-jetty12</artifactId>
+      <version>${wiremock.version}</version>
+    </dependency>
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- WireMock 3.13.1 trae Jetty 12.0.16 y el BOM de Boot 4.1.0 gestiona jetty-util a
+           12.1.10: al mezclarlos, `ServletContextHandler` llama a un método que en 12.1 cambió y
+           la aplicación no arranca (`Environment.ensure` no existe). Se alinea todo Jetty a la
+           versión de WireMock.
+
+           Por BOM y no con la propiedad `jetty.version` de Boot: esa propiedad hace que el BOM de
+           Boot importe `jetty-ee11-bom`, que en 12.0.16 no existe.
+
+           El radio de impacto es exactamente WireMock: esta aplicación corre sobre TOMCAT, y
+           Jetty sólo está en el classpath porque lo trae el simulador de Tesorería. -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-bom</artifactId>
+        <version>${jetty.wiremock.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.ee10</groupId>
+        <artifactId>jetty-ee10-bom</artifactId>
+        <version>${jetty.wiremock.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>repackage</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

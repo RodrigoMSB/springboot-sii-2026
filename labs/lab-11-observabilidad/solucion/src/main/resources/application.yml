@@ -1,0 +1,77 @@
+server:
+  # `practica` en el 8101 y `solucion` en el 8102.
+  port: 8102
+
+spring:
+  application:
+    name: lab11-observabilidad-solucion
+
+  datasource:
+    # Por URL, no entregando el DataSource ya hecho: así el pool se reconecta solo
+    # cuando el paso 5 tira la base y la vuelve a levantar.
+    url: jdbc:postgresql://localhost:55443/postgres
+    username: postgres
+    hikari:
+      # Cortos, para que el health del paso 5 conteste rápido en vez de colgarse.
+      connection-timeout: 2000
+      initialization-fail-timeout: -1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+lab10:
+  base:
+    puerto: 55443
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Lista blanca NOMINAL. El paso 1 explica por qué no va `*`.
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        # Enciende /actuator/health/liveness y /actuator/health/readiness.
+        enabled: true
+      group:
+        # LA DECISIÓN DEL PASO 5: la base entra en readiness, NO en liveness.
+        # Sin la base no se puede atender (sacar de rotación); reiniciar el
+        # proceso no la arregla.
+        readiness:
+          include: readinessState,baseDeDatos
+        liveness:
+          include: livenessState
+  health:
+    # El health propio entra en readiness (sacar de rotación), NO en liveness
+    # (reiniciar). Es la decisión del paso 5.
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+info:
+  curso: Spring Boot SII 2026
+  lab: 10 — Observabilidad
+
+logging:
+  # Logging estructurado nativo de Spring Boot 4: sin dependencias.
+  # Se enciende en el paso 2 cambiando esto a `ecs`.
+  structured:
+    format:
+      console:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO
+  pattern:
+    # El traceId del MDC, en cada línea. Paso 2.
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] %logger{25} - %msg%n"

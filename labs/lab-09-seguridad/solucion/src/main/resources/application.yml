@@ -1,0 +1,28 @@
+server:
+  # `practica` en el 8095 y `solucion` en el 8096: pueden correr a la vez.
+  port: 8096
+
+spring:
+  application:
+    name: lab09-seguridad-solucion
+
+  jpa:
+    hibernate:
+      # La tabla la crea Flyway (V1__usuario.sql); Hibernate sólo comprueba que cuadren.
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+lab08:
+  jwt:
+    # El secreto de firma. Fuera del código en producción; aquí se deja a la vista
+    # para poder enseñar qué pasa cuando se cambia.
+    secreto: ${LAB08_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO

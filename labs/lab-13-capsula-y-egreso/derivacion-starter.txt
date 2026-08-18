@@ -1,9 +1,0 @@
-# starter/ L13 vs solucion/ L12.
-#
-# VACIO A PROPOSITO, y no es un descuido: el starter de este lab ES la aplicacion completa del
-# Lab 12, byte a byte. No hay huecos que abrir porque no hay TODOs — los huecos los define el
-# brief, no un marcador en el codigo.
-#
-# Que este archivo este vacio ES la afirmacion: el examen parte de lo que el alumno construyo en
-# doce sesiones, sin trampas ni piezas retiradas. Si alguna vez aparece una divergencia aqui, es
-# un error: alguien le quito algo al alumno sin declararlo.

@@ -7,13 +7,10 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 
 ## Los laboratorios
 
-### El arco vigente · construcción guiada
-
-Trece laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
-misma forma: `README.md`, `PASOS.md` (el guion de la sesión), `practica/` donde se trabaja y
-`solucion/` al lado para comparar. Se corren con `./mvnw spring-boot:run` y **no necesitan
-Docker ni instalar nada**: Java, Maven y —donde hace falta— PostgreSQL viajan dentro del
-repositorio.
+**Catorce laboratorios, del 00 al 13.** El alumno construye en vivo junto al instructor: todos
+tienen la misma forma —`README.md`, `PASOS.md` (el guion de la sesión), y tres carpetas— y se
+corren con `./mvnw spring-boot:run`. **No necesitan Docker ni instalar nada**: Java, Maven,
+PostgreSQL y hasta la imagen base de los contenedores viajan dentro del repositorio.
 
 | Lab | Tema | Qué se lleva |
 |---|---|---|
@@ -21,25 +18,18 @@ repositorio.
 | [`lab-01-web`](labs/lab-01-web/) | El primer endpoint | Ruta, parámetro y cuerpo; y el código de estado como parte de la respuesta |
 | [`lab-02-di`](labs/lab-02-di/) | Inyección de dependencias | **Qué es Spring**: tú declaras qué necesitas y el contenedor te lo entrega |
 | [`lab-03-errores`](labs/lab-03-errores/) | Errores con forma | El camino triste también es contrato: 404 con cuerpo, 400 con los campos |
-| [`lab-03b-jpa`](labs/lab-03b-jpa/) | Guardar y recuperar | Una clase y una tabla son la misma cosa. El SQL sale en la consola |
-| [`lab-04-relaciones`](labs/lab-04-relaciones/) | Relaciones JPA | LAZY dispara 1 SELECT; EAGER, 4. Y la `LazyInitializationException` |
-| [`lab-05-rendimiento`](labs/lab-05-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
-| [`lab-06-concurrencia`](labs/lab-06-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |
-| [`lab-07-testing`](labs/lab-07-testing/) | Testing | Un test sirve el día que se pone **rojo**. JUnit, Mockito, `@WebMvcTest` y cuándo NO levantar Spring |
-| [`lab-08-seguridad`](labs/lab-08-seguridad/) | Seguridad | Cerrado por defecto. BCrypt con sal, el JWT que **cualquiera lee**, y 401 frente a 403 |
-| [`lab-09-resiliencia`](labs/lab-09-resiliencia/) | Resiliencia | De **30 s a 2 ms**: timeout, reintento (que empeora la caída) y el circuito que deja de llamar |
-| [`lab-11-tareas`](labs/lab-11-tareas/) | Tareas y asincronía | `@Scheduled`, `@Async` (3,03 s → 0,004 s), hilos virtuales, y la tarea que se ejecuta **dos veces** |
-| [`lab-12-empaquetado`](labs/lab-12-empaquetado/) | Empaquetado | El jar, las capas, qué es un contenedor, y una imagen OCI **sin Docker y sin red** |
+| [`lab-04-jpa`](labs/lab-04-jpa/) | Guardar y recuperar | Una clase y una tabla son la misma cosa. El SQL sale en la consola |
+| [`lab-05-relaciones`](labs/lab-05-relaciones/) | Relaciones JPA | LAZY dispara 1 SELECT; EAGER, 4. Y la `LazyInitializationException` |
+| [`lab-06-rendimiento`](labs/lab-06-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
+| [`lab-07-concurrencia`](labs/lab-07-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |
+| [`lab-08-testing`](labs/lab-08-testing/) | Testing | Un test sirve el día que se pone **rojo**. JUnit, Mockito, `@WebMvcTest` |
+| [`lab-09-seguridad`](labs/lab-09-seguridad/) | Seguridad | Cerrado por defecto. BCrypt con sal, el JWT que **cualquiera lee**, y 401 frente a 403 |
+| [`lab-10-resiliencia`](labs/lab-10-resiliencia/) | Resiliencia | De **30 s a 2 ms**: timeout, reintento (que empeora la caída) y el circuito |
+| [`lab-11-observabilidad`](labs/lab-11-observabilidad/) | Observabilidad | Con la base caída: liveness **200**, readiness **503**, y el health nombra la causa |
+| [`lab-12-tareas`](labs/lab-12-tareas/) | Tareas y asincronía | `@Scheduled`, `@Async` (3,03 s → 0,004 s), hilos virtuales, y la tarea duplicada |
+| [`lab-13-empaquetado`](labs/lab-13-empaquetado/) | Empaquetado | El jar, las capas, qué es un contenedor, y una imagen OCI **sin Docker y sin red** |
 
-> ⚠️ **Falta el Lab 10 (observabilidad).** Es un hueco conocido, no un olvido: el nombre
-> `lab-10-observabilidad` lo ocupa todavía el lab del arco antiguo, y el PO decidió no inventar un
-> nombre provisional. Se construye con ese nombre cuando la SPEC de reempaquetado retire el arco
-> viejo (SPEC-032 §10.1).
-
-#### La tercera carpeta: `instructor/`
-
-Desde el `lab-07-testing` (SPEC-031) cada lab del arco vigente puede tener una **tercera
-carpeta**, y **no está en el repositorio**:
+### Las tres carpetas de cada lab
 
 | | |
 |---|---|
@@ -47,31 +37,13 @@ carpeta**, y **no está en el repositorio**:
 | `solucion/` | El proyecto terminado, con comentarios **breves** donde algo no es evidente |
 | `instructor/` | Los mismos archivos de `solucion/`, explicados **línea por línea**. **No viaja al repo** |
 
-`instructor/` **no es un proyecto**: no tiene `mvnw`, ni `.mvn`, ni se compila. Son los archivos
+`instructor/` **no es un proyecto**: no tiene `mvnw`, ni `.mvn`, y no se compila. Son los archivos
 para leer mientras se enseña — desde por qué está cada `import` hasta cada dependencia del `pom`.
 
 Está excluida en el [`.gitignore`](.gitignore) de la raíz (`labs/*/instructor/`) por una razón
-pedagógica, no técnica: **es la chuleta de quien dicta**. Si viajara en el clon, el alumno la
-tendría delante y leería la explicación en vez de escuchar al instructor — que es exactamente lo
-que `practica/` sin documentación busca evitar. Si esta carpeta no está en tu clon, no falta
-nada: la genera quien prepara la sesión, a partir de `solucion/`.
-
-### Del 07 en adelante · el arco antiguo
-
-Los laboratorios [`lab-07-el-portero`](labs/lab-07-el-portero/) a
-[`lab-14-la-dgt-se-parte-en-pedazos`](labs/lab-14-la-dgt-se-parte-en-pedazos/) siguen con el
-formato anterior —enunciado con TODOs, `bin/` de validación, ArchUnit, Docker— y cubren
-seguridad, resiliencia, observabilidad, mensajería, el examen de egreso y microservicios.
-
-> ⚠️ **Hay dos labs con el número 07.** `lab-07-testing` es del arco vigente y
-> `lab-07-el-portero` del antiguo; conviven en `labs/` y no se estorban —son proyectos
-> independientes—, pero la numeración definitiva del arco nuevo está pendiente de la SPEC de
-> renumeración. Se citan siempre por su nombre completo, nunca como «el Lab 07».
-
-> ⚠️ **Pendiente de decisión del PO.** La SPEC-030 retiró el arco antiguo hasta el Lab 06 y
-> dejó el arco nuevo en su lugar. Qué se hace con los labs 07 al 14 —migrarlos al formato
-> guiado, mantenerlos como están, o retirar parte— **no está decidido**. Mientras tanto siguen
-> íntegros y funcionando.
+pedagógica: **es la chuleta de quien dicta**. Si viajara en el clon, el alumno leería la
+explicación en vez de escuchar — que es justo lo que `practica/` sin documentación evita. Si no
+está en tu clon, no falta nada: la genera quien prepara la sesión, a partir de `solucion/`.
 
 Problemas de entorno: [`docs/troubleshooting.md`](docs/troubleshooting.md) ·
 [`docs/entorno-alumno.md`](docs/entorno-alumno.md).

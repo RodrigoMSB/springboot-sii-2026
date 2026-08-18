@@ -1,43 +1,12 @@
-# -----------------------------------------------------------------------------
-#  La configuración de la aplicación.
-#
-#  Spring lee este archivo al arrancar, sin que nadie lo abra desde el código: se
-#  llama `application.yml` y está en `src/main/resources/`, y con eso basta. Es
-#  el sitio donde se cambian cosas SIN recompilar.
-#
-#  La sangría es la que manda: `spring: application: name:` es una sola
-#  propiedad, `spring.application.name`. Dos espacios por nivel, nunca tabuladores.
-# -----------------------------------------------------------------------------
-
 spring:
   application:
-    # -------------------------------------------------------------------------
-    #  El nombre con el que la aplicación se presenta.
-    #
-    #  Sale entre corchetes en CADA línea de log — `[mi-primera-app]` —, no en el
-    #  texto «Starting HolaMundoApplication», que es el nombre de la CLASE. Son
-    #  dos cosas distintas y conviene no confundirlas: el paso 3 del guion cambia
-    #  esta línea y comprueba exactamente dónde aparece.
-    #  En un sistema con varias aplicaciones, este nombre es lo que permite saber
-    #  de cuál viene cada línea cuando los logs se juntan en un mismo sitio.
-    # -------------------------------------------------------------------------
     name: mi-primera-app
 
 logging:
   level:
-    # -------------------------------------------------------------------------
-    #  Cuánto habla cada parte del programa. Se configura por PAQUETE, y el
-    #  ajuste más específico gana: `cl.dgt` es más específico que `root`.
-    #
-    #  Los niveles van de menos a más grave: TRACE, DEBUG, INFO, WARN, ERROR.
-    #  Poner un nivel significa «muéstrame este y todo lo más grave».
-    # -------------------------------------------------------------------------
 
     # WARN calla a Spring casi entero. Sin esto, un arranque escupe decenas de
     # líneas de autoconfiguración que hoy no enseñan nada y tapan lo que sí.
     root: WARN
 
-    # ...menos lo nuestro. `cl.dgt` es el paquete de esta aplicación, y de su
-    # logger salen las dos líneas que sí interesan: «Starting» y «Started ... in
-    # 0.4 seconds», que son la señal de que la cosa llegó.
     cl.dgt: INFO

@@ -1,6 +1,4 @@
 server:
-  # Cada proyecto de este lab tiene su puerto, así que `practica` (8081) y
-  # `solucion` (8082) pueden correr a la vez sin pisarse.
   port: 8081
 
 spring:

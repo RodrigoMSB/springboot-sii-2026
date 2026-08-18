@@ -1,0 +1,5 @@
+CREATE TABLE tramite (
+    id   BIGSERIAL PRIMARY KEY,
+    tipo VARCHAR(40) NOT NULL,
+    rut  VARCHAR(20) NOT NULL
+);

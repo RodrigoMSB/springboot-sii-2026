@@ -1,0 +1,32 @@
+package cl.dgt.observabilidad.controllers;
+
+import cl.dgt.observabilidad.observabilidad.MotorDePostgres;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/simulador")
+public class SimuladorController {
+
+    private final MotorDePostgres base;
+
+    public SimuladorController(MotorDePostgres base) {
+        this.base = base;
+    }
+
+    @PostMapping("/base-caida")
+    public Map<String, Object> caer() throws IOException {
+        base.caer();
+        return Map.of("base", "apagada");
+    }
+
+    @PostMapping("/base-sana")
+    public Map<String, Object> levantar() throws IOException {
+        base.levantar();
+        return Map.of("base", "arriba");
+    }
+}
