@@ -1,4 +1,4 @@
-# Lab 3b · JPA
+# Lab 04 · JPA
 
 Guardar objetos Java en una base de datos y recuperarlos, sin escribir SQL.
 

@@ -1,4 +1,4 @@
-# Pasos · Lab 3b · JPA
+# Pasos · Lab 04 · JPA
 
 Diez pasos. Se construyen en `practica/`, en vivo, uno a la vez. Después de cada paso se corre
 el programa y se mira la consola antes de seguir.
