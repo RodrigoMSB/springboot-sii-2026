@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-035 — vuelve el proyecto final: ya hay con qué evaluar (tag `material-v1.1.0`).*
+*Última actualización: SPEC-FIX-07 — el puerto ocupado ya se explica solo (tag `material-v1.1.2`).*
 
 ---
 
@@ -290,6 +290,23 @@ cierre nocturno corre una vez con el candado y dos sin él.
 divergencias a **cero**.
 
 Informe en `docs/specs/informes/INFORME-SPEC-025.md`.
+
+## 1.g · Cuando el puerto está ocupado, el lab lo dice (SPEC-FIX-07)
+
+Los seis labs con base de datos levantan su PostgreSQL en un puerto fijo. Si quedaba uno vivo de
+una corrida anterior —cerrar la terminal de golpe basta—, el siguiente arranque moría con
+`Failed to start bean 'webServerStartStop'` o con `could not lock .datos-pg/epg-lock` debajo de
+cinco excepciones anidadas. **Ninguno de los dos nombra el puerto ni Postgres**, así que el alumno
+concluye que rompió su código y se pone a depurar donde no hay nada roto.
+
+Ahora, antes de arrancar el motor, se sondea el puerto. Si está tomado, el programa termina
+imprimiendo el puerto, la causa probable, **que no es un error de su código**, y el comando exacto
+para cerrarlo — sólo el de su sistema operativo, elegido con `os.name`.
+
+Está en los 20 proyectos con PostgreSQL embebido: los labs 04, 05, 06, 07, 09 y 11 en sus tres
+carpetas, `proyecto-final/base` y la solución de referencia.
+
+Informe en `docs/specs/informes/INFORME-SPEC-FIX-07.md`.
 
 ## 2 · Qué falta
 
