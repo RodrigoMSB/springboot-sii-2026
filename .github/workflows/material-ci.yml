@@ -10,11 +10,17 @@
 #   2. `siembra` — toda TEORIA.md de un lab con sucesor siembra el módulo N+1
 #      (P-18 del ADN). Detección por PATRÓN, jamás por título literal: los labs
 #      09-12 del curso de Cypress usan otro encabezado y son correctos.
-#   3. `app` — el tronco compila, sus 7 guardianes vigilan y sus 7 mordidas se
-#      certifican (SPEC-005).
+#   3. `labs` — los catorce proyectos del arco compilan OFFLINE, con la maleta
+#      del repositorio y el mismo `./mvnw` que usa el alumno (SPEC-033).
+#
+#  SPEC-033: se retiraron los jobs `app`, `lab14`, `grpc` y `deriva`. Los cuatro
+#  verificaban el arco antiguo (el tronco `dgt-tramites-api`, el sistema de
+#  microservicios, la demo gRPC y la cadena de derivación), que salió del
+#  repositorio. No se apagaron: se quedaron sin objeto. En su lugar nace `labs`,
+#  que verifica el material vivo.
 #
 #  ¿Por qué `pull_request` NO lleva filtro de rutas? (SPEC-FIX-01 §2)
-#  Porque `main` exige estos tres checks para mergear. Con filtro, un PR que solo
+#  Porque `main` exige estos checks para mergear. Con filtro, un PR que solo
 #  tocara `docs/specs/` no dispararía ninguno y quedaría colgado para siempre
 #  esperando un veredicto que nadie iba a emitir. El filtro era una trampa armada.
 #  Se descartaron las alternativas: un job centinela no-op protege menos, y el
@@ -33,7 +39,7 @@ on:
       - 'docs/temario/**'
       - 'tools/**'
       - 'labs/**'
-      - 'dgt-tramites-api/**'
+      - 'repo-maven/**'
       - '.github/workflows/material-ci.yml'
   pull_request:            # sin `paths`: ver la cabecera. Ningún PR queda colgado.
   workflow_dispatch:       # para poder exigirle el verde a mano
@@ -163,205 +169,107 @@ jobs:
             exit 1
           fi
           echo "[OK] Todos los labs con sucesor siembran el módulo N+1."
-
   # ---------------------------------------------------------------------------
-  #  La app canónica: compila, sus 7 guardianes vigilan y sus 7 mordidas se
-  #  certifican.
+  #  labs · los catorce proyectos del arco compilan, offline y con la maleta.
   #
-  #  SOLO ubuntu-latest, y la exclusión de Windows va escrita aquí para que nadie
-  #  la lea como un olvido ni la "arregle" rompiendo el CI:
+  #  Este job NACE en la SPEC-033, y ocupa el sitio que dejaron `app`, `lab14`,
+  #  `grpc` y `deriva`. Aquellos verificaban el arco antiguo, que ya no está.
   #
-  #    `ContratoRn03IT` levanta PostgreSQL con Testcontainers, que necesita un
-  #    demonio Docker con contenedores LINUX. Los runners `windows-latest`
-  #    hospedados no lo ofrecen. Es la misma exclusión —y la misma razón— que el
-  #    Lab 11 del curso de Cypress documenta en su matriz (P-12 del ADN).
+  #  Verifica lo que el alumno de verdad ejecuta: los 28 proyectos Maven de los
+  #  catorce labs (`practica/` y `solucion/`), con el MISMO shim `./mvnw` que
+  #  usa él — o sea con `--offline` forzado y contra el `repo-maven/` del
+  #  repositorio.
   #
-  #  El alumno Windows sí corre esto: su Docker Desktop con backend WSL2 levanta
-  #  contenedores Linux. Lo que no existe es el runner, no el escenario.
-  #  Si algún día hay tests sin Docker que valga la pena correr en Windows, se
-  #  parte el job en dos: `app-sin-docker` (matriz de SO) y `app-it` (solo ubuntu).
+  #  Que sea offline no es un detalle de eficiencia: es EL invariante del
+  #  material (D-022-3). Si alguien añade una dependencia y olvida capturarla en
+  #  `repo-maven/`, en su máquina compilará —tiene caché y tiene red— y en la
+  #  sala del SII no. Este job es lo único que lo caza antes.
+  #
+  #  No arranca las aplicaciones ni corre las demos: eso necesita puertos,
+  #  PostgreSQL embebido y esperas, y lo verifica el ejecutor a mano contra la
+  #  consola, que es donde el material vive. Aquí se comprueba lo que una
+  #  máquina puede comprobar sin interpretar: que todo compila y que nadie
+  #  necesitó la red.
   # ---------------------------------------------------------------------------
-  app:
-    name: app · dgt-tramites-api (verify)
+  labs:
+    name: labs · los 14 proyectos compilan offline
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: dgt-tramites-api
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
-
-      - name: ./mvnw verify
-        run: ./mvnw -B verify
-
-      - name: Las 7 reglas y las 7 mordidas corrieron
-        run: |
-          set -euo pipefail
-          # Un verde no basta: hay que ver que la suite de arquitectura EXISTIÓ.
-          # Un `verify` que no ejecuta a los guardianes es un gate decorativo (P-05).
-          for suite in ArquitecturaTest MordidaDeLosGuardianesTest; do
-            informe="target/surefire-reports/cl.dgt.tramites.arquitectura.$suite.txt"
-            [ -f "$informe" ] || { echo "[ERROR] No se ejecutó $suite"; exit 1; }
-            cat "$informe" | sed -n '4p'
-            grep -q "Failures: 0, Errors: 0" "$informe" || { echo "[ERROR] $suite no está limpio"; exit 1; }
-          done
-          echo "[OK] Los 7 guardianes vigilan y los 7 muerden."
-
-  # ---------------------------------------------------------------------------
-  #  El sistema del Lab 14: cinco proyectos Maven que no son la app canónica.
-  #
-  #  El job `app` compila el tronco. Este compila lo OTRO: dgt-registro,
-  #  dgt-config, dgt-portal, dgt-contribuyentes y dgt-tramites, que viven en
-  #  labs/lab-14-*/sistema/ con su propio agregador y su propio release train de
-  #  Spring Cloud. Sin este job, el día que ese tren o Boot cambien de versión,
-  #  el Lab 14 se rompería en la máquina del alumno y en ningún sitio antes.
-  #
-  #  ---------------------------------------------------------------------------
-  #  LO QUE ESTE JOB *NO* HACE, Y POR QUÉ — léelo antes de "arreglarlo"
-  #  ---------------------------------------------------------------------------
-  #  NO levanta las seis piezas en contenedores. La exclusión es deliberada:
-  #
-  #   · Son seis JVM más PostgreSQL. Medido en la construcción de la SPEC-020:
-  #     1,54 GiB de RAM y 56 s de arranque en un portátil con caché caliente. En
-  #     un runner hospedado, sin caché de imágenes, es varias veces eso.
-  #   · Y sobre todo: un E2E de seis contenedores mide TIEMPOS de propagación
-  #     entre cachés (Eureka + LoadBalancer). Eso, en un runner compartido y con
-  #     la CPU en manos de otro, es una fábrica de fallos intermitentes. Un check
-  #     que parpadea se acaba ignorando, y un check ignorado protege menos que
-  #     ninguno.
-  #
-  #  Así que aquí se certifica lo DETERMINISTA —que compila, que los tests pasan,
-  #  que el gate muerde, que no hay dependencias muertas— y el sistema en vivo se
-  #  verifica a mano con `bin/start-lab.sh` y sus banderas, que es además donde el
-  #  alumno lo va a ver. La evidencia de esa verificación está en el reporte de la
-  #  SPEC-020, con sus milisegundos citados.
-  #
-  #  Si algún día hace falta el E2E en CI: job aparte, `continue-on-error: false`
-  #  pero fuera de los checks requeridos, y con reintento. Nunca metido aquí.
-  # ---------------------------------------------------------------------------
-  lab14:
-    name: lab14 · el sistema de microservicios (compila y su gate muerde)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: labs/lab-14-la-dgt-se-parte-en-pedazos/sistema
     steps:
       - uses: actions/checkout@v4
 
       - name: Guarda de activación
         id: guarda
         shell: bash
-        working-directory: .
         run: |
           set -euo pipefail
-          if [ -f labs/lab-14-la-dgt-se-parte-en-pedazos/sistema/pom.xml ]; then
-            echo "hay=si" >> "$GITHUB_OUTPUT"
-          else
-            echo "[INFO] El Lab 14 aún no existe: el job queda armado, no activo."
+          if [ -z "$(find labs -maxdepth 1 -mindepth 1 -type d -name 'lab-*' 2>/dev/null)" ]; then
+            echo "[INFO] Sin labs: el job queda armado, no activo."
             echo "hay=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=si" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/setup-java@v4
-        if: steps.guarda.outputs.hay == 'si'
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
-
-      - name: Los cinco proyectos compilan sobre Boot 4.1.0 + Spring Cloud 2025.1.2
-        if: steps.guarda.outputs.hay == 'si'
-        run: ./mvnw -B -DskipTests package
-
-      - name: La solución PASA el criterio de aceptación
-        if: steps.guarda.outputs.hay == 'si'
-        run: ./mvnw -B test -pl dgt-tramites -Ddgt.config-repo=../config-repo-solucion
-
-      - name: El starter FALLA — si no, el enunciado no tiene ejercicio
+      - name: Los proyectos compilan con el shim, offline
         if: steps.guarda.outputs.hay == 'si'
         shell: bash
         run: |
           set -uo pipefail
-          # El paso canónico de la SPEC-000 §7.6, aquí arriba: un starter que ya
-          # aprueba es un enunciado sin hueco. Se comprueba que el validador diga
-          # que NO, y se falla el job si dice que sí.
-          if ./mvnw -B -q test -pl dgt-tramites -Ddgt.config-repo=../config-repo; then
-            echo "[ERROR] El starter APRUEBA el criterio de aceptación."
-            echo "        Alguien dejó los umbrales puestos en config-repo/dgt-tramites.yml."
-            echo "        Sin hueco no hay laboratorio."
+
+          # El shim ensambla el JDK 25 del repositorio y usa el Maven commiteado.
+          # No se instala Java con `actions/setup-java` A PROPÓSITO: se quiere
+          # verificar la maleta tal como la recibe el alumno, no una máquina
+          # bien equipada.
+
+          FALLOS=0
+          TOTAL=0
+          # Se excluye `instructor/`: NO es un proyecto ejecutable (no tiene
+          # `mvnw` ni `.mvn`) y además está en el .gitignore, así que en el
+          # runner ni siquiera existe. Pero SÍ existe en la máquina de quien
+          # prepara el material, y sin esta exclusión este mismo bucle daría
+          # verde en el CI y rojo en su portátil — la peor combinación posible.
+          for POM in $(find labs -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
+              PROY="$(dirname "$POM")"
+              TOTAL=$((TOTAL + 1))
+              printf '[..] %s\n' "$PROY"
+              if ( cd "$PROY" && ./mvnw -q -B compile > /tmp/salida.txt 2>&1 ); then
+                  printf '[OK] %s\n' "$PROY"
+              else
+                  printf '[ERROR] %s NO compila\n' "$PROY"
+                  tail -25 /tmp/salida.txt | sed 's/^/        /'
+                  FALLOS=$((FALLOS + 1))
+              fi
+          done
+
+          echo
+          echo "[INFO] $TOTAL proyectos Maven en labs/"
+          if [ "$FALLOS" -gt 0 ]; then
+            echo "[ERROR] $FALLOS proyecto(s) no compilan."
             exit 1
           fi
-          echo "[OK] El starter falla, como debe: el hueco es real y el gate muerde."
+          echo "[OK] Los $TOTAL proyectos compilan."
 
-      - name: Ninguna dependencia arrastra Hystrix, Ribbon ni Zuul
+      - name: Nadie salió a la red
         if: steps.guarda.outputs.hay == 'si'
         shell: bash
         run: |
           set -euo pipefail
-          # De todo el stack Netflix histórico solo Eureka sigue vivo en el tren
-          # actual. Que reaparezca cualquiera de los otros significa que alguien
-          # copió un tutorial caducado — y entonces media teoría de este lab deja
-          # de ser cierta.
-          ./mvnw -B -q dependency:tree -DoutputFile=/tmp/arbol.txt -DappendOutput=true
-          # `-q`, no `-c`: con `-c` el propio grep imprime el número de coincidencias
-          # ("0") en la salida del job, y un cero suelto en un log verde despista más
-          # de lo que informa.
-          if grep -qiE 'hystrix|:ribbon|zuul|archaius' /tmp/arbol.txt; then
-            echo "[ERROR] El árbol de dependencias arrastra artefactos muertos:"
-            grep -inE 'hystrix|:ribbon|zuul|archaius' /tmp/arbol.txt
+
+          # La prueba fuerte del offline, y no depende de leer logs: si algún
+          # proyecto hubiera necesitado bajar algo, habría aparecido en
+          # `repo-maven/` — que está versionado— o el paso anterior habría
+          # muerto. Un `git status` sucio aquí significa dependencia sin
+          # capturar.
+          SUCIO="$(git status --porcelain repo-maven | wc -l | tr -d ' ')"
+          echo "[INFO] archivos nuevos en repo-maven tras compilar: $SUCIO"
+          if [ "$SUCIO" != "0" ]; then
+            echo "[ERROR] Alguien necesitó la red: hay dependencias sin capturar."
+            git status --porcelain repo-maven | head -30
+            echo
+            echo "        Se capturan ejecutando el proyecto con DGT_ONLINE=1 y"
+            echo "        commiteando lo que aparezca en repo-maven/."
             exit 1
           fi
-          echo "[OK] Sin Hystrix, Ribbon, Zuul ni Archaius."
-
-  # ---------------------------------------------------------------------------
-  #  La demo de gRPC del Lab 08 (M10 del temario: «HTTP Declarativo Y gRPC»).
-  #
-  #  Es una demo del relator, no material del alumno: no tiene TODOs y no la mira
-  #  ningún validador. Precisamente por eso necesita CI — nadie la corre en el día
-  #  a día, así que se pudriría en silencio y el relator lo descubriría delante de
-  #  la sala. Un `./mvnw test` aquí cuesta un minuto y lo hace imposible.
-  #
-  #  Genera stubs con `protoc` (binario nativo que descarga el plugin), así que es
-  #  el único job que depende de una herramienta fuera del mundo Java. Si algún día
-  #  esa descarga se vuelve inestable en el runner, el arreglo NO es borrar el job:
-  #  es cachear el binario.
-  # ---------------------------------------------------------------------------
-  grpc:
-    name: grpc · la demo del Lab 08 compila y responde
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: labs/lab-08-diplomacia-con-tesoreria/demo-grpc
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Guarda de activación
-        id: guarda
-        shell: bash
-        working-directory: .
-        run: |
-          set -euo pipefail
-          if [ -f labs/lab-08-diplomacia-con-tesoreria/demo-grpc/pom.xml ]; then
-            echo "hay=si" >> "$GITHUB_OUTPUT"
-          else
-            echo "[INFO] La demo de gRPC aún no existe: el job queda armado, no activo."
-            echo "hay=no" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: actions/setup-java@v4
-        if: steps.guarda.outputs.hay == 'si'
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
-
-      - name: Los stubs se generan y el servicio responde a una llamada real
-        if: steps.guarda.outputs.hay == 'si'
-        run: ./mvnw -B test
+          echo "[OK] 0 descargas: la maleta está completa."
 
   # ---------------------------------------------------------------------------
   #  El andamiaje de los labs: los scripts que el ALUMNO ejecuta.
@@ -473,38 +381,3 @@ jobs:
             exit 1
           fi
           echo "[OK] Los scripts tienen finales LF."
-
-  # ---------------------------------------------------------------------------
-  #  Deriva: que los labs no se desincronicen de su base EN SILENCIO.
-  #
-  #  Un `starter/`/`solucion/` se deriva de una base (el tronco, o la solución del
-  #  lab anterior). Todo archivo compartido debe ser idéntico, salvo los que el lab
-  #  cambia a propósito (el crimen, los huecos) — y esos están DECLARADOS en un
-  #  allowlist `derivacion-*.txt`, no son excepciones ad-hoc del diff. Resuelve el
-  #  hallazgo 1 de la SPEC-007: el día que el tronco cambie, esto se pone rojo.
-  #
-  #  No compila nada: solo compara bytes. Por eso no instala Java.
-  # ---------------------------------------------------------------------------
-  deriva:
-    name: deriva · labs en sincronía con su base
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Guarda de activación
-        id: guarda
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ ! -f labs/lib/verificar-toda-derivacion.sh ]; then
-            echo "[INFO] Sin verificador de derivación aún: el job queda armado, no activo."
-            echo "hay=no" >> "$GITHUB_OUTPUT"
-          else
-            echo "hay=si" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Verificar la cadena de derivación
-        if: steps.guarda.outputs.hay == 'si'
-        shell: bash
-        run: ./labs/lib/verificar-toda-derivacion.sh
-

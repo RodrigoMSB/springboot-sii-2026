@@ -1,4 +1,0 @@
-2d503f0170fee0e2ba4726439eac94eb41786c481ce8f26534398f4fcce10fc3  src/test/java/cl/dgt/tramites/enunciado/BaseResilienciaIT.java
-68c84e786e4188d3b6fcf877593ffd2ab8234bce8b4679076bb189c8aafd7aff  src/test/java/cl/dgt/tramites/enunciado/E1_TimeoutIT.java
-fbacdfff9cd1b889c573796129827704d91b9be963ed4e1e1b64643b8b9c63bd  src/test/java/cl/dgt/tramites/enunciado/E2_DegradacionEleganteIT.java
-3ef8865c093cdf07262d22db30368c708b9c0fbb04d2463c2553b333f7eee387  src/test/java/cl/dgt/tramites/enunciado/E4_EndurecimientoIT.java

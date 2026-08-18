@@ -1,8 +1,0 @@
-# starter/ L9 vs su solucion/. El sistema MUDO y los huecos:
-#   · application.yml -> logging en texto plano (sin structured JSON): TODO_2.
-#   · AdjuntoService  -> ingenuo: cree el Content-Type declarado, no sanea el nombre: TODO_4.
-# El starter NO trae FiltroDeTraza ni AspectoDeAuditoria (son TODO_1 y TODO_3): al no existir en el
-# starter, no se comparan. Y trae de mas un RegistroIngenuo (el log plano del practicante), que el
-# alumno borra al resolver: un archivo solo-starter no dispara la deriva.
-src/main/resources/application.yml
-src/main/java/cl/dgt/tramites/application/AdjuntoService.java

@@ -1,7 +1,0 @@
-%% Un JWT: tres partes en base64url. Solo la firma no se puede falsificar sin el secreto.
-flowchart LR
-    H["HEADER<br/>alg: HS256"] --> P["PAYLOAD (claims)<br/>sub, exp, roles"]
-    P --> S["SIGNATURE<br/>HMAC(header.payload, secreto)"]
-    S --> V{"El servidor RECALCULA<br/>la firma y compara"}
-    V -->|"cuadra"| OK["200 · identidad probada"]
-    V -->|"no cuadra<br/>(payload editado)"| NO["401 · una opinión, no una credencial"]

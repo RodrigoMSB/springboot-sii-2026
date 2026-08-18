@@ -1,5 +1,0 @@
-2c87dbf63493f54bf5fa01382dfbf5e3544c63bbb3e548f7280d167d630212f5  src/test/java/cl/dgt/tramites/enunciado/BaseAmortiguadoresIT.java
-8f87586cec0a8e3653ed2f27f0827914963c35246ffea53bfb44f76314a0ee35  src/test/java/cl/dgt/tramites/enunciado/E1_ElAvisoNoSePierdeIT.java
-47814006cee51b42e3ad74a0cf7638d770b51629f94a0fb3d68b9d29c6b69aaf  src/test/java/cl/dgt/tramites/enunciado/E2_ConsumidorIdempotenteIT.java
-8c5f9661545e7f58a6ce23996037962f5dbc26e5b01f56a2a3d0044ab111bb0f  src/test/java/cl/dgt/tramites/enunciado/E3_LaColaDeLosMuertosIT.java
-c6aaf0be495ebb6345fcc0dbe6361c23896838bfcfeab71ead4e2aa281499e4e  src/test/java/cl/dgt/tramites/enunciado/E4_CircuitBreakerIT.java
