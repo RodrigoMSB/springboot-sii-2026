@@ -10,8 +10,9 @@
 #   2. `siembra` — toda TEORIA.md de un lab con sucesor siembra el módulo N+1
 #      (P-18 del ADN). Detección por PATRÓN, jamás por título literal: los labs
 #      09-12 del curso de Cypress usan otro encabezado y son correctos.
-#   3. `labs` — los catorce proyectos del arco compilan OFFLINE, con la maleta
-#      del repositorio y el mismo `./mvnw` que usa el alumno (SPEC-033).
+#   3. `labs` — los 28 proyectos del arco compilan con el `./mvnw` del curso y
+#      `--offline` contra `repo-maven/`: si alguien añade una dependencia y
+#      olvida capturarla, este job es lo único que lo caza (SPEC-033).
 #
 #  SPEC-033: se retiraron los jobs `app`, `lab14`, `grpc` y `deriva`. Los cuatro
 #  verificaban el arco antiguo (el tronco `dgt-tramites-api`, el sistema de
@@ -197,6 +198,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ---------------------------------------------------------------------
+      #  SÍ se instala Java, y hay que explicar por qué, porque contradice al
+      #  resto del material:
+      #
+      #  El JDK de la maleta viaja SOLO para macos-aarch64 y windows-x64 — las
+      #  dos plataformas reales del curso: el Mac donde se prepara y los Windows
+      #  de la sala del SII. No hay JDK para Linux a propósito: serían 200 MB en
+      #  el clon de cada alumno para una plataforma que ningún alumno usa.
+      #
+      #  El runner es Linux, así que el shim no encuentra JDK embebido y cae al
+      #  Java del sistema, que no es 25: `release version 25 not supported`.
+      #
+      #  Lo que este job verifica, entonces, es LA MITAD QUE SÍ APLICA en Linux:
+      #  que las DEPENDENCIAS estén completas y nadie necesite la red. El
+      #  ensamblado del JDK desde los trozos se verifica en las dos plataformas
+      #  de verdad, a mano, por quien prepara el material.
+      # ---------------------------------------------------------------------
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
       - name: Guarda de activación
         id: guarda
         shell: bash
@@ -215,10 +238,8 @@ jobs:
         run: |
           set -uo pipefail
 
-          # El shim ensambla el JDK 25 del repositorio y usa el Maven commiteado.
-          # No se instala Java con `actions/setup-java` A PROPÓSITO: se quiere
-          # verificar la maleta tal como la recibe el alumno, no una máquina
-          # bien equipada.
+          # El shim usa el Maven commiteado y `--offline` contra `repo-maven/`.
+          # El JDK lo pone el runner (ver la nota de arriba).
 
           FALLOS=0
           TOTAL=0
