@@ -263,7 +263,36 @@ org/jetbrains/kotlin/kotlin-stdlib (transitivo)      1.9 MB
 org/jetbrains/annotations · commons-io               620 KB
 ```
 
+Y el **plugin de Jib con sus dependencias**: 129 archivos, **17,7 MB** (Guava, las librerías de
+Google Cloud Tools, HttpComponents y unas piezas internas de Maven). Sin ellos, un clon nuevo no
+podría construir la imagen: faltaría el plugin, y `--offline` abortaría antes de llegar a mirar la
+caché de la imagen base. Se detectaron al revisar `git status` antes de cerrar; **estaban en el
+disco de trabajo y no versionados**, que es la forma clásica de que algo «funcione aquí» y no allá.
+
 La captura se hizo **compilando el proyecto real**, no con `dependency:go-offline` — ver §6.2.
+
+**La prueba de que no falta nada**, con `target/` borrado en los ocho proyectos y compilando los
+cuatro labs con el shim (que fuerza `--offline`):
+
+```
+  lab-08-seguridad     practica  OK        lab-08-seguridad     solucion  OK
+  lab-09-resiliencia   practica  OK        lab-09-resiliencia   solucion  OK
+  lab-11-tareas        practica  OK        lab-11-tareas        solucion  OK
+  lab-12-empaquetado   practica  OK        lab-12-empaquetado   solucion  OK
+
+archivos nuevos en repo-maven tras compilar los ocho proyectos: 0
+```
+
+Y lo mismo para la imagen del Lab 12, reconstruida desde cero:
+
+```
+[INFO] Built image tarball at .../target/jib-image.tar
+[INFO] BUILD SUCCESS
+archivos nuevos tras la construcción: 0
+```
+
+**Cero archivos nuevos** es la prueba fuerte: todo lo que estos labs necesitan está versionado. Si
+faltara algo, o habría aparecido ahí o el build habría muerto.
 
 ---
 
