@@ -9,7 +9,7 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 
 ### El arco vigente · construcción guiada
 
-Ocho laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
+Nueve laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
 misma forma: `README.md`, `PASOS.md` (el guion de la sesión), `practica/` donde se trabaja y
 `solucion/` al lado para comparar. Se corren con `./mvnw spring-boot:run` y **no necesitan
 Docker ni instalar nada**: Java, Maven y —donde hace falta— PostgreSQL viajan dentro del
@@ -25,6 +25,27 @@ repositorio.
 | [`lab-04-relaciones`](labs/lab-04-relaciones/) | Relaciones JPA | LAZY dispara 1 SELECT; EAGER, 4. Y la `LazyInitializationException` |
 | [`lab-05-rendimiento`](labs/lab-05-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
 | [`lab-06-concurrencia`](labs/lab-06-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |
+| [`lab-07-testing`](labs/lab-07-testing/) | Testing | Un test sirve el día que se pone **rojo**. JUnit, Mockito, `@WebMvcTest` y cuándo NO levantar Spring |
+
+#### La tercera carpeta: `instructor/`
+
+Desde el `lab-07-testing` (SPEC-031) cada lab del arco vigente puede tener una **tercera
+carpeta**, y **no está en el repositorio**:
+
+| | |
+|---|---|
+| `practica/` | Donde trabaja el alumno. **Sin documentación**: la firma, una línea imperativa y `// escribe aquí` |
+| `solucion/` | El proyecto terminado, con comentarios **breves** donde algo no es evidente |
+| `instructor/` | Los mismos archivos de `solucion/`, explicados **línea por línea**. **No viaja al repo** |
+
+`instructor/` **no es un proyecto**: no tiene `mvnw`, ni `.mvn`, ni se compila. Son los archivos
+para leer mientras se enseña — desde por qué está cada `import` hasta cada dependencia del `pom`.
+
+Está excluida en el [`.gitignore`](.gitignore) de la raíz (`labs/*/instructor/`) por una razón
+pedagógica, no técnica: **es la chuleta de quien dicta**. Si viajara en el clon, el alumno la
+tendría delante y leería la explicación en vez de escuchar al instructor — que es exactamente lo
+que `practica/` sin documentación busca evitar. Si esta carpeta no está en tu clon, no falta
+nada: la genera quien prepara la sesión, a partir de `solucion/`.
 
 ### Del 07 en adelante · el arco antiguo
 
@@ -32,6 +53,11 @@ Los laboratorios [`lab-07-el-portero`](labs/lab-07-el-portero/) a
 [`lab-14-la-dgt-se-parte-en-pedazos`](labs/lab-14-la-dgt-se-parte-en-pedazos/) siguen con el
 formato anterior —enunciado con TODOs, `bin/` de validación, ArchUnit, Docker— y cubren
 seguridad, resiliencia, observabilidad, mensajería, el examen de egreso y microservicios.
+
+> ⚠️ **Hay dos labs con el número 07.** `lab-07-testing` es del arco vigente y
+> `lab-07-el-portero` del antiguo; conviven en `labs/` y no se estorban —son proyectos
+> independientes—, pero la numeración definitiva del arco nuevo está pendiente de la SPEC de
+> renumeración. Se citan siempre por su nombre completo, nunca como «el Lab 07».
 
 > ⚠️ **Pendiente de decisión del PO.** La SPEC-030 retiró el arco antiguo hasta el Lab 06 y
 > dejó el arco nuevo en su lugar. Qué se hace con los labs 07 al 14 —migrarlos al formato

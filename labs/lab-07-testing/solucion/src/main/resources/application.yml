@@ -1,0 +1,13 @@
+server:
+  # `practica` en el 8093 y `solucion` en el 8094: pueden correr a la vez.
+  port: 8094
+
+spring:
+  application:
+    name: lab07-testing-solucion
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO

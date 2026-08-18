@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-025 — los labs 08 a 11 dejan Docker (tag `material-v0.6.0`).*
+*Última actualización: SPEC-031 — nace el `lab-07-testing` y la tercera carpeta `instructor/` (tag `material-v0.7.0`).*
 
 ---
 
@@ -12,7 +12,7 @@
 - **La aplicación del curso**: `dgt-tramites-api/`. Es el backend de la DGT — lo que hay
   detrás del botón. Arranca, se conecta a su base de datos y responde. Tiene siete reglas
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
-- **EL ARCO VIGENTE — ocho labs de construcción guiada (00 a 06).** El alumno construye en
+- **EL ARCO VIGENTE — nueve labs de construcción guiada (00 a 06, más el de testing).** El alumno construye en
   vivo junto al instructor: `README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni
   validadores, y se corren con `./mvnw spring-boot:run` sin Docker ni instalar nada. Nacieron
   porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring Boot** y
@@ -31,8 +31,28 @@
     **201 consultas contra 1**, con `JOIN FETCH`, `@EntityGraph` o proyección.
   - `labs/lab-06-concurrencia/` — 20 emisiones simultáneas del mismo folio. El número: sin
     candado salen 9 o 10 números distintos de 21, con repetidos; con candado, **21 de 21**.
+  - `labs/lab-07-testing/` — **el lab de testing**, y el hueco más grande que dejó la encuesta:
+    12 de los 18 alumnos nunca escribió un test automatizado. El proyecto llega entero y andando
+    y sin un solo test; se escriben nueve en seis pasos —JUnit, `assertThrows`, Mockito,
+    `@WebMvcTest` con `MockMvc`, y un `@SpringBootTest`—. El momento del lab es el paso 2: se
+    rompe el IVA a propósito y sale `expected: <5938> but was: <5489>`. El número del cierre:
+    **de 0,03 s sin Spring a 0,7 s con Spring, veinte veces**. Sin base de datos, a propósito.
+    Estrena la **tercera carpeta**, `instructor/` (ver abajo).
 
-- **Lab 07** (`labs/lab-07-el-portero/`): la seguridad. La API se cierra por defecto (Spring
+- **La estructura de tres carpetas (SPEC-031).** Rige desde el `lab-07-testing`:
+  `practica/` **sin documentación** —la firma, una línea imperativa y `// escribe aquí`—,
+  `solucion/` con comentarios **breves**, e `instructor/` con **todo explicado línea por línea**.
+  La tercera **no viaja al repositorio**: está en el `.gitignore` de la raíz
+  (`labs/*/instructor/`) porque es la chuleta de quien dicta — si el alumno la tuviera en el
+  clon, leería la explicación en vez de escuchar. No es un proyecto: sin `mvnw`, sin `.mvn`, sin
+  `target`. La generan de nuevo, a partir de `solucion/`, quien prepare la sesión.
+  **Los labs 00 a 06 todavía NO están migrados** a esta forma: su `practica/` conserva los
+  bloques explicativos largos. La migración es una SPEC de reempaquetado pendiente del PO.
+
+- **Lab 07 del arco antiguo** (`labs/lab-07-el-portero/`) — ⚠️ **choca de número con el
+  `lab-07-testing` del arco nuevo**; conviven sin estorbarse (son proyectos independientes) y la
+  renumeración del arco nuevo sigue pendiente. Se citan por nombre completo, nunca como «el Lab
+  07». Su contenido: la seguridad. La API se cierra por defecto (Spring
   Security 7), hay login real contra la tabla de usuarios (BCrypt de la semilla), el JWT se
   valida por su firma (no se cree — un token adulterado da 401), y la emisión de folios exige
   el rol FUNCIONARIO (403 para el resto). El secreto de firma vive fuera del repo. Es el primer
