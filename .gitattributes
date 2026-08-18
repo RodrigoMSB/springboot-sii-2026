@@ -53,3 +53,10 @@ tools/maven/**  binary
 # Los trozos del JDK: binarios explicitos. Si Git les tocara un byte —un CRLF,
 # lo que sea— el ensamblado dejaria de cuadrar con su sha256 y el shim abortaria.
 tools/jdk/**    binary
+
+# La caché de la imagen base de Jib (SPEC-032, Lab 12). Son capas de una imagen
+# OCI: blobs comprimidos SIN extensión, con nombre igual a su digest sha256. El
+# `* text=auto` de arriba los destrozaría, y Jib rechazaría la caché porque el
+# contenido ya no correspondería a su digest — que es justo el mecanismo por el
+# que una caché de contenedores se puede confiar.
+tools/jib-base/**  binary

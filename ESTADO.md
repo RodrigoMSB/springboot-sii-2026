@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-031 — nace el `lab-07-testing` y la tercera carpeta `instructor/` (tag `material-v0.7.0`).*
+*Última actualización: SPEC-032 — nacen los labs 08, 09, 11 y 12; el arco nuevo llega hasta el empaquetado (tag `material-v0.8.0`).*
 
 ---
 
@@ -12,7 +12,7 @@
 - **La aplicación del curso**: `dgt-tramites-api/`. Es el backend de la DGT — lo que hay
   detrás del botón. Arranca, se conecta a su base de datos y responde. Tiene siete reglas
   de arquitectura que la vigilan, y cada regla trae una prueba de que muerde.
-- **EL ARCO VIGENTE — nueve labs de construcción guiada (00 a 06, más el de testing).** El alumno construye en
+- **EL ARCO VIGENTE — trece labs de construcción guiada (00 a 12, con el hueco del 10).** El alumno construye en
   vivo junto al instructor: `README.md` + `PASOS.md` + `practica/` + `solucion/`, sin tests ni
   validadores, y se corren con `./mvnw spring-boot:run` sin Docker ni instalar nada. Nacieron
   porque la encuesta a los 18 alumnos dijo que **17 no saben explicar qué hace Spring Boot** y
@@ -38,6 +38,34 @@
     rompe el IVA a propósito y sale `expected: <5938> but was: <5489>`. El número del cierre:
     **de 0,03 s sin Spring a 0,7 s con Spring, veinte veces**. Sin base de datos, a propósito.
     Estrena la **tercera carpeta**, `instructor/` (ver abajo).
+
+  - `labs/lab-08-seguridad/` — la API abierta se cierra. El default de Spring Security (todo 401
+    sin escribir una línea), la cadena de filtros, **BCrypt con sal** —dos hashes distintos para la
+    misma clave, mirados en la tabla con DBeaver—, el JWT que se decodifica en vivo para ver que
+    **cualquiera lo lee**, el filtro que lo valida, y la matriz final: **401 sin token, 403 con
+    token y sin rol**. Usuarios en PostgreSQL embebido; productos en memoria.
+  - `labs/lab-09-resiliencia/` — el vecino que no responde. Tesorería es WireMock dentro del mismo
+    proceso, con mando a distancia. Los números: **30,01 s** con el cliente ingenuo, 2,04 s con
+    timeout, **6,44 s con tres intentos** (el reintento empeora la caída), y **0,002 s con cero
+    llamadas HTTP** cuando el circuito abre. Resilience4j núcleo declarado a mano, con las
+    transiciones CLOSED→OPEN→HALF_OPEN→CLOSED en consola.
+  - **falta el `lab-10-observabilidad`** — hueco conocido: el nombre lo ocupa el lab del arco
+    antiguo y el PO decidió no inventar uno provisional. Se construye en la SPEC de reempaquetado
+    (SPEC-032 §10.1).
+  - `labs/lab-11-tareas/` — `fixedDelay` frente a `fixedRate`, el cron de **seis** campos con zona
+    explícita, `@Async` (**3,03 s → 0,004 s**) con sus tres trampas, y los hilos virtuales en una
+    línea de YAML. El paso 5 levanta **dos instancias** y el cierre nocturno se ejecuta **dos
+    veces en el mismo segundo**; la solución (candado distribuido) se nombra y no se implementa.
+  - `labs/lab-12-empaquetado/` — el cierre del curso. El fat jar (20,9 MB) y `java -jar`, el jar
+    por capas, veinte minutos de **qué es un contenedor** sin teclear nada, una **imagen OCI de
+    138,9 MB construida con Jib sin Docker y sin red**, abierta con `tar` para contar sus diez
+    capas, y la misma imagen en tres entornos sin recompilar.
+
+- **La imagen base de Jib viaja en el repositorio (SPEC-032).** `tools/jib-base/`, **122 MB**: las
+  capas de `eclipse-temurin:25-jre`. Mismo criterio que `tools/jdk/` y `repo-maven/` — sin eso, el
+  Lab 12 intentaría bajar la imagen de un registro y en el SII no correría. Va marcada `binary` en
+  `.gitattributes` (el `text=auto` la corrompería) y se regenera con
+  `rm -rf tools/jib-base && DGT_ONLINE=1 ./mvnw package jib:buildTar` desde `lab-12-empaquetado/`.
 
 - **La estructura de tres carpetas (SPEC-031).** Rige desde el `lab-07-testing`:
   `practica/` **sin documentación** —la firma, una línea imperativa y `// escribe aquí`—,
