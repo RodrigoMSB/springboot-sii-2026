@@ -11,12 +11,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3b: anotaciones,
- * id generado, constructor sin argumentos para JPA. Aquí llega hecha, porque es repaso.
- *
- * <p>Lo único nuevo está abajo del todo: la lista de trámites, que llegó en el paso 3.
- */
 @Entity
 @Table(name = "contribuyente")
 public class Contribuyente {
@@ -31,19 +25,10 @@ public class Contribuyente {
     @Column(name = "razon_social", nullable = false, length = 120)
     private String razonSocial;
 
-    // =========================================================================
-    //  EL LADO ESPEJO — llegó en el paso 3
-    // -------------------------------------------------------------------------
-    //  `mappedBy = "contribuyente"` significa: la relación NO se guarda aquí, se
-    //  guarda en el campo `contribuyente` de Tramite, que es quien tiene la
-    //  columna en la base. Este lado solo sirve para navegar.
-    //  Qué se espera ver: al tocar esta lista sale un SELECT sobre `tramite`.
-    //  Para pensar: si borras un trámite de esta lista, ¿cambia algo en la base?
-    // =========================================================================
+    // `mappedBy` dice quién manda: la columna vive en la otra tabla.
     @OneToMany(mappedBy = "contribuyente")
     private List<Tramite> tramites = new ArrayList<>();
 
-    /** JPA lo exige. No se usa desde el código del laboratorio. */
     protected Contribuyente() {
     }
 

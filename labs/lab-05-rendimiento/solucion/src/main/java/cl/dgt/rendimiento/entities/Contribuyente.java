@@ -11,10 +11,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Un contribuyente, tal como quedó al terminar el Lab 04. <strong>Viene dado y no se toca</strong>:
- * hoy no se aprenden entidades, se aprende a medir lo que cuestan.
- */
 @Entity
 @Table(name = "contribuyente")
 public class Contribuyente {
@@ -29,19 +25,9 @@ public class Contribuyente {
     @Column(name = "razon_social", nullable = false, length = 120)
     private String razonSocial;
 
-    // =========================================================================
-    //  EL LADO ESPEJO — y el protagonista de hoy
-    // -------------------------------------------------------------------------
-    //  Esta lista es LAZY (lo es por defecto en @OneToMany). Tocarla dispara un
-    //  SELECT sobre `tramite`. Uno por contribuyente. Con 200 contribuyentes en
-    //  la base, eso son 200 SELECT, y de ahí sale el nombre del laboratorio.
-    //  Qué se espera ver: la demo 1 midiendo 201 consultas.
-    //  Para pensar: ¿la culpa es de esta línea, o de cómo se consulta?
-    // =========================================================================
     @OneToMany(mappedBy = "contribuyente")
     private List<Tramite> tramites = new ArrayList<>();
 
-    /** JPA lo exige. No se usa desde el código del laboratorio. */
     protected Contribuyente() {
     }
 

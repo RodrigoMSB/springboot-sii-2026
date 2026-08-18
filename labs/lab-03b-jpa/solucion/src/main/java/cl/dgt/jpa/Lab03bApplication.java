@@ -11,16 +11,6 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * El programa del laboratorio.
- *
- * <p>Al arrancar corre las demos en orden: cada una es un método de {@link DemosJpa}, imprime lo
- * que hace, y deja ver el SQL que Hibernate generó por debajo.
- *
- * <p>Después <strong>se queda corriendo</strong>, y eso es a propósito: con el programa vivo
- * puedes mirar la base con un cliente SQL y llamar a los endpoints desde Postman. Se apaga con
- * Ctrl+C.
- */
 @SpringBootApplication
 public class Lab03bApplication {
 
@@ -28,13 +18,6 @@ public class Lab03bApplication {
         SpringApplication.run(Lab03bApplication.class, args);
     }
 
-    /**
-     * Las demos, en el orden del guion. Cada línea es un paso de la sesión.
-     */
-    // Las demos llegan por parámetro, no con un `new`: es el contenedor otra
-    // vez, dándole a este método lo que pide. DemosJpa está anotada con
-    // @Component, así que existe en el contenedor y tiene dentro el repositorio
-    // que a su vez pidió.
     @Bean
     CommandLineRunner run(DemosJpa demos) {
         return args -> {
@@ -49,31 +32,6 @@ public class Lab03bApplication {
         };
     }
 
-    // -------------------------------------------------------------------------
-    //  La base de datos. No hace falta leer esto para el laboratorio.
-    // -------------------------------------------------------------------------
-    //  PostgreSQL de verdad, arrancado como proceso hijo de este programa. Llega
-    //  como una dependencia Maven más: sin Docker y sin instalar nada.
-    //
-    //  Dos ajustes que sí importan para el laboratorio:
-    //
-    //   · DIRECTORIO DE DATOS FIJO (.datos-pg/, aquí al lado). Sin esto la base
-    //     nace vacía en cada arranque, y un lab que se llama «guardar y
-    //     recuperar» no puede perder lo guardado al apagar. Con esto, lo que
-    //     guardaste ayer sigue ahí hoy. El paso 9 lo comprueba.
-    //     `setCleanDataDirectory(false)` es lo que impide que lo borre al
-    //     arrancar.
-    //
-    //   · PUERTO FIJO 55433, en vez de uno al azar. Así puedes conectarte con
-    //     DBeaver o pgAdmin MIENTRAS el programa corre y mirar la tabla por
-    //     fuera. Ver el objeto en consola es ver la memoria; ver la fila en la
-    //     tabla es ver la persistencia. Los datos de conexión, en el README.
-    //
-    //  `destroyMethod = "close"` apaga el motor cuando el programa termina; sin
-    //  eso quedaría un PostgreSQL huérfano en cada ejecución.
-    // -------------------------------------------------------------------------
-
-    /** El puerto de la base. Fijo a propósito: ver la nota de arriba. */
     static final int PUERTO_BASE = 55433;
 
     @Bean(destroyMethod = "close")
@@ -85,18 +43,6 @@ public class Lab03bApplication {
                 .start();
     }
 
-    // =========================================================================
-    //  EL DATASOURCE, ENTREGADO A MANO
-    // -------------------------------------------------------------------------
-    //  Normalmente Spring fabrica el DataSource leyendo `spring.datasource.url`
-    //  y compañía del application.yml. Aquí se le da uno ya hecho: el que ofrece
-    //  el PostgreSQL embebido, que solo conoce su puerto una vez arrancado.
-    //  Por eso el application.yml de este lab no tiene ninguna cadena de
-    //  conexión. Definir este @Bean hace que Spring use el nuestro en vez de
-    //  fabricar el suyo.
-    //  El parámetro es el bean de arriba: Spring resuelve el orden solo — no
-    //  puede entregar el DataSource antes de haber arrancado la base.
-    // =========================================================================
     @Bean
     DataSource dataSource(EmbeddedPostgres postgresEmbebido) {
         return postgresEmbebido.getPostgresDatabase();

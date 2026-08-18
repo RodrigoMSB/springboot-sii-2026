@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Lab 02 — Inyección de dependencias.
-
-  Las mismas dependencias del Lab 01: web y nada más. Lo de hoy no se pide en el
-  pom — ya venía dentro de Spring desde el primer día.
-
-      ./mvnw spring-boot:run
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -32,17 +24,6 @@
   </properties>
 
   <dependencies>
-    <!--
-      LA MISMA DEPENDENCIA DEL LAB 01, Y NINGUNA MÁS.
-
-      Trae Tomcat, el enrutado de peticiones y Jackson. Y merece pararse un
-      segundo: la inyección de dependencias —todo lo que enseña este lab— NO se
-      pide aquí. Viene dentro del núcleo de Spring, que llega dentro de este
-      starter igual que llegaba dentro del `spring-boot-starter` del Lab 00.
-
-      Es decir: el contenedor lleva funcionando desde el primer laboratorio. Lo
-      único que cambia hoy es que se le pide algo.
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -55,18 +36,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <!-- El `repackage` queda apagado a propósito.
-
-             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
-             aplicación y TODAS sus dependencias dentro — Spring, Tomcat, y lo
-             que haga falta—, y por eso pesa decenas de MB.
-
-             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
-             que ejecuta las clases directamente y no necesita empaquetar nada.
-             `./mvnw package` sigue funcionando y deja el jar normal, de unos
-             pocos KB.
-
-             Para volver a activarlo, borrar este bloque <executions>. -->
         <executions>
           <execution>
             <id>repackage</id>

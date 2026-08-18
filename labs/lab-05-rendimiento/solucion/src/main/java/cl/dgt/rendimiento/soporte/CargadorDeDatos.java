@@ -11,16 +11,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Siembra la base con <strong>200 contribuyentes y 5 trámites cada uno</strong> — 1.000 trámites.
- * <strong>Viene dado.</strong>
- *
- * <p>Ese tamaño no es capricho: con tres filas el N+1 no se nota, y ese es exactamente el problema
- * que tiene en la vida real. Con 200 se nota, y sigue cabiendo en un laboratorio.
- *
- * <p>Solo siembra <strong>si la base está vacía</strong>. Así los datos persisten entre arranques y
- * las mediciones se repiten iguales.
- */
 @Component
 public class CargadorDeDatos {
 

@@ -7,13 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * Un contribuyente. Es la misma clase de entidad que ya construiste en el Lab 3b: anotaciones,
- * id generado, constructor sin argumentos para JPA. Aquí llega hecha, porque es repaso.
- *
- * <p>Le falta una cosa, y es del paso 3: el lado espejo de la relación, para poder ir de un
- * contribuyente a sus trámites.
- */
 @Entity
 @Table(name = "contribuyente")
 public class Contribuyente {
@@ -28,7 +21,6 @@ public class Contribuyente {
     @Column(name = "razon_social", nullable = false, length = 120)
     private String razonSocial;
 
-    /** JPA lo exige. No se usa desde el código del laboratorio. */
     protected Contribuyente() {
     }
 

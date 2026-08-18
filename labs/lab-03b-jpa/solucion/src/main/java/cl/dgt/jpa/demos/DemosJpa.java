@@ -9,17 +9,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Las ocho demos del laboratorio, en el orden en que se construyen.
- *
- * <p>Cada método imprime lo que hace. El SQL que aparece entre medio no lo escribió nadie: lo
- * genera Hibernate a partir de la entidad y del nombre de cada método del repositorio.
- *
- * <p>{@code @Component} es lo que hace que esta clase exista en el contenedor y pueda pedirse
- * desde {@code Lab03bApplication}. Es la anotación genérica: {@code @Service} y
- * {@code @Repository} hacen lo mismo con un nombre más preciso, y aquí ninguno de los dos
- * encajaría — esto no es una regla de negocio ni un almacén, es una colección de demostraciones.
- */
 @Component
 public class DemosJpa {
 
@@ -27,34 +16,12 @@ public class DemosJpa {
     // `new`: Spring Data creó la implementación al arrancar y Spring la entrega.
     private final ObservacionRepository repositorio;
 
-    // =========================================================================
-    //  EL ID QUE SE PASAN LAS DEMOS
-    // -------------------------------------------------------------------------
-    //  Lo guarda la demo 1 al crear la primera observación, y lo usan la 2 (para
-    //  buscarla), la 6 (para modificarla) y la 7 (para borrarla). Es un campo y
-    //  no una constante porque el número lo pone la base y cambia en cada
-    //  corrida — las secuencias de PostgreSQL no se reinician al borrar filas.
-    //  Correr una demo suelta sin haber corrido antes la 1 lo dejaría en null.
-    //  Es la razón de que el guion las descomente en orden.
-    // =========================================================================
     private Long primerId;
 
     public DemosJpa(ObservacionRepository repositorio) {
         this.repositorio = repositorio;
     }
 
-    // =========================================================================
-    //  1 · GUARDAR
-    // -------------------------------------------------------------------------
-    //  Un objeto Java entra sin id y sale con id. Eso es todo lo que hace save():
-    //  toma el objeto, genera el INSERT con las columnas del mapeo, y lee de
-    //  vuelta el id que generó la base para escribirlo en el objeto.
-    //  El SQL: insert into observacion (autor, fecha, texto) values (?, ?, ?)
-    //  Empieza con deleteAll() porque la base PERSISTE entre ejecuciones: sin eso
-    //  cada corrida sumaría tres filas más. Se borra y se vuelve a sembrar, para
-    //  que el laboratorio arranque siempre desde el mismo punto.
-    //  Para pensar: ¿por qué el INSERT no menciona la columna id?
-    // =========================================================================
     public void guardar() {
         seccion(1, "GUARDAR · save()");
 
@@ -75,15 +42,6 @@ public class DemosJpa {
         System.out.println("  (guardadas 2 más, para las demos siguientes)");
     }
 
-    // =========================================================================
-    //  2 · BUSCAR POR ID
-    // -------------------------------------------------------------------------
-    //  findById devuelve Optional, y no es capricho: preguntar por un id que no
-    //  existe es normal, no es un error. El Optional obliga a decidir qué hacer
-    //  en ese caso, en vez de recibir un null que revienta más adelante.
-    //  El SQL: select ... from observacion where id = ?
-    //  Para pensar: ¿qué habría pasado si esto devolviera Observacion a secas?
-    // =========================================================================
     public void buscarPorId() {
         seccion(2, "BUSCAR POR ID · findById()");
 
@@ -94,14 +52,6 @@ public class DemosJpa {
         System.out.println("  id 9999 -> " + inexistente.map(Object::toString).orElse("no existe"));
     }
 
-    // =========================================================================
-    //  3 · LISTAR TODAS
-    // -------------------------------------------------------------------------
-    //  findAll trae la tabla entera. Es cómodo y es peligroso: con tres filas se
-    //  ve igual que con tres millones, y la diferencia solo aparece en producción.
-    //  El SQL: select ... from observacion (sin where)
-    //  Para pensar: ¿qué pasaría con esta línea si la tabla tuviera 500.000 filas?
-    // =========================================================================
     public void listarTodas() {
         seccion(3, "LISTAR TODAS · findAll()");
 
@@ -110,15 +60,6 @@ public class DemosJpa {
         todas.forEach(o -> System.out.println("    " + o));
     }
 
-    // =========================================================================
-    //  4 · BUSCAR POR AUTOR
-    // -------------------------------------------------------------------------
-    //  La primera consulta derivada. No se escribe SQL: se escribe el NOMBRE del
-    //  método —findByAutor— y Spring Data lo lee, comprueba que la entidad tiene
-    //  una propiedad `autor`, y genera la consulta con su parámetro.
-    //  El SQL: select ... from observacion where autor = ?
-    //  Para pensar: si te equivocas y escribes findByAutorr, ¿cuándo te enteras?
-    // =========================================================================
     public void buscarPorAutor() {
         seccion(4, "BUSCAR POR AUTOR · findByAutor()");
 
@@ -127,15 +68,6 @@ public class DemosJpa {
         deCarolina.forEach(o -> System.out.println("    " + o));
     }
 
-    // =========================================================================
-    //  5 · DOS CONDICIONES
-    // -------------------------------------------------------------------------
-    //  El vocabulario de los nombres da para más: And, Or, After, Before,
-    //  Between, LessThan, OrderBy. Aquí se combinan dos condiciones y el método
-    //  sigue sin tener cuerpo.
-    //  El SQL: select ... where autor = ? and fecha > ?
-    //  Para pensar: ¿hasta qué largo de nombre sigue siendo esto legible?
-    // =========================================================================
     public void buscarConDosCondiciones() {
         seccion(5, "DOS CONDICIONES · findByAutorAndFechaAfter()");
 
@@ -145,28 +77,6 @@ public class DemosJpa {
         recientes.forEach(o -> System.out.println("    " + o));
     }
 
-    // =========================================================================
-    //  6 · ACTUALIZAR SIN save()
-    // -------------------------------------------------------------------------
-    //  El momento raro del laboratorio. Dentro de una transacción, el objeto que
-    //  cargaste está VIGILADO: Hibernate recuerda cómo venía. Al cerrar compara,
-    //  ve que el texto cambió, y lanza el UPDATE solo. Se llama dirty checking.
-    //  El SQL: update observacion set autor=?, fecha=?, texto=? where id=?
-    //  Para pensar: si esto es así, ¿para qué sirve save() entonces?
-    // =========================================================================
-    // =========================================================================
-    //  @Transactional — la anotación que hace posible la demo 6
-    // -------------------------------------------------------------------------
-    //  Abre una transacción al entrar y la confirma al salir. Mientras dura, el
-    //  objeto que se cargó está VIGILADO por Hibernate: recuerda cómo venía, y
-    //  al cerrar compara y manda el UPDATE de lo que cambió.
-    //  Sin esta línea no habría nada abierto, el objeto llegaría desconectado, y
-    //  cambiarle el texto no tendría ningún efecto en la base — sin error, sin
-    //  aviso, sin nada. Es el ÚNICO método de esta clase que la lleva, y por eso.
-    //  Ojo: solo funciona porque quien llama está fuera de esta clase. Una
-    //  llamada entre métodos del mismo objeto no pasa por el proxy de Spring y
-    //  la anotación no se aplicaría.
-    // =========================================================================
     @Transactional
     public void actualizar() {
         seccion(6, "ACTUALIZAR SIN save() · dirty checking");
@@ -180,15 +90,6 @@ public class DemosJpa {
         System.out.println("  cuando esta transacción se cierre:");
     }
 
-    // =========================================================================
-    //  7 · BORRAR
-    // -------------------------------------------------------------------------
-    //  deleteById hace lo que dice. Se cuenta antes y después para no creerle al
-    //  método: un borrado que no borra y un borrado que borra se ven igual desde
-    //  fuera si nadie mira la tabla.
-    //  El SQL: select (para cargarla) y después delete from observacion where id=?
-    //  Para pensar: ¿por qué Hibernate hace un SELECT antes del DELETE?
-    // =========================================================================
     public void borrar() {
         seccion(7, "BORRAR · deleteById()");
 
@@ -197,15 +98,6 @@ public class DemosJpa {
         System.out.println("  filas después: " + repositorio.count());
     }
 
-    // =========================================================================
-    //  8 · CONTAR
-    // -------------------------------------------------------------------------
-    //  Dos formas de saber cuántas hay, y una es mucho peor. count() le pregunta
-    //  a la base y recibe un número. findAll().size() se trae todas las filas a
-    //  memoria, las convierte en objetos, y después las cuenta.
-    //  El SQL: select count(*) from observacion  ·  contra  select ... from observacion
-    //  Para pensar: ¿cuál de las dos se nota con 500.000 filas?
-    // =========================================================================
     public void contar() {
         seccion(8, "CONTAR · count() vs findAll().size()");
 
@@ -214,7 +106,6 @@ public class DemosJpa {
         System.out.println("  countByAutor(\"Carolina\") -> " + repositorio.countByAutor("Carolina"));
     }
 
-    /** Imprime la cabecera de cada demo. Solo formato: separa la salida para poder leerla. */
     private void seccion(int numero, String titulo) {
         System.out.println();
         System.out.println("=== " + numero + " · " + titulo + " ===");

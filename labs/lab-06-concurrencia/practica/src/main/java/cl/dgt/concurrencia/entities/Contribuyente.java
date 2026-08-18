@@ -11,9 +11,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Un contribuyente, tal como quedó al terminar el Lab 04. <strong>Viene dado y no se toca.</strong>
- */
 @Entity
 @Table(name = "contribuyente")
 public class Contribuyente {
@@ -31,7 +28,6 @@ public class Contribuyente {
     @OneToMany(mappedBy = "contribuyente")
     private List<Tramite> tramites = new ArrayList<>();
 
-    /** JPA lo exige. No se usa desde el código del laboratorio. */
     protected Contribuyente() {
     }
 

@@ -9,14 +9,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    # APAGADO a propósito. La demo 1 dispara 201 consultas: con show-sql
-    # encendido serían mil líneas de SQL y el número se perdería entre ellas.
-    # Hoy no se lee el SQL —eso fue el Lab 04—, hoy se cuenta.
     show-sql: false
     properties:
       hibernate:
-        # Esto es lo que enciende el contador. Sin esta línea,
-        # ContadorDeConsultas devolvería siempre 0.
         generate_statistics: true
     open-in-view: false
 

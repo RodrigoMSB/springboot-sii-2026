@@ -12,15 +12,6 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * El programa del laboratorio.
- *
- * <p>Primero siembra la base si hace falta —200 contribuyentes con 5 trámites cada uno— y después
- * corre las cinco demos. Cada una imprime <strong>cuántas consultas</strong> costó y cuántos
- * milisegundos tardó.
- *
- * <p>Después se queda corriendo, para poder mirar la base con un cliente SQL. Se apaga con Ctrl+C.
- */
 @SpringBootApplication
 public class Lab05Application {
 
@@ -28,7 +19,6 @@ public class Lab05Application {
         SpringApplication.run(Lab05Application.class, args);
     }
 
-    /** Las demos, en el orden del guion. Cada línea es un paso de la sesión. */
     @Bean
     CommandLineRunner run(CargadorDeDatos cargador, DemosRendimiento demos) {
         return args -> {
@@ -42,14 +32,6 @@ public class Lab05Application {
         };
     }
 
-    // -------------------------------------------------------------------------
-    //  La base de datos. No hace falta leer esto para el laboratorio.
-    //  Igual que en los labs 3.5 y 04: PostgreSQL de verdad como proceso hijo,
-    //  con directorio de datos fijo para que lo sembrado sobreviva al apagado, y
-    //  puerto propio para que varios labs puedan estar arriba a la vez.
-    // -------------------------------------------------------------------------
-
-    /** El puerto de la base. `practica` usa el 55436. */
     static final int PUERTO_BASE = 55437;
 
     @Bean(destroyMethod = "close")

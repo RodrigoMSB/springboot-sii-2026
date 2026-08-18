@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Lab 06 — Concurrencia.
-
-  Las mismas piezas del Lab 3b: JPA, Flyway y un PostgreSQL de verdad que llega
-  como dependencia Maven y corre como proceso hijo. Sin Docker, sin instalar nada.
-
-      ./mvnw spring-boot:run
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -27,8 +19,6 @@
 
   <properties>
     <java.version>25</java.version>
-    <!-- Zonky: PostgreSQL de verdad, empaquetado como artefacto Maven. La versión
-         de los BINARIOS (16.x) es independiente de la del envoltorio Java. -->
     <zonky.version>2.2.2</zonky.version>
     <zonky.binarios.version>16.14.0</zonky.binarios.version>
   </properties>
@@ -51,15 +41,11 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!-- Hace que la aplicación se QUEDE ARRIBA al acabar las demos, que es lo que
-         permite mirar la base con un cliente SQL mientras corre. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- Boot 4 sacó las autoconfiguraciones a módulos: `flyway-core` por sí solo
-         NO enciende Flyway al arrancar. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-flyway</artifactId>
@@ -84,8 +70,6 @@
       <artifactId>embedded-postgres</artifactId>
       <version>${zonky.version}</version>
     </dependency>
-    <!-- Los binarios, uno por plataforma. Se declaran los dos: el alumno del SII
-         va en Windows y el material se prepara en un Mac con Apple Silicon. -->
     <dependency>
       <groupId>io.zonky.test.postgres</groupId>
       <artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
@@ -103,19 +87,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <!-- El `repackage` queda apagado a propósito.
-
-             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
-             aplicación y TODAS sus dependencias dentro. Aquí pesaba 160 MB,
-             porque se lleva los binarios de PostgreSQL de las cinco plataformas
-             que soporta Zonky.
-
-             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
-             que ejecuta las clases directamente y no necesita empaquetar nada.
-             `./mvnw package` sigue funcionando y deja el jar normal, de unos
-             pocos KB.
-
-             Para volver a activarlo, borrar este bloque <executions>. -->
         <executions>
           <execution>
             <id>repackage</id>

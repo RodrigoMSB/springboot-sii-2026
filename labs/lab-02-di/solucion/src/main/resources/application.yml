@@ -1,8 +1,3 @@
-# -----------------------------------------------------------------------------
-#  Configuración del Lab 02. Idéntica a la del Lab 01: hoy lo que se aprende no
-#  se configura, se anota.
-# -----------------------------------------------------------------------------
-
 server:
   # `practica` en el 8083 y `solucion` en el 8084, para poder tenerlos arriba a
   # la vez y comparar.
@@ -22,7 +17,4 @@ logging:
     # El paquete de esta aplicación: «Starting» y «Started».
     cl.dgt: INFO
 
-    # La línea que dice en qué puerto quedó Tomcat. En Spring Boot 4 la clase
-    # vive en `org.springframework.boot.tomcat`; con el nombre de las versiones
-    # anteriores esta línea no haría nada, y sin avisar.
     org.springframework.boot.tomcat: INFO

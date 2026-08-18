@@ -12,9 +12,6 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
-/**
- * Un trámite, tal como quedó al terminar el Lab 04. <strong>Viene dado y no se toca.</strong>
- */
 @Entity
 @Table(name = "tramite")
 public class Tramite {
@@ -38,7 +35,6 @@ public class Tramite {
     @JoinColumn(name = "contribuyente_id", nullable = false)
     private Contribuyente contribuyente;
 
-    /** JPA lo exige. */
     protected Tramite() {
     }
 

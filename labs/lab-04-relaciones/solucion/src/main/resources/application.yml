@@ -16,9 +16,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-    # Explícito a propósito. Con `true` la sesión seguiría abierta durante toda
-    # la petición web y el paso 5 —la LazyInitializationException— no ocurriría
-    # nunca dentro de un controller. Aquí se ve el comportamiento de verdad.
     open-in-view: false
 
 logging:

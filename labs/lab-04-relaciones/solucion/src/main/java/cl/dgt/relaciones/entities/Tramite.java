@@ -12,11 +12,6 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
-/**
- * Un trámite, que siempre pertenece a un contribuyente.
- *
- * <p>Muchos trámites pueden apuntar al mismo contribuyente: de ahí el nombre de la anotación.
- */
 @Entity
 @Table(name = "tramite")
 public class Tramite {
@@ -34,22 +29,11 @@ public class Tramite {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    // =========================================================================
-    //  EL LADO QUE MANDA — llegó en el paso 1
-    // -------------------------------------------------------------------------
-    //  Quien tiene la columna en la base es quien manda en la relación, y aquí
-    //  se dice con @JoinColumn: la columna `contribuyente_id` de la tabla
-    //  `tramite`. Guardar el trámite guarda la relación; no hay que tocar nada
-    //  del otro lado.
-    //  FetchType.LAZY: el contribuyente NO viaja con el trámite. Se va a buscar
-    //  cuando alguien lo toque, y eso son los pasos 2, 4 y 5.
-    //  Para pensar: ¿por qué la anotación se llama ManyToOne y no OneToMany?
-    // =========================================================================
+    // LAZY: el contribuyente no se trae hasta que alguien lo pida. Es el número del lab.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contribuyente_id", nullable = false)
     private Contribuyente contribuyente;
 
-    /** JPA lo exige. */
     protected Tramite() {
     }
 

@@ -7,13 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * Un folio emitido: un número correlativo dentro de un año. <strong>Viene dado.</strong>
- *
- * <p>La regla del negocio cabe en una línea: <em>dentro de un mismo año, no puede haber dos folios
- * con el mismo número</em>. Todo el laboratorio consiste en descubrir que esa línea es mucho más
- * difícil de cumplir de lo que parece.
- */
 @Entity
 @Table(name = "folio")
 public class Folio {
@@ -28,7 +21,6 @@ public class Folio {
     @Column(nullable = false)
     private int numero;
 
-    /** JPA lo exige. */
     protected Folio() {
     }
 

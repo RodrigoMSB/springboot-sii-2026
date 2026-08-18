@@ -9,14 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Las cinco demos del laboratorio. Todas hacen <em>lo mismo</em>: armar la pantalla «contribuyentes
- * y cuántos trámites tiene cada uno».
- *
- * <p>Lo único que cambia entre ellas es <strong>cuánto cuesta</strong>, y por eso todas terminan
- * imprimiendo la misma línea: consultas y milisegundos. Hoy no se mira el SQL —serían doscientas
- * líneas—, se mira el número.
- */
 @Component
 public class DemosRendimiento {
 
@@ -28,16 +20,6 @@ public class DemosRendimiento {
         this.contador = contador;
     }
 
-    // =========================================================================
-    //  1 · EL CRIMEN, MEDIDO
-    // -------------------------------------------------------------------------
-    //  findAll() trae los 200 contribuyentes en UNA consulta. Después, tocar la
-    //  lista de trámites de cada uno dispara una consulta más por contribuyente,
-    //  porque la relación es LAZY y nadie pidió lo contrario.
-    //  1 + 200 = 201. De ahí el nombre: N+1.
-    //  Qué se espera ver: tres cifras en el contador.
-    //  Para pensar: ¿en qué línea exacta de este método se disparan las 200?
-    // =========================================================================
     @Transactional(readOnly = true)
     public void elCrimen() {
         seccion(1, "EL CRIMEN · findAll() y tocar la relación");
@@ -54,15 +36,6 @@ public class DemosRendimiento {
         informe(todos.size(), totalTramites, empezo);
     }
 
-    // =========================================================================
-    //  2 · JOIN FETCH
-    // -------------------------------------------------------------------------
-    //  La misma pantalla, pidiendo de entrada los trámites en la misma consulta.
-    //  No cambia el mapeo de la entidad: cambia la consulta. Ese es el punto del
-    //  laboratorio entero.
-    //  Qué se espera ver: el mismo resultado con el contador en una cifra.
-    //  Para pensar: ¿por qué hizo falta el `distinct`?
-    // =========================================================================
     @Transactional(readOnly = true)
     public void conJoinFetch() {
         seccion(2, "JOIN FETCH · traerlo todo de una vez");
@@ -79,15 +52,6 @@ public class DemosRendimiento {
         informe(todos.size(), totalTramites, empezo);
     }
 
-    // =========================================================================
-    //  3 · @EntityGraph
-    // -------------------------------------------------------------------------
-    //  Lo mismo sin escribir JPQL: se nombra la relación en una anotación sobre
-    //  el método del repositorio. Se prefiere cuando la consulta no tiene nada
-    //  especial y solo hay que decidir qué se trae con ella.
-    //  Qué se espera ver: el mismo número que la demo 2.
-    //  Para pensar: si dan el mismo número, ¿cuál elegirías y por qué?
-    // =========================================================================
     @Transactional(readOnly = true)
     public void conEntityGraph() {
         seccion(3, "@EntityGraph · lo mismo, sin JPQL");
@@ -104,15 +68,6 @@ public class DemosRendimiento {
         informe(todos.size(), totalTramites, empezo);
     }
 
-    // =========================================================================
-    //  4 · PROYECCIÓN
-    // -------------------------------------------------------------------------
-    //  Si la pantalla solo muestra rut, razón social y un número, traer entidades
-    //  enteras con todos sus trámites es pagar de más. Esto trae un record con lo
-    //  justo, y la cuenta la hace la base con un count().
-    //  Qué se espera ver: una consulta, y 200 objetos en memoria en vez de 1.200.
-    //  Para pensar: ¿qué NO se puede hacer con estos objetos? (Modificarlos.)
-    // =========================================================================
     @Transactional(readOnly = true)
     public void conProyeccion() {
         seccion(4, "PROYECCIÓN · traer solo lo que se muestra");
@@ -127,16 +82,6 @@ public class DemosRendimiento {
         System.out.println("  primera fila -> " + resumen.getFirst());
     }
 
-    // =========================================================================
-    //  5 · LA PANTALLA QUE NO NECESITA TRÁMITES
-    // -------------------------------------------------------------------------
-    //  Un listado que solo muestra razones sociales. Con la relación LAZY esto
-    //  cuesta UNA consulta, porque nadie toca los trámites.
-    //  Existe para el paso 5: al poner EAGER en la entidad para «arreglar» la
-    //  demo 1, esta pantalla —que no pidió nada— empieza a pagar.
-    //  Qué se espera ver: 1 consulta ahora; con EAGER, muchas más.
-    //  Para pensar: ¿cuántas pantallas así hay en un sistema de verdad?
-    // =========================================================================
     @Transactional(readOnly = true)
     public void laPantallaQueNoNecesitaTramites() {
         seccion(5, "LA OTRA PANTALLA · solo razones sociales");

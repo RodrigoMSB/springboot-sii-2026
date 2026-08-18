@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Lab 00 — Hola mundo.
-
-  El pom más corto del curso, a propósito: cabe entero en una pantalla y el paso 4
-  lo lee línea por línea. Una sola dependencia, sin web y sin base de datos.
-
-      ./mvnw spring-boot:run
-
-  Un `pom.xml` es la lista de la compra del proyecto: qué necesita para
-  compilar, con qué versiones, y qué comandos sabe ejecutar. Maven lo lee y se
-  encarga del resto.
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -19,20 +7,6 @@
        más de quince años y no se toca nunca. -->
   <modelVersion>4.0.0</modelVersion>
 
-  <!--
-    EL PADRE.
-
-    Heredar de `spring-boot-starter-parent` ahorra tres cosas que si no habría
-    que escribir a mano:
-
-     · las VERSIONES de todo lo que trae Spring Boot, ya elegidas y probadas
-       juntas — por eso las dependencias de abajo no llevan <version>;
-     · la configuración del compilador, de los tests y del empaquetado;
-     · valores por defecto sensatos, como compilar con `-parameters`, que es lo
-       que permitirá que los @PathVariable del Lab 01 funcionen por nombre.
-
-    Cambiar el 4.1.0 de aquí sube toda la pila de golpe.
-  -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
@@ -53,23 +27,10 @@
   <description>Lab 00 — que Spring Boot arranque</description>
 
   <properties>
-    <!-- Con qué versión de Java se compila. El JDK 25 viaja dentro del
-         repositorio (tools/jdk), así que esto vale igual en cualquier máquina,
-         tenga instalado lo que tenga. -->
     <java.version>25</java.version>
   </properties>
 
   <dependencies>
-    <!--
-      LA ÚNICA DEPENDENCIA.
-
-      Un "starter" no es una librería: es un paquete de librerías que suelen ir
-      juntas. `spring-boot-starter` trae el núcleo —el contenedor, la lectura de
-      `application.yml`, el sistema de logs— y nada más. Sin web, sin base de
-      datos, sin nada que no haga falta hoy.
-
-      No lleva <version>: la pone el padre.
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -78,27 +39,9 @@
 
   <build>
     <plugins>
-      <!--
-        EL PLUGIN DE SPRING BOOT.
-
-        Es lo que aporta la meta `spring-boot:run` que se usa todo el curso:
-        compila, arma el classpath y arranca la aplicación de un tirón.
-      -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <!-- El `repackage` queda apagado a propósito.
-
-             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
-             aplicación y TODAS sus dependencias dentro — Spring, Tomcat, y lo
-             que haga falta—, y por eso pesa decenas de MB.
-
-             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
-             que ejecuta las clases directamente y no necesita empaquetar nada.
-             `./mvnw package` sigue funcionando y deja el jar normal, de unos
-             pocos KB.
-
-             Para volver a activarlo, borrar este bloque <executions>. -->
         <executions>
           <execution>
             <id>repackage</id>

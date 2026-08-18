@@ -12,9 +12,6 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 
-/**
- * Un trámite, tal como quedó al terminar el Lab 04. <strong>Viene dado y no se toca.</strong>
- */
 @Entity
 @Table(name = "tramite")
 public class Tramite {
@@ -32,13 +29,10 @@ public class Tramite {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    // El lado que manda: la columna `contribuyente_id` vive en esta tabla. LAZY,
-    // declarado, como dejó dicho el Lab 04.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contribuyente_id", nullable = false)
     private Contribuyente contribuyente;
 
-    /** JPA lo exige. */
     protected Tramite() {
     }
 

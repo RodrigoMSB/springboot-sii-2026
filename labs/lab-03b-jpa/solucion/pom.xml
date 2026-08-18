@@ -1,15 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Lab 3b — JPA.
-
-  Proyecto mínimo y autónomo: solo lo que hace falta para guardar y recuperar
-  objetos. Sin web, sin seguridad, sin tests. Se corre con:
-
-      ./mvnw spring-boot:run
-
-  PostgreSQL llega como dependencia Maven (Zonky) y corre como proceso hijo del
-  JVM: sin Docker, sin instalar nada, sin permisos de administrador.
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -32,23 +21,10 @@
 
   <properties>
     <java.version>25</java.version>
-    <!-- Zonky: PostgreSQL de verdad, empaquetado como artefacto Maven. La versión
-         de los BINARIOS (16.x) es independiente de la del envoltorio Java, y por
-         eso son dos propiedades y no una. -->
     <zonky.version>2.2.2</zonky.version>
     <zonky.binarios.version>16.14.0</zonky.binarios.version>
   </properties>
 
-  <!--
-    IMPORTAR UN BOM.
-
-    Un BOM ("bill of materials") es un pom que solo contiene versiones. Al
-    importarlo aquí, todos los artefactos de binarios de Zonky que se declaren
-    abajo cogen su versión de él y no hace falta repetirla en cada uno.
-
-    `<scope>import</scope>` con `<type>pom</type>` es la forma de decir «trae las
-    versiones de ese pom», y solo vale dentro de <dependencyManagement>.
-  -->
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -62,47 +38,16 @@
   </dependencyManagement>
 
   <dependencies>
-    <!--
-      EL STARTER DEL LABORATORIO.
-
-      Trae tres cosas: la especificación JPA, Hibernate —que es quien realmente
-      escribe el SQL que sale en la consola— y Spring Data JPA, que es quien lee
-      el nombre de los métodos del repositorio y genera su implementación.
-      También el manejo de transacciones, que es lo que hace funcionar el
-      @Transactional de la demo 6.
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!--
-      WEB, POR DOS MOTIVOS.
-
-      El evidente: los endpoints del paso 10, para llamarlos desde Postman.
-
-      El que no se ve: al haber un servidor escuchando, la aplicación NO TERMINA
-      cuando acaban las demos. Y eso es condición para el paso 9 —mirar la base
-      con DBeaver mientras corre— y para que el laboratorio pueda enseñar que el
-      dato sigue ahí. Sin esta dependencia, el programa se apagaría solo y la
-      base con él.
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!--
-      FLYWAY, EN TRES PIEZAS Y NINGUNA SOBRA.
-
-       · `spring-boot-flyway` — la autoconfiguración. Spring Boot 4 sacó las
-         autoconfiguraciones a módulos aparte, así que `flyway-core` por sí solo
-         NO arranca Flyway: la tabla no se crearía y la aplicación fallaría al
-         validar la entidad.
-       · `flyway-core` — el motor que lee `db/migration` y aplica lo que falte.
-       · `flyway-database-postgresql` — el dialecto. Desde Flyway 10 cada base
-         va en su propio artefacto.
-    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-flyway</artifactId>
@@ -116,41 +61,17 @@
       <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
 
-    <!--
-      EL DRIVER JDBC de PostgreSQL: lo que traduce las llamadas Java al protocolo
-      de la base. `runtime` porque ninguna clase del proyecto lo importa — hace
-      falta al ejecutar, no al compilar. Ponerlo así evita que alguien lo use por
-      error desde el código.
-    -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
 
-    <!--
-      EL POSTGRESQL EMBEBIDO.
-
-      Esta es la pieza que quita Docker de en medio. Zonky trae el ejecutable de
-      PostgreSQL dentro de un jar: al arrancar lo extrae a una carpeta y lo lanza
-      como proceso hijo del JVM. Es el motor de verdad —16.14, el mismo que en
-      producción—, no un H2 disfrazado. Sin demonio, sin permisos de
-      administrador, sin instalar nada.
-    -->
     <dependency>
       <groupId>io.zonky.test</groupId>
       <artifactId>embedded-postgres</artifactId>
       <version>${zonky.version}</version>
     </dependency>
-    <!--
-      LOS BINARIOS, UNO POR PLATAFORMA.
-
-      El artefacto de arriba es el envoltorio Java; el ejecutable de PostgreSQL
-      va aparte y compilado para cada sistema. Se declaran los dos que hacen
-      falta: el alumno del SII va en Windows y el material se prepara en un Mac
-      con Apple Silicon. `runtime` por lo mismo que el driver: no se compila
-      contra ellos.
-    -->
     <dependency>
       <groupId>io.zonky.test.postgres</groupId>
       <artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
@@ -169,19 +90,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <!-- El `repackage` queda apagado a propósito.
-
-             Ese goal construye el "fat jar" ejecutable: un solo archivo con la
-             aplicación y TODAS sus dependencias dentro. Aquí pesaba 160 MB,
-             porque se lleva los binarios de PostgreSQL de las cinco plataformas
-             que soporta Zonky.
-
-             En este laboratorio no se usa nunca: se corre con `spring-boot:run`,
-             que ejecuta las clases directamente y no necesita empaquetar nada.
-             `./mvnw package` sigue funcionando y deja el jar normal, de unos
-             pocos KB.
-
-             Para volver a activarlo, borrar este bloque <executions>. -->
         <executions>
           <execution>
             <id>repackage</id>
