@@ -324,13 +324,50 @@ El segundo número es la prueba fuerte: si algo hubiera hecho falta bajar, habr�
 | Gate | Resultado |
 |---|---|
 | `siembra` (lógica del CI, local) | ✅ `FALLOS=0` · `labs/lab-07-testing/PASOS.md siembra` |
-| `deriva` | ✅ **no le aplica**: el bucle recorre una lista fija de labs del arco antiguo, y `lab-07-testing` no está en ella. No hay derivación que declarar (regla de la SPEC) |
+| `deriva` | ⚠️ **rojo heredado, idéntico al de `main`** — ver el bloque de abajo |
 | CRLF / `.gitattributes` | ✅ los dos `mvnw` en LF; `mvnw` y `mvnw.cmd` ya cubiertos en `.gitattributes` (líneas 15 y 20) |
 | Tamaños (`tools/verificar-tamanos.sh`) | ✅ `[OK] Ningún archivo supera los 95 MB`. El más pesado del lab nuevo: `PASOS.md`, **20 KB** |
 | Maleta | ✅ shim `mvnw` + `.mvn/wrapper` copiados del Lab 02, sin tocar |
 | Puertos | ✅ 8093 / 8094, libres — el mapa del curso llegaba hasta 8100 (Lab 03b) sin usar estos dos |
 | `logging.level.root: WARN` | ✅ en los dos proyectos |
 | Prohibiciones | ✅ sin narrativa DGT, sin personajes, sin ArchUnit, sin `bin/`, sin validadores, sin manifiestos, sin derivación, sin base de datos, sin `sudo`, sin LFS, sin credenciales |
+
+### El CI del PR #38 · 7 de 8 en verde, y el rojo medido
+
+```
+temario · coherencia .md <-> .docx                        pass
+siembra · toda TEORIA.md con sucesor siembra el módulo    pass
+app · dgt-tramites-api (verify)                           pass
+labs-sh · andamiaje (ubuntu-latest)                       pass
+labs-sh · andamiaje (windows-latest)                      pass
+grpc · la demo del Lab 08 compila y responde              pass
+lab14 · el sistema de microservicios                      pass
+deriva · labs en sincronía con su base                    FAIL
+```
+
+**El rojo de `deriva` es el de `main` y no lo trajo esta SPEC.** No se declara por deducción — se
+midió, comparando la salida del paso `Verificar la cadena de derivación` de la corrida del PR
+(job `95599713768`) con la de la última corrida de `main` (`31982192079`, commit `3f780c2`):
+
+```
+main:  55 líneas · 23 [ERROR]
+rama:  55 líneas · 23 [ERROR]
+
+$ diff main.txt rama.txt
+1c1
+< 2026-08-17T00:30:09Z ##[group]Run ./labs/lib/verificar-toda-derivacion.sh
+---
+> 2026-08-18T04:47:41Z ##[group]Run ./labs/lib/verificar-toda-derivacion.sh
+```
+
+**La única diferencia entre las dos salidas es la marca de tiempo.** Las 23 líneas de `[ERROR]`
+son las mismas, en el mismo orden, y hablan de `dgt-tramites-api`, `lab-07-el-portero` y
+`lab-12-amortiguadores` — ninguna de `lab-07-testing`.
+
+Y no podía ser de otra forma: el bucle de `verificar-toda-derivacion.sh` recorre una **lista fija**
+de rutas del arco antiguo, y `labs/lab-07-testing` no está en ella. El lab nuevo no deriva de
+nadie —es un proyecto independiente, como los otros ocho del arco vigente— y la SPEC prohíbe
+expresamente la derivación.
 
 **Ningún otro lab fue tocado.** Los cambios fuera de `labs/lab-07-testing/` son cuatro archivos
 de la raíz y `docs/`: `.gitignore`, `README.md`, `ESTADO.md` y `docs/decisiones.md`.
