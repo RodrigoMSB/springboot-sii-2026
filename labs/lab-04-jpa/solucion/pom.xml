@@ -17,7 +17,7 @@
   <artifactId>lab04-jpa</artifactId>
   <version>0.1.0</version>
   <name>lab04-jpa</name>
-  <description>Lab 3b — JPA: guardar y recuperar objetos</description>
+  <description>Lab 04 — JPA: guardar y recuperar objetos</description>
 
   <properties>
     <java.version>25</java.version>

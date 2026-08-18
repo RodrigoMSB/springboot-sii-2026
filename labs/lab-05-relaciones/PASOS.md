@@ -44,7 +44,7 @@ public Tramite(String tipo, String estado, LocalDate fecha, Contribuyente contri
 ```
 
 Y en `demos/DemosRelaciones.java`, la demo 1. Empieza contando lo que quedó de la vez anterior —la
-base persiste, como en el Lab 3b— y borrando:
+base persiste, como en el Lab 04— y borrando:
 
 ```java
 System.out.println("  al arrancar había " + contribuyentes.count() + " contribuyentes y "
@@ -277,7 +277,7 @@ paso 4 en todas las demás pantallas.
 
 ## Paso 6 · Un método cuyo nombre cruza la relación
 
-**Se explica:** en el Lab 3b el nombre del método era la consulta. Eso sigue valiendo, **y
+**Se explica:** en el Lab 04 el nombre del método era la consulta. Eso sigue valiendo, **y
 atraviesa relaciones**: un trámite no tiene RUT, pero su contribuyente sí, y se puede decir así.
 
 **Se escribe:** en `repositories/TramiteRepository.java`:
