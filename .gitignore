@@ -44,3 +44,9 @@ labs/**/.estado/
 # Bancos de pruebas y respaldos de los labs. Efímeros.
 labs/**/.e2e/
 labs/**/.respaldo-*/
+
+# Material del INSTRUCTOR (SPEC-031). La tercera carpeta de cada lab: una copia de
+# la solución con TODO explicado línea por línea, para leer mientras se enseña. No
+# es un proyecto ejecutable y no viaja al repositorio — es la chuleta de quien
+# dicta, y si estuviera versionada el alumno la tendría en el clon.
+labs/*/instructor/
