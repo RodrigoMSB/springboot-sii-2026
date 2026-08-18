@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-033 — se retira el arco antiguo, nace el Lab 11 y el arco queda numerado 00–13 (tag `material-v1.0.0`).*
+*Última actualización: SPEC-034 — el mapa de trazabilidad, rehecho y con las brechas medidas (tag `material-v1.0.1`).*
 
 ---
 
@@ -294,10 +294,29 @@ su SPEC— pero el PO no los ha corrido de punta a punta.
 **Faltan las diapositivas y el material de sala.** `instructor/` cubre la parte de código; una
 presentación, no.
 
-**Del contrato, dos discrepancias abiertas que son del PO, no del material:** el mapa
-`docs/temario/MAPA-LAB-MODULO.md` quedó escrito contra la numeración y los nombres del arco
-antiguo, y **no se actualizó en la SPEC-033** — está fuera de su alcance. Hay que rehacerlo
-contra los catorce labs actuales antes de la entrega al SII.
+**Del contrato: el mapa ya está rehecho, y dice que hay huecos.**
+`docs/temario/MAPA-LAB-MODULO.md` (SPEC-034) mide la cobertura real contra los 15 módulos y los
+35 temas. El resultado, medido con el lab y el paso que lo respalda:
+
+| Nivel | Temas |
+|---|---|
+| **Cubierto** | **19** de 35 |
+| **Parcial** | 6 |
+| **Mencionado** | 1 |
+| **No cubierto** | **9** |
+
+Y por módulo: **3 cubiertos** (M4 Testing I, M5 Persistencia, M7 Transacciones) y **12 parciales**.
+
+**La brecha que hay que mirar primero: el tema XXXV, el proyecto final integrador.** El contrato
+pesa la evaluación en `Proyecto final 50 % · Conocimientos 30 % · Ejercicios 20 %`, y **el material
+no tiene ningún instrumento de evaluación**: los catorce labs son construcción guiada, sin nota.
+Estaba en el antiguo `lab-13-capsula-y-egreso`, recuperable desde `material-v0.8.0`. Es lo único
+que impide cerrar el contrato tal como está escrito.
+
+Las otras ocho brechas: gRPC, AOP, manejo de archivos, eventos de aplicación, mensajería, caché,
+Liquibase y OpenAPI/versionado. **Siete de ellas son un paso dentro de un lab que ya existe**; las
+caras —Testcontainers, mensajería y Buildpacks— lo son porque las tres exigen Docker, que la sala
+del SII no tiene. El mapa las detalla con qué haría falta para cada una.
 
 Y el alcance de microservicios: el título del contrato («Desarrollo de Microservicios en Java»)
 lo cubría el antiguo Lab 14, que se retiró con el resto del arco por decisión del PO. Sigue
@@ -314,8 +333,8 @@ Lo que viene, en orden:
 1. **La fila de aceptación del PO.** Sentarse con cada `PASOS.md` sobre `practica/`, sin abrir
    `solucion/`, del 00 al 13. Es la etapa que cierra cada SPEC y la única que el ejecutor no puede
    hacer.
-2. **Rehacer `docs/temario/MAPA-LAB-MODULO.md`** contra los catorce labs actuales. El mapa vigente
-   habla de labs que ya no existen.
+2. **Decidir sobre las brechas del mapa** (§2): el proyecto final primero, después las siete
+   baratas, y por último negociar con el SII las tres que dependen de Docker.
 3. **Las diapositivas y el material de sala.**
 4. **Decidir sobre microservicios** (ver §2): se retiró con el arco antiguo y sigue recuperable
    desde el tag `material-v0.8.0`.
