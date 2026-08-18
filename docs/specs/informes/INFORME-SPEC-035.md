@@ -309,7 +309,48 @@ tamaño le parece razonable y qué sobra, y la guía de defensa lo marca como un
 valen Destacado. Es un problema real, de los que aparecen en cualquier proyecto, y verlo sin que te
 lo señalen es exactamente lo que este examen mide.
 
-### 6.d · Un fósil de la SPEC-033 que no se tocó
+### 6.d · La revisión de seguridad encontró un fail-open real, y tenía razón
+
+La revisión automática del commit marcó tres cosas en `proyecto-final/base`. Dos eran
+intencionales y declaradas —el valor por defecto del secreto en el perfil de **laboratorio**, y los
+hashes BCrypt de los dos usuarios sembrados, que el brief publica—. **La tercera era un defecto de
+verdad:**
+
+```yaml
+# application-prod.yml, como estaba
+secreto: ${DGT_JWT_SECRETO:CAMBIAME-en-produccion-32-bytes-minimo-o-no-arranca}
+```
+
+El comentario decía «o no arranca». **Arrancaba.** En producción, sin la variable, la aplicación
+firmaba tokens con una clave escrita en el repositorio: cualquiera que leyera el repo podía
+fabricarse un token de FISCALIZADOR, y nada fallaría — que es la peor forma de fallar.
+
+Y lo grave no es sólo el agujero: es que **contradecía lo que este mismo artefacto enseña**. El
+reporte pregunta al alumno «¿dónde viven los secretos de tu imagen?», y el Lab 13 dedica una nota a
+que el respaldo de un valor de producción debe ser visiblemente falso para que el olvido se note.
+
+**Corregido a fail-closed**, sin respaldo:
+
+```
+PlaceholderResolutionException: Could not resolve placeholder 'DGT_JWT_SECRETO'
+arranques: 0
+```
+
+Con la variable puesta arranca y el login responde 200. El perfil de laboratorio conserva su valor
+por defecto, que ahí sí es correcto: el proyecto tiene que arrancar sin configurar nada.
+
+Y se convirtió en **descriptor comprobable** del eje Oficio: «el perfil productivo arranca con un
+secreto por defecto» pasa a Insuficiente, y la rúbrica dice cómo se comprueba
+(`SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run` sin la variable: debe negarse). El material no
+puede castigar en la rúbrica lo que su propia base hacía.
+
+**Un aviso de método, porque casi me lo trago:** la primera comprobación del fail-closed dio
+`BUILD FAILURE` y la di por buena. No era el placeholder: era el error de versión de Java que
+aparece al envolver `./mvnw` en `timeout` —la trampa que `docs/decisiones.md` ya documenta, porque
+bajo Rosetta el shim cree estar en un Mac Intel y cae al Java del sistema—. Un falso verde con
+forma de rojo. Se repitió sin `timeout` y ahí sí salió el mensaje real.
+
+### 6.e · Un fósil de la SPEC-033 que no se tocó
 
 `lab-04-jpa` conserva el título **«Lab 3b · JPA»** en su `README.md`, su `PASOS.md` y la
 `<description>` de sus dos `pom.xml`. Es un resto de la renumeración de la SPEC-033: el mapa de
@@ -347,7 +388,7 @@ descubrió esta brecha.
   mensajería, caché, Liquibase y OpenAPI. Siete son un paso dentro de un lab existente.
 - **`instructor/` del proyecto no está respaldada por Git**, por diseño. La `NOTA.md` de dentro dice
   qué contiene y cómo verificarla.
-- **El fósil «Lab 3b»** (§6.d), para una `SPEC-FIX`.
+- **El fósil «Lab 3b»** (§6.e), para una `SPEC-FIX`.
 - **La fila de aceptación del PO** sigue pendiente, y ahora incluye una prueba más: **resolver el
   proyecto final** con el brief delante, sin mirar la referencia. Es la única forma de saber si tres
   horas alcanzan de verdad — mi estimación es un cálculo, no una medición con un alumno.
