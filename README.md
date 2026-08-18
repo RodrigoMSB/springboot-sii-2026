@@ -9,7 +9,7 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 
 ### El arco vigente · construcción guiada
 
-Nueve laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
+Trece laboratorios donde el alumno **construye en vivo junto al instructor**. Todos tienen la
 misma forma: `README.md`, `PASOS.md` (el guion de la sesión), `practica/` donde se trabaja y
 `solucion/` al lado para comparar. Se corren con `./mvnw spring-boot:run` y **no necesitan
 Docker ni instalar nada**: Java, Maven y —donde hace falta— PostgreSQL viajan dentro del
@@ -26,6 +26,15 @@ repositorio.
 | [`lab-05-rendimiento`](labs/lab-05-rendimiento/) | El N+1 | De **201 consultas a 1**, medido en pantalla. Y por qué `EAGER` lo empeora |
 | [`lab-06-concurrencia`](labs/lab-06-concurrencia/) | Dos peticiones, el mismo folio | Correcto en secuencia, incorrecto en paralelo. Se prueba corriéndolo |
 | [`lab-07-testing`](labs/lab-07-testing/) | Testing | Un test sirve el día que se pone **rojo**. JUnit, Mockito, `@WebMvcTest` y cuándo NO levantar Spring |
+| [`lab-08-seguridad`](labs/lab-08-seguridad/) | Seguridad | Cerrado por defecto. BCrypt con sal, el JWT que **cualquiera lee**, y 401 frente a 403 |
+| [`lab-09-resiliencia`](labs/lab-09-resiliencia/) | Resiliencia | De **30 s a 2 ms**: timeout, reintento (que empeora la caída) y el circuito que deja de llamar |
+| [`lab-11-tareas`](labs/lab-11-tareas/) | Tareas y asincronía | `@Scheduled`, `@Async` (3,03 s → 0,004 s), hilos virtuales, y la tarea que se ejecuta **dos veces** |
+| [`lab-12-empaquetado`](labs/lab-12-empaquetado/) | Empaquetado | El jar, las capas, qué es un contenedor, y una imagen OCI **sin Docker y sin red** |
+
+> ⚠️ **Falta el Lab 10 (observabilidad).** Es un hueco conocido, no un olvido: el nombre
+> `lab-10-observabilidad` lo ocupa todavía el lab del arco antiguo, y el PO decidió no inventar un
+> nombre provisional. Se construye con ese nombre cuando la SPEC de reempaquetado retire el arco
+> viejo (SPEC-032 §10.1).
 
 #### La tercera carpeta: `instructor/`
 
