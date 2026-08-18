@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-07 — el puerto ocupado ya se explica solo (tag `material-v1.1.2`).*
+*Última actualización: SPEC-FIX-08 — el puerto y el candado, los dos explicados (tag `material-v1.1.3`).*
 
 ---
 
@@ -291,7 +291,7 @@ divergencias a **cero**.
 
 Informe en `docs/specs/informes/INFORME-SPEC-025.md`.
 
-## 1.g · Cuando el puerto está ocupado, el lab lo dice (SPEC-FIX-07)
+## 1.g · Cuando el puerto está ocupado, el lab lo dice (SPEC-FIX-07 y SPEC-FIX-08)
 
 Los seis labs con base de datos levantan su PostgreSQL en un puerto fijo. Si quedaba uno vivo de
 una corrida anterior —cerrar la terminal de golpe basta—, el siguiente arranque moría con
@@ -306,7 +306,13 @@ para cerrarlo — sólo el de su sistema operativo, elegido con `os.name`.
 Está en los 20 proyectos con PostgreSQL embebido: los labs 04, 05, 06, 07, 09 y 11 en sus tres
 carpetas, `proyecto-final/base` y la solución de referencia.
 
-Informe en `docs/specs/informes/INFORME-SPEC-FIX-07.md`.
+Y hay **dos** candados, no uno: el puerto lo retiene PostgreSQL y se libera al morir el motor;
+`.datos-pg/epg-lock` lo retiene la aplicación Java y sobrevive al motor. Si alguien mata el
+PostgreSQL a mano y deja la aplicación en pie —lo verificó el PO en Windows—, el puerto queda
+libre y el candado no. Por eso hay una segunda guarda, `CandadoLibre`, que manda a cerrar la otra
+terminal con Ctrl+C.
+
+Informes en `docs/specs/informes/INFORME-SPEC-FIX-07.md` y `INFORME-SPEC-FIX-08.md`.
 
 ## 2 · Qué falta
 

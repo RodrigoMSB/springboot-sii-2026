@@ -112,7 +112,7 @@ motores escuchando: 55440=1 55441=1   <- dos bases separadas
 V8 importaba más de lo que parece: `System.exit(1)` dentro de un bean **mata la JVM de surefire**.
 Con los puertos bien repartidos no ocurre, pero había que medirlo, no suponerlo.
 
-## 6 · Windows · lo verificado y lo que falta verificar
+## 6 · Windows · verificado
 
 **Verificado aquí:** que se elige la rama correcta. Forzando `os.name` sobre la clase ya
 compilada, cada sistema ve **un solo** comando, el suyo:
@@ -126,18 +126,27 @@ os.name = Linux      ->  lsof -ti:55436 | xargs kill -9
 os.name = Mac OS X   ->  lsof -ti:55436 | xargs kill -9
 ```
 
-**Falta verificar en la VM, y es tuyo:** que esos dos comandos hacen el trabajo en Windows real.
-Aquí no hay Windows y no me lo voy a inventar. Lo concreto a comprobar:
+**VERIFICADO POR EL PO EN LA VM (18/08/2026).** `netstat -ano | findstr :PUERTO` muestra **dos
+filas, IPv4 e IPv6, con el mismo PID**, y `taskkill /F /PID <pid>` funciona tal como está escrito.
+Las dos filas dicen `LISTENING`, así que la redacción sigue llevando al PID correcto.
+
+Lo que se pidió comprobar, y que quedó comprobado:
 
 1. Levantar cualquier lab con base, cerrar la ventana de golpe, y volver a arrancar: debe salir el
    recuadro con la rama de Windows.
-2. `netstat -ano | findstr :55436` debe listar la fila `LISTENING`.
-3. `taskkill /F /PID <ese PID>` debe cerrarlo, y el lab arrancar después.
+2. `netstat -ano | findstr :55436` lista **dos** filas `LISTENING` —IPv4 e IPv6— con el
+   **mismo PID**. Es lo normal, no un síntoma.
+3. `taskkill /F /PID <ese PID>` lo cierra, y el lab arranca después.
 
-**Un detalle que ya cambié por precaución:** el texto decía «el PID de la última columna».
-`findstr :55436` también casa filas de conexión donde el 55436 es el puerto **remoto**, y ahí el
-PID es el de otro programa. Ahora dice **«el PID de la fila que dice LISTENING»**. Si en la VM ves
-más de una fila, eso es justo lo que estaba mal.
+**Un detalle que se cambió por precaución, y que la VM confirmó que valía la pena:** el texto
+decía «el PID de la última columna». `findstr :55436` también casa filas de conexión donde el
+55436 es el puerto **remoto**, y ahí el PID es el de otro programa. Ahora dice **«el PID de la
+fila que dice LISTENING»**. En la VM salen dos filas y ambas son `LISTENING` con el mismo PID, así
+que la redacción lleva al PID correcto en cualquiera de las dos.
+
+**Queda abierto** el caso que este mensaje anticipa en su último bloque y no comprueba: matar el
+PostgreSQL dejando la aplicación viva. Lo detectó el PO en esta misma verificación y lo resuelve
+la **SPEC-FIX-08**.
 
 ## 7 · Lo que no se hizo, y por qué
 
