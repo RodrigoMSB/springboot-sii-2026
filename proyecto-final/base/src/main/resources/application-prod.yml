@@ -1,0 +1,4 @@
+# Perfil productivo. El secreto llega por variable de entorno; aquí sólo el respaldo.
+dgt:
+  jwt:
+    secreto: ${DGT_JWT_SECRETO:CAMBIAME-en-produccion-32-bytes-minimo-o-no-arranca}

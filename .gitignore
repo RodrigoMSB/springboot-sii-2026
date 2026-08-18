@@ -50,3 +50,8 @@ labs/**/.respaldo-*/
 # es un proyecto ejecutable y no viaja al repositorio — es la chuleta de quien
 # dicta, y si estuviera versionada el alumno la tendría en el clon.
 labs/*/instructor/
+
+# Y la del proyecto final, por lo mismo: dentro va la solución de referencia y la
+# guía de defensa con las respuestas calibradas. Si viajara en el clon, el examen
+# vendría con las respuestas.
+proyecto-final/instructor/
