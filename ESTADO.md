@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-034 — el mapa de trazabilidad, rehecho y con las brechas medidas (tag `material-v1.0.1`).*
+*Última actualización: SPEC-035 — vuelve el proyecto final: ya hay con qué evaluar (tag `material-v1.1.0`).*
 
 ---
 
@@ -30,6 +30,19 @@
   | 11 | `observabilidad` | base caída: liveness **200**, readiness **503** nombrando la causa |
   | 12 | `tareas` | **3,03 s → 0,004 s**, y el cierre nocturno **dos veces en el mismo segundo** |
   | 13 | `empaquetado` | imagen OCI de **138,9 MB** construida sin Docker y sin red |
+
+- **EL INSTRUMENTO DE EVALUACIÓN: `proyecto-final/`.** Recuperado del arco antiguo y adaptado
+  (SPEC-035). No es un lab: es con lo que el PO certifica. Un requerimiento de negocio incompleto
+  en los bordes («el consolidado del contribuyente»), tres horas, y una rúbrica de tres ejes
+  —Correctitud, Oficio, Criterio— con el umbral que define el curso: **núcleo verde Y Criterio ≥
+  Suficiente**. Todo funcionando y sin criterio **no aprueba**.
+  - `base/` (8107) — compila y arranca: dominio, datos sembrados y la autenticación JWT resueltos.
+    El encargo, no.
+  - `brief/` · `rubrica/` · `plantillas/reporte.md` — lo que el alumno lee y entrega.
+  - `instructor/` — la solución de referencia (10 tests, verificada) y la guía de defensa con
+    respuestas calibradas por nivel. **No viaja al repositorio**: traería las respuestas dentro.
+  - Los **20 requisitos del encargo están atados a su lab y su paso**: no se evalúa nada que no se
+    haya enseñado.
 
 - **La estructura de tres carpetas rige en los catorce** (SPEC-031, -032, -033): `practica/` sin
   una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
@@ -300,21 +313,31 @@ presentación, no.
 
 | Nivel | Temas |
 |---|---|
-| **Cubierto** | **19** de 35 |
+| **Cubierto** | **20** de 35 |
 | **Parcial** | 6 |
 | **Mencionado** | 1 |
-| **No cubierto** | **9** |
+| **No cubierto** | **8** |
 
 Y por módulo: **3 cubiertos** (M4 Testing I, M5 Persistencia, M7 Transacciones) y **12 parciales**.
 
-**La brecha que hay que mirar primero: el tema XXXV, el proyecto final integrador.** El contrato
-pesa la evaluación en `Proyecto final 50 % · Conocimientos 30 % · Ejercicios 20 %`, y **el material
-no tiene ningún instrumento de evaluación**: los catorce labs son construcción guiada, sin nota.
-Estaba en el antiguo `lab-13-capsula-y-egreso`, recuperable desde `material-v0.8.0`. Es lo único
-que impide cerrar el contrato tal como está escrito.
+**El tema XXXV ya está cubierto (SPEC-035):** `proyecto-final/` es el instrumento con el que se
+evalúa, recuperado del antiguo `lab-13-capsula-y-egreso` y adaptado al arco nuevo. Con eso, la
+cobertura sube a **20 temas cubiertos de 35**.
 
-Las otras ocho brechas: gRPC, AOP, manejo de archivos, eventos de aplicación, mensajería, caché,
-Liquibase y OpenAPI/versionado. **Siete de ellas son un paso dentro de un lab que ya existe**; las
+**Lo que sigue sin instrumento es el otro 50 % de la evaluación:**
+
+| | Peso | Instrumento |
+|---|---|---|
+| Proyecto final | **50 %** | ✅ `proyecto-final/` |
+| Evaluación de conocimientos | **30 %** | ❌ **no existe** |
+| Ejercicios | **20 %** | ❌ **no existe** |
+
+Los catorce labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
+evaluados» sin definir antes qué se puntúa. Las dos casillas vacías son una decisión del PO, no un
+trabajo pendiente del material.
+
+Las ocho brechas restantes: gRPC, AOP, manejo de archivos, eventos de aplicación, mensajería,
+caché, Liquibase y OpenAPI/versionado. **Siete de ellas son un paso dentro de un lab que ya existe**; las
 caras —Testcontainers, mensajería y Buildpacks— lo son porque las tres exigen Docker, que la sala
 del SII no tiene. El mapa las detalla con qué haría falta para cada una.
 

@@ -1,18 +1,20 @@
 # Mapa Laboratorio ↔ Módulo del temario contratado
 
 *Documento de trazabilidad para la entrega al SII. Rehecho por la **SPEC-034** contra el arco de
-catorce labs (`material-v1.0.0`). Sustituye al mapa de la SPEC-FIX-02, escrito contra el arco
-antiguo, que ya no existe.*
+catorce labs, y actualizado por la **SPEC-035**, que cerró la brecha del proyecto final.*
 
 **Fuente de verdad:** `TEMARIO-SPRING-BOOT-SII-v3.md`, §«Estructura del Programa» y §«Matriz
 Módulo × Sesión». **Donde el material y el temario discrepen, manda el temario** y la discrepancia
 se declara aquí. No se reinterpreta el temario para que calce.
 
 > ⚠️ **Este documento dice que hay huecos.** El arco nuevo no es el antiguo con otros nombres:
-> cambió lo que se enseña. Nueve de los treinta y cinco temas comprometidos **no se cubren**, y
-> uno de ellos es el proyecto final integrador, que pesa el 50 % de la evaluación contratada. Está
-> todo en la §4. Un mapa que dijera que está todo cubierto sería más cómodo y no serviría para
-> nada.
+> cambió lo que se enseña. **Ocho** de los treinta y cinco temas comprometidos **no se cubren**.
+> Está todo en la §4. Un mapa que dijera que está todo cubierto sería más cómodo y no serviría
+> para nada.
+>
+> El noveno hueco —el proyecto final, tema XXXV— **se cerró en la SPEC-035**: `proyecto-final/` es
+> el instrumento con el que se evalúa. Lo que sigue sin instrumento es el otro 50 % de la nota
+> (conocimientos 30 % y ejercicios 20 %): ver §4.1.
 
 ---
 
@@ -84,9 +86,11 @@ Ver §5.
 | **M12** | Asincronía, Scheduling y Eventos | 2,0 | **Parcial** | lab-12 pasos 1–5 | **Eventos de aplicación, entero** (`@EventListener`, `@TransactionalEventListener`) · `CompletableFuture` · la protección contra doble ejecución **se muestra pero no se implementa** |
 | **M13** | Mensajería y Resiliencia | 2,5 | **Parcial (mitad)** | lab-10 pasos 3–5 (retry, circuit breaker, fallback) | **Mensajería, entera**: RabbitMQ/Kafka, AMQP, DLQ, idempotencia · rate limiter y bulkhead (mencionados) · `@Retryable`/`@ConcurrencyLimit` del núcleo |
 | **M14** | Observabilidad, Métricas y Caché | 2,0 | **Parcial** | lab-11 pasos 1, 3, 4, 5 | **Caché, entero** (`@Cacheable`, Caffeine, hit-rate) · **OpenTelemetry y trazas** (mencionado) · Prometheus/Grafana (mencionado) · `@Endpoint` propio |
-| **M15** | Contenedores y Proyecto Final | 2,0 | **Parcial** | lab-13 pasos 1–5 | **El proyecto final integrador y su rúbrica** (ver §4.1) · Buildpacks (`build-image`) — se usa Jib · arranque acelerado (AOT/Leyden, GraalVM) · `compose.yaml` · graceful shutdown |
+| **M15** | Contenedores y Proyecto Final | 2,0 | **Parcial** | lab-13 pasos 1–5 · **`proyecto-final/`** | Buildpacks (`build-image`) — se usa Jib · arranque acelerado (AOT/Leyden, GraalVM) · `compose.yaml` · graceful shutdown |
 
 **Recuento por módulo:** **3 Cubiertos** (M4, M5, M7) · **12 Parciales** · 0 sin ningún contenido.
+
+(M15 sigue Parcial pese a tener ya su proyecto final: le faltan Buildpacks y el arranque acelerado.)
 
 ---
 
@@ -130,16 +134,16 @@ Deducidos del contenido de su módulo (ver la nota de la §0).
 | XXXII | M8 | **Liquibase** | **No cubierto** | — |
 | XXXIII | M13 | Resiliencia | **Cubierto** | lab-10 pasos 3–5 |
 | XXXIV | M15 | Contenedores y empaquetado | **Cubierto** | lab-13 pasos 1–5 |
-| XXXV | M15 | **Proyecto final integrador** | **No cubierto** | ver §4.1 |
+| XXXV | M15 | Proyecto final integrador | **Cubierto** | `proyecto-final/` (SPEC-035): brief, rúbrica de tres ejes y defensa |
 
 **Recuento por tema:**
 
 | Nivel | Cuántos | Cuáles |
 |---|---|---|
-| **Cubierto** | **19** | I, II, III, V, VI, VII, VIII, IX, X, XIII, XIV, XVIII, XXI, XXIII, XXIV, XXVII, XXX, XXXIII, XXXIV |
+| **Cubierto** | **20** | I, II, III, V, VI, VII, VIII, IX, X, XIII, XIV, XVIII, XXI, XXIII, XXIV, XXVII, XXX, XXXIII, XXXIV, **XXXV** |
 | **Parcial** | **6** | XI, XII, XV, XVI, XXII, XXXI |
 | **Mencionado** | **1** | XXVIII |
-| **No cubierto** | **9** | IV, XVII, XIX, XX, XXV, XXVI, XXIX, XXXII, XXXV |
+| **No cubierto** | **8** | IV, XVII, XIX, XX, XXV, XXVI, XXIX, XXXII |
 | | **35** | |
 
 ---
