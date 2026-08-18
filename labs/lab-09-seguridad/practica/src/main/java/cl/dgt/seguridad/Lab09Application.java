@@ -16,10 +16,12 @@ public class Lab09Application {
         SpringApplication.run(Lab09Application.class, args);
     }
 
-    static final int PUERTO_BASE = 55441;
+    static final int PUERTO_BASE = 55440;
 
     @Bean(destroyMethod = "close")
     EmbeddedPostgres postgresEmbebido() throws IOException {
+        PuertoLibre.exigir(PUERTO_BASE);
+
         return EmbeddedPostgres.builder()
                 .setPort(PUERTO_BASE)
                 .setDataDirectory(new File(".datos-pg"))

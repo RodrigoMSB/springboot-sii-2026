@@ -25,6 +25,11 @@ public class MotorDePostgres {
         if (motor != null) {
             return;
         }
+
+        // Después de la guarda de arriba, y no antes: si el motor ya está en pie, el puerto lo
+        // ocupa él mismo y la comprobación mataría la aplicación al pedir /simulador/base-sana
+        // dos veces seguidas.
+        PuertoLibre.exigir(puerto);
         motor = EmbeddedPostgres.builder()
                 .setPort(puerto)
                 .setDataDirectory(directorio)
