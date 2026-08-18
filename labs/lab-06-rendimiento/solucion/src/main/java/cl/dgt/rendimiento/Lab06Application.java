@@ -37,6 +37,7 @@ public class Lab06Application {
     @Bean(destroyMethod = "close")
     EmbeddedPostgres postgresEmbebido() throws IOException {
         PuertoLibre.exigir(PUERTO_BASE);
+        CandadoLibre.exigir(new File(".datos-pg"));
 
         return EmbeddedPostgres.builder()
                 .setPort(PUERTO_BASE)

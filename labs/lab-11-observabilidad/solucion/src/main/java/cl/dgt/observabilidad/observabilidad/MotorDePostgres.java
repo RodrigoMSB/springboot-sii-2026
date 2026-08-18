@@ -30,6 +30,7 @@ public class MotorDePostgres {
         // ocupa él mismo y la comprobación mataría la aplicación al pedir /simulador/base-sana
         // dos veces seguidas.
         PuertoLibre.exigir(puerto);
+        CandadoLibre.exigir(directorio);
         motor = EmbeddedPostgres.builder()
                 .setPort(puerto)
                 .setDataDirectory(directorio)
