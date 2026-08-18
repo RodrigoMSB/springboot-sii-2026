@@ -1,4 +1,26 @@
-# Perfil productivo. El secreto llega por variable de entorno; aquí sólo el respaldo.
+# =============================================================================
+#  Perfil productivo.
+# -----------------------------------------------------------------------------
+#  Fíjate en lo que NO hay: valor por defecto.
+#
+#      secreto: ${DGT_JWT_SECRETO}        <- sin respaldo, a propósito
+#
+#  Si la variable no está, la aplicación **no arranca**:
+#
+#      Could not resolve placeholder 'DGT_JWT_SECRETO' in value "${DGT_JWT_SECRETO}"
+#
+#  Un respaldo aquí sería peor que no tener nada: la aplicación arrancaría en
+#  producción firmando tokens con una clave que está escrita en el repositorio,
+#  y por tanto cualquiera podría fabricar un token de FISCALIZADOR. Nadie se
+#  enteraría, porque todo *funcionaría*.
+#
+#  Fallar al arrancar es ruidoso, ocurre en el despliegue y lo arregla quien
+#  está mirando. Arrancar con la clave equivocada es silencioso y se descubre
+#  cuando ya da igual.
+#
+#  El perfil por defecto (`application.yml`) SÍ trae un valor: ahí es correcto,
+#  porque es el laboratorio y tiene que arrancar sin configurar nada.
+# =============================================================================
 dgt:
   jwt:
-    secreto: ${DGT_JWT_SECRETO:CAMBIAME-en-produccion-32-bytes-minimo-o-no-arranca}
+    secreto: ${DGT_JWT_SECRETO}

@@ -13,7 +13,10 @@ spring:
 
 dgt:
   jwt:
-    secreto: ${DGT_JWT_SECRETO:clave-del-proyecto-final-que-debe-tener-32-bytes-o-mas}
+    # Valor por defecto SÓLO para el perfil de laboratorio: el proyecto tiene que
+    # arrancar sin configurar nada. En `prod` no hay respaldo y la aplicación se
+    # niega a arrancar sin la variable — ver application-prod.yml.
+    secreto: ${DGT_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
 
 management:
   endpoints:

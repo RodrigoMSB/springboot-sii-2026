@@ -38,7 +38,7 @@ comprobaciones son cosas que el relator hace en minutos con la entrega delante.
 
 | Nivel | Descriptores | Cómo se comprueba |
 |---|---|---|
-| **Insuficiente** | Cualquiera de: **suite flaky** (tres corridas no coinciden) · una credencial literal en un archivo versionado · el esquema improvisado a mano en vez de una migración · el `puntaje_riesgo` sale en la respuesta | `./mvnw test` tres veces · `grep -rn "password\|secreto\|clave" src/` · mirar `db/migration/` · `curl` y buscar el campo |
+| **Insuficiente** | Cualquiera de: **suite flaky** (tres corridas no coinciden) · una credencial literal en un archivo versionado · **el perfil productivo arranca con un secreto por defecto** · el esquema improvisado a mano en vez de una migración · el `puntaje_riesgo` sale en la respuesta | `./mvnw test` tres veces · `grep -rn "password\|secreto\|clave" src/` · `SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run` **sin** la variable: debe **negarse a arrancar** · mirar `db/migration/` · `curl` y buscar el campo |
 | **Suficiente** | Suite determinista, sin credenciales versionadas, migraciones en orden, y el dato interno no sale | Lo mismo, en verde |
 | **Competente** | Lo anterior **y** el código se lee como el resto del curso: el controlador **no conoce la entidad** · la lógica vive en el servicio · el DTO es **lista blanca** (enumera lo que sale, no excluye lo que no debe salir) · los nombres dicen lo que hacen | Leer `controllers/` buscando imports de `entities/` · leer el DTO: ¿enumera o excluye? |
 | **Destacado** | Lo anterior **y** decisiones que se sostienen solas: la consulta no arrastra el ORM donde no toca · hay comentarios que explican **por qué**, no qué · el que llegue mañana no necesita preguntar nada | Leer la consulta y los comentarios |
