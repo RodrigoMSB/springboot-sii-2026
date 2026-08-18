@@ -40,6 +40,7 @@ on:
       - 'docs/temario/**'
       - 'tools/**'
       - 'labs/**'
+      - 'proyecto-final/**'
       - 'repo-maven/**'
       - '.github/workflows/material-ci.yml'
   pull_request:            # sin `paths`: ver la cabecera. Ningún PR queda colgado.
@@ -193,7 +194,7 @@ jobs:
   #  necesitó la red.
   # ---------------------------------------------------------------------------
   labs:
-    name: labs · los 14 proyectos compilan offline
+    name: labs · los proyectos del curso compilan offline
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -248,7 +249,10 @@ jobs:
           # runner ni siquiera existe. Pero SÍ existe en la máquina de quien
           # prepara el material, y sin esta exclusión este mismo bucle daría
           # verde en el CI y rojo en su portátil — la peor combinación posible.
-          for POM in $(find labs -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
+          # Incluye `proyecto-final/base`: es material que el alumno usa y sin esto
+          # sería lo único del repositorio que nadie compila.
+          # (`proyecto-final/instructor/` está en el .gitignore: en el runner no existe.)
+          for POM in $(find labs proyecto-final -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
               PROY="$(dirname "$POM")"
               TOTAL=$((TOTAL + 1))
               printf '[..] %s\n' "$PROY"
