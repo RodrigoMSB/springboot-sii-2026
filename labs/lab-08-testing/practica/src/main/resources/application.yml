@@ -1,0 +1,12 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: lab08-testing
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO

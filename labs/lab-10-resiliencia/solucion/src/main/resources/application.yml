@@ -1,0 +1,18 @@
+server:
+  # `practica` en el 8097 y `solucion` en el 8098.
+  port: 8098
+
+spring:
+  application:
+    name: lab10-resiliencia-solucion
+
+lab09:
+  tesoreria:
+    # El puerto de Tesorería simulada, que vive dentro de este mismo proceso.
+    puerto: 9098
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO

@@ -1,0 +1,24 @@
+server:
+  # El puerto HTTP de los endpoints del paso 10.
+  port: 8099
+
+spring:
+  application:
+    name: lab04-jpa
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+logging:
+  level:
+    root: WARN
+    cl.dgt.jpa: INFO
+    org.flywaydb: INFO
