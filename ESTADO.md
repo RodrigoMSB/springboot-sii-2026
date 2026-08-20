@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-08 — el puerto y el candado, los dos explicados (tag `material-v1.1.3`).*
+*Última actualización: SPEC-037 — el Lab 14, microservicios sin Docker. El arco pasa a quince labs.*
 
 ---
 
@@ -10,7 +10,7 @@
 - **El temario definitivo** (v3, julio 2026): `docs/temario/`. Son 36 horas, 12 sesiones de 3,
   15 módulos. El `.md` manda; el `.docx` es lo que se le entrega al SII.
 
-- **EL ARCO, COMPLETO: catorce labs de construcción guiada, del 00 al 13.** Es todo el material
+- **EL ARCO, COMPLETO: quince labs de construcción guiada, del 00 al 14.** Es todo el material
   que el alumno usa. Cada uno con `README.md`, `PASOS.md` y **tres carpetas** (`practica/`,
   `solucion/`, `instructor/`). Sin Docker, sin instalar nada, sin red.
 
@@ -30,6 +30,7 @@
   | 11 | `observabilidad` | base caída: liveness **200**, readiness **503** nombrando la causa |
   | 12 | `tareas` | **3,03 s → 0,004 s**, y el cierre nocturno **dos veces en el mismo segundo** |
   | 13 | `empaquetado` | imagen OCI de **138,9 MB** construida sin Docker y sin red |
+  | 14 | `microservicios` | cuatro procesos, tres bases: con un servicio caído, **HTTP 500 → HTTP 200 degradado**, y las llamadas a un muerto **congeladas en 3** |
 
 - **EL INSTRUMENTO DE EVALUACIÓN: `proyecto-final/`.** Recuperado del arco antiguo y adaptado
   (SPEC-035). No es un lab: es con lo que el PO certifica. Un requerimiento de negocio incompleto
@@ -44,7 +45,7 @@
   - Los **20 requisitos del encargo están atados a su lab y su paso**: no se evalúa nada que no se
     haya enseñado.
 
-- **La estructura de tres carpetas rige en los catorce** (SPEC-031, -032, -033): `practica/` sin
+- **La estructura de tres carpetas rige en los quince** (SPEC-031, -032, -033, -037): `practica/` sin
   una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
   explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
   `.gitignore`): es la chuleta de quien dicta, y versionarla anularía el motivo de haber vaciado
@@ -66,8 +67,9 @@
 
 - **Un CI de cuatro jobs** (`.github/workflows/material-ci.yml`):
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
-  siguiente) · **`labs`** (los 28 proyectos compilan **offline**, y falla si alguien necesitó la
-  red) · `labs-sh` (los scripts, en Linux y en Git Bash).
+  siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
+  necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
+  `proyecto-final/base`) · `labs-sh` (los scripts, en Linux y en Git Bash).
 
 ## 1.a · Lo que se retiró, y dónde está
 
@@ -316,30 +318,38 @@ Informes en `docs/specs/informes/INFORME-SPEC-FIX-07.md` y `INFORME-SPEC-FIX-08.
 
 ## 2 · Qué falta
 
-**Del material, nada bloqueante.** El arco está completo: catorce labs, los tres formatos de
-carpeta en todos, y el CI verificando que los 28 proyectos compilan offline.
+**Del material, nada bloqueante.** El arco está completo: quince labs, los tres formatos de
+carpeta en todos, y el CI verificando que los 37 proyectos compilan offline.
 
 **Pendiente del PO, y en los labs guiados es LA prueba, no una más:** sentarse con `PASOS.md` y
 `practica/` y llegar al final **sin abrir `solucion/`**. Si siguiendo el guion no se llega al
 resultado, el guion está mal. Es la única prueba que el ejecutor no puede hacer por definición:
 quien escribió el guion no puede juzgar si se entiende.
 
-Los catorce están verificados por el ejecutor —cada uno con sus salidas citadas en el informe de
+Los quince están verificados por el ejecutor —cada uno con sus salidas citadas en el informe de
 su SPEC— pero el PO no los ha corrido de punta a punta.
+
+En el **Lab 14** esa fila importa más que en los otros catorce, por dos razones concretas: es el
+único que abre **cuatro terminales y tres PostgreSQL a la vez** (memoria y confusión medidas en
+`INFORME-SPEC-037` §6/V8), y **todo se midió en macOS**. Los tres defectos que encontró la
+SPEC-024 eran invisibles desde macOS. Es el lab que más conviene probar en la VM de Windows.
 
 **Faltan las diapositivas y el material de sala.** `instructor/` cubre la parte de código; una
 presentación, no.
 
 **Del contrato: el mapa ya está rehecho, y dice que hay huecos.**
-`docs/temario/MAPA-LAB-MODULO.md` (SPEC-034) mide la cobertura real contra los 15 módulos y los
-35 temas. El resultado, medido con el lab y el paso que lo respalda:
+`docs/temario/MAPA-LAB-MODULO.md` (SPEC-034, al día con la SPEC-037) mide la cobertura real contra
+los 15 módulos y los 35 temas. El resultado, medido con el lab y el paso que lo respalda:
 
 | Nivel | Temas |
 |---|---|
 | **Cubierto** | **20** de 35 |
-| **Parcial** | 6 |
-| **Mencionado** | 1 |
+| **Parcial** | 7 |
+| **Mencionado** | 0 |
 | **No cubierto** | **8** |
+
+*(El Lab 14 subió el tema XXVIII —trazas— de «Mencionado» a «Parcial»: la correlación entre tres
+servicios ahora se practica; OpenTelemetry sigue sin verse.)*
 
 Y por módulo: **3 cubiertos** (M4 Testing I, M5 Persistencia, M7 Transacciones) y **12 parciales**.
 
@@ -355,7 +365,7 @@ cobertura sube a **20 temas cubiertos de 35**.
 | Evaluación de conocimientos | **30 %** | ❌ **no existe** |
 | Ejercicios | **20 %** | ❌ **no existe** |
 
-Los catorce labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
+Los quince labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
 evaluados» sin definir antes qué se puntúa. Las dos casillas vacías son una decisión del PO, no un
 trabajo pendiente del material.
 
@@ -364,26 +374,36 @@ caché, Liquibase y OpenAPI/versionado. **Siete de ellas son un paso dentro de u
 caras —Testcontainers, mensajería y Buildpacks— lo son porque las tres exigen Docker, que la sala
 del SII no tiene. El mapa las detalla con qué haría falta para cada una.
 
-Y el alcance de microservicios: el título del contrato («Desarrollo de Microservicios en Java»)
-lo cubría el antiguo Lab 14, que se retiró con el resto del arco por decisión del PO. Sigue
-recuperable desde el tag `material-v0.8.0`; si el SII lo exige, hay que decidir si se reconstruye
-en formato guiado.
+**Y el alcance de microservicios ya está cubierto (SPEC-037).** El título del contrato
+—«Desarrollo de Microservicios en Java»— prometía algo que su propio temario no reparte: ninguno
+de los 15 módulos ni de los 35 temas es de microservicios. Lo cubría el antiguo Lab 14, retirado
+con el arco viejo por necesitar Docker Compose y seis servicios.
+
+El **`lab-14-microservicios`** lo reconstruye en formato guiado: **cuatro procesos que el alumno
+arranca a mano, tres bases de datos, cero Docker**. Su teoría se recuperó entera del tag
+`material-v0.8.0` y se leyó antes de diseñar nada.
+
+Lo que queda para el PO es la aritmética, no el material: son **tres horas más** sobre un contrato
+que ya iba seis por encima, y el lab **no mapea a ningún módulo contratado como titular** — toca
+M10, M13 y M14 sin ser el dueño de ninguno. Está declarado en el mapa, §6.4.
 
 ## 3 · Qué viene ahora
 
-**El material está terminado.** Catorce labs, numerados 00 a 13, con las tres carpetas, la maleta
+**El material está terminado.** Quince labs, numerados 00 a 14, con las tres carpetas, la maleta
 completa y el CI verde. No queda laboratorio por escribir.
 
 Lo que viene, en orden:
 
 1. **La fila de aceptación del PO.** Sentarse con cada `PASOS.md` sobre `practica/`, sin abrir
-   `solucion/`, del 00 al 13. Es la etapa que cierra cada SPEC y la única que el ejecutor no puede
-   hacer.
-2. **Decidir sobre las brechas del mapa** (§2): el proyecto final primero, después las siete
-   baratas, y por último negociar con el SII las tres que dependen de Docker.
+   `solucion/`, del 00 al 14. Es la etapa que cierra cada SPEC y la única que el ejecutor no puede
+   hacer. **Empezar por el 14**: es el más grande, el más nuevo, el único con cuatro terminales, y
+   el único que no se ha probado nunca fuera de macOS.
+2. **Decidir sobre las brechas del mapa** (§2): las siete baratas primero, y después negociar con
+   el SII las tres que dependen de Docker.
 3. **Las diapositivas y el material de sala.**
-4. **Decidir sobre microservicios** (ver §2): se retiró con el arco antiguo y sigue recuperable
-   desde el tag `material-v0.8.0`.
+4. **Resolver la aritmética del contrato con el SII** (§2 y mapa §6.4): el material va **nueve
+   horas y tres sesiones** por encima de lo contratado, y el lab-14 no tiene módulo titular. Es una
+   conversación, no un trabajo pendiente del material.
 
 ## 4 · Si estás perdido
 

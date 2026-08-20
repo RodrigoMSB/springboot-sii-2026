@@ -398,14 +398,18 @@ Lo que hay que poder decir con las propias palabras:
 > contenedor es un proceso normal al que el núcleo le aisló lo que ve. Y la imagen se construye
 > **una vez**: si se recompila para producción, lo que se probó no es lo que se despliega.
 
-### Lo que siembra este lab — y cierra el curso
-
-Este es el último laboratorio, así que lo que se siembra no lo recoge otra sesión: lo recoge quien
-vuelva el lunes a su trabajo.
+### Lo que siembra este lab
 
 En trece sesiones se armó una aplicación que arranca, expone endpoints, guarda en una base de
 datos, no se cae bajo concurrencia, está probada, cerrada con llave, sobrevive a que el vecino
 falle, hace su trabajo a tiempo, y hoy sale de la máquina donde nació.
+
+**Una** aplicación. Un artefacto, un puerto, una base de datos, un log.
+
+Y esa palabra es lo que siembra el **Lab 14**, que es el último: mañana esa misma DGT son **cuatro
+programas distintos con tres bases de datos separadas**, y la pregunta deja de ser cómo se
+construye y pasa a ser **qué se gana y qué se paga** al partirla. La imagen de hoy es la unidad de
+despliegue de mañana — un microservicio es, antes que nada, algo que se despliega solo.
 
 Lo que queda por delante —y hay que nombrarlo para que nadie se vaya creyendo que el mapa está
 completo— es **quién cuida eso una vez desplegado**: quién arranca la imagen, cuántas copias,

@@ -7,7 +7,7 @@ Material del curso de Spring Boot para el SII: teoría, labs y su tooling de val
 
 ## Los laboratorios
 
-**Catorce laboratorios, del 00 al 13.** El alumno construye en vivo junto al instructor: todos
+**Quince laboratorios, del 00 al 14.** El alumno construye en vivo junto al instructor: todos
 tienen la misma forma —`README.md`, `PASOS.md` (el guion de la sesión), y tres carpetas— y se
 corren con `./mvnw spring-boot:run`. **No necesitan Docker ni instalar nada**: Java, Maven,
 PostgreSQL y hasta la imagen base de los contenedores viajan dentro del repositorio.
@@ -28,6 +28,7 @@ PostgreSQL y hasta la imagen base de los contenedores viajan dentro del reposito
 | [`lab-11-observabilidad`](labs/lab-11-observabilidad/) | Observabilidad | Con la base caída: liveness **200**, readiness **503**, y el health nombra la causa |
 | [`lab-12-tareas`](labs/lab-12-tareas/) | Tareas y asincronía | `@Scheduled`, `@Async` (3,03 s → 0,004 s), hilos virtuales, y la tarea duplicada |
 | [`lab-13-empaquetado`](labs/lab-13-empaquetado/) | Empaquetado | El jar, las capas, qué es un contenedor, y una imagen OCI **sin Docker y sin red** |
+| [`lab-14-microservicios`](labs/lab-14-microservicios/) | Microservicios | Cuatro procesos y tres bases: el JOIN imposible, el fallo en cascada (**500 → 200 degradado**), el gateway, y cuándo **no** partir un sistema |
 
 ### Las tres carpetas de cada lab
 

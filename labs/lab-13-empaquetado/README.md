@@ -1,6 +1,7 @@
 # Lab 13 · Empaquetado
 
-El último laboratorio del curso, y el único sobre **salir de la máquina propia**.
+El único laboratorio sobre **salir de la máquina propia** — y el que deja lista la pieza que el
+Lab 14 va a repartir en cuatro.
 
 Hasta hoy todo se corrió con `./mvnw spring-boot:run`. Eso no existe en producción: en producción
 hay un artefacto que alguien construyó una vez y que arranca solo. Hoy se construye ese artefacto,

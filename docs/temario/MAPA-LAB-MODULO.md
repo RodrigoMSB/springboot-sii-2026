@@ -1,7 +1,8 @@
 # Mapa Laboratorio ↔ Módulo del temario contratado
 
 *Documento de trazabilidad para la entrega al SII. Rehecho por la **SPEC-034** contra el arco de
-catorce labs, y actualizado por la **SPEC-035**, que cerró la brecha del proyecto final.*
+catorce labs, actualizado por la **SPEC-035** (que cerró la brecha del proyecto final) y por la
+**SPEC-037**, que añadió el Lab 14 de microservicios.*
 
 **Fuente de verdad:** `TEMARIO-SPRING-BOOT-SII-v3.md`, §«Estructura del Programa» y §«Matriz
 Módulo × Sesión». **Donde el material y el temario discrepen, manda el temario** y la discrepancia
@@ -60,8 +61,9 @@ Cuatro niveles, y la diferencia importa:
 | **11** observabilidad | **M14** (parte) · M11 (parte) | XVIII, XXVII | Actuator con lista blanca nominal, `traceId` en el MDC, métrica de negocio con Micrometer, health indicator propio que **nombra la causa**, liveness contra readiness |
 | **12** tareas | **M12** | XXIII, XXIV | `@Scheduled`, `fixedRate` contra `fixedDelay`, cron de seis campos con zona, `@Async` y sus trampas, hilos virtuales, y la **tarea duplicada en dos instancias** |
 | **13** empaquetado | **M15** (parte) · M1 (parte) | II, XXXIV | Jar ejecutable y `java -jar`, jar por capas, **qué es un contenedor** (20 min de pizarra), imagen OCI con Jib sin Docker, y la misma imagen en tres entornos |
+| **14** microservicios | M10 (parte) · M13 (parte) · M14 (parte) | XVI, XXVIII, XXXIII | **Cuatro servicios, tres bases, sin Docker**: una base por servicio y el JOIN imposible, la llamada HTTP entre procesos, el **fallo en cascada medido** (500 → 200 degradado), API gateway con enrutado y JWT en la puerta, **correlation id por tres logs**, consistencia eventual con el evento que se pierde — y cuándo **no** partir un sistema |
 
-**Horas del material:** 14 labs × 3 h = **42 h**. El contrato compromete **36 h en 12 sesiones**.
+**Horas del material:** 15 labs × 3 h = **45 h**. El contrato compromete **36 h en 12 sesiones**.
 Ver §5.
 
 ---
@@ -81,11 +83,11 @@ Ver §5.
 | **M7** | Transacciones y Optimización | 2,0 | **Cubierto** | lab-07 pasos 1–5 · lab-06 pasos 1–5 | (complementos: propagación · aislamiento y anomalías · `@Version` optimista · índices y plan de ejecución · HikariCP como tema) |
 | **M8** | Migraciones: Flyway y Liquibase | 1,5 | **Parcial** | lab-07 paso 5 (migración correctiva con restricción) · Flyway en uso en 6 labs | **Liquibase, entero** · la mecánica de Flyway como tema (historial, repetibles, baseline, `ddl-auto` como antipatrón) |
 | **M9** | Spring Security 7 y JWT | 4,0 | **Parcial** | lab-09 pasos 1–6 | **CORS** · **cabeceras de seguridad (HSTS, CSP)** · `@PreAuthorize` (mencionado) · Argon2 · firma asimétrica · refresh tokens (mencionado) · passkeys |
-| **M10** | Comunicación entre Servicios | 2,5 | **Parcial** | lab-10 pasos 2, 3, 5 (`RestClient`, timeouts, degradación) | **gRPC, entero** · **`@HttpExchange`** · Feign · WebClient · mitigación SSRF · propagación de trazas |
+| **M10** | Comunicación entre Servicios | 2,5 | **Parcial (alto)** | lab-10 pasos 2, 3, 5 (`RestClient`, timeouts, degradación) · **lab-14 pasos 3, 6, 7** (llamada real entre dos procesos, gateway, propagación de trazas) | **gRPC, entero** · **`@HttpExchange`** · Feign · WebClient · mitigación SSRF |
 | **M11** | Logging Estructurado, AOP y Archivos | 3,0 | **Parcial (bajo)** | lab-11 paso 2 (MDC y correlación) · niveles de log | **AOP, entero** (`@Aspect`, advice, pointcuts, auditoría) · **manejo de archivos, entero** (`MultipartFile`, MIME, streaming) · logging JSON (configurado y apagado: mencionado) |
 | **M12** | Asincronía, Scheduling y Eventos | 2,0 | **Parcial** | lab-12 pasos 1–5 | **Eventos de aplicación, entero** (`@EventListener`, `@TransactionalEventListener`) · `CompletableFuture` · la protección contra doble ejecución **se muestra pero no se implementa** |
-| **M13** | Mensajería y Resiliencia | 2,5 | **Parcial (mitad)** | lab-10 pasos 3–5 (retry, circuit breaker, fallback) | **Mensajería, entera**: RabbitMQ/Kafka, AMQP, DLQ, idempotencia · rate limiter y bulkhead (mencionados) · `@Retryable`/`@ConcurrencyLimit` del núcleo |
-| **M14** | Observabilidad, Métricas y Caché | 2,0 | **Parcial** | lab-11 pasos 1, 3, 4, 5 | **Caché, entero** (`@Cacheable`, Caffeine, hit-rate) · **OpenTelemetry y trazas** (mencionado) · Prometheus/Grafana (mencionado) · `@Endpoint` propio |
+| **M13** | Mensajería y Resiliencia | 2,5 | **Parcial (mitad)** | lab-10 pasos 3–5 (retry, circuit breaker, fallback) · **lab-14 pasos 4–5** (el circuito protegiendo una llamada entre servicios de verdad, con los dos comportamientos medidos) | **Mensajería, entera**: RabbitMQ/Kafka, AMQP, DLQ, idempotencia · rate limiter y bulkhead (mencionados) · `@Retryable`/`@ConcurrencyLimit` del núcleo |
+| **M14** | Observabilidad, Métricas y Caché | 2,0 | **Parcial** | lab-11 pasos 1, 3, 4, 5 · **lab-14 paso 7** (correlación a través de tres procesos) | **Caché, entero** (`@Cacheable`, Caffeine, hit-rate) · **OpenTelemetry**, con su árbol de tiempos (el id de correlación sí se practica) · Prometheus/Grafana (mencionado) · `@Endpoint` propio |
 | **M15** | Contenedores y Proyecto Final | 2,0 | **Parcial** | lab-13 pasos 1–5 · **`proyecto-final/`** | Buildpacks (`build-image`) — se usa Jib · arranque acelerado (AOT/Leyden, GraalVM) · `compose.yaml` · graceful shutdown |
 
 **Recuento por módulo:** **3 Cubiertos** (M4, M5, M7) · **12 Parciales** · 0 sin ningún contenido.
@@ -115,7 +117,7 @@ Deducidos del contenido de su módulo (ver la nota de la §0).
 | XIII | M9 | Cadena de filtros y autenticación | **Cubierto** | lab-09 pasos 1–3 |
 | XIV | M9 | JWT | **Cubierto** | lab-09 pasos 4–5 |
 | XV | M9 | Autorización | **Parcial** | lab-09 paso 6 (por ruta; falta method security) |
-| XVI | M10 | Comunicación HTTP | **Parcial** | lab-10 pasos 2–3 (`RestClient`; falta el declarativo) |
+| XVI | M10 | Comunicación HTTP | **Parcial** | lab-10 pasos 2–3 · lab-14 pasos 3, 6 (llamada entre dos procesos y gateway; falta el cliente declarativo) |
 | XVII | M10 | **gRPC** | **No cubierto** | — |
 | XVIII | M11 | Logging y correlación | **Cubierto** | lab-11 paso 2 |
 | XIX | M11 | **AOP** | **No cubierto** | — |
@@ -127,12 +129,12 @@ Deducidos del contenido de su módulo (ver la nota de la §0).
 | XXV | M12 | **Eventos de aplicación** | **No cubierto** | — |
 | XXVI | M13 | **Mensajería** | **No cubierto** | — |
 | XXVII | M14 | Actuator y métricas | **Cubierto** | lab-11 pasos 1, 3, 4, 5 |
-| XXVIII | M14 | Trazas / OpenTelemetry | **Mencionado** | lab-11, «lo que no vimos hoy» |
+| XXVIII | M14 | Trazas / OpenTelemetry | **Parcial** | **lab-14 paso 7**: el mismo id de correlación en los logs de tres servicios, medido. Falta OpenTelemetry y su árbol de tiempos |
 | XXIX | M14 | **Caché** | **No cubierto** | — |
 | XXX | M7 | Optimización de consultas | **Cubierto** | lab-06 pasos 1–5 |
 | XXXI | M8 | Flyway | **Parcial** | lab-07 paso 5 (migración correctiva; falta la mecánica como tema) |
 | XXXII | M8 | **Liquibase** | **No cubierto** | — |
-| XXXIII | M13 | Resiliencia | **Cubierto** | lab-10 pasos 3–5 |
+| XXXIII | M13 | Resiliencia | **Cubierto** | lab-10 pasos 3–5 · lab-14 pasos 4–5 (el mismo patrón entre dos procesos) |
 | XXXIV | M15 | Contenedores y empaquetado | **Cubierto** | lab-13 pasos 1–5 |
 | XXXV | M15 | Proyecto final integrador | **Cubierto** | `proyecto-final/` (SPEC-035): brief, rúbrica de tres ejes y defensa |
 
@@ -141,8 +143,8 @@ Deducidos del contenido de su módulo (ver la nota de la §0).
 | Nivel | Cuántos | Cuáles |
 |---|---|---|
 | **Cubierto** | **20** | I, II, III, V, VI, VII, VIII, IX, X, XIII, XIV, XVIII, XXI, XXIII, XXIV, XXVII, XXX, XXXIII, XXXIV, **XXXV** |
-| **Parcial** | **6** | XI, XII, XV, XVI, XXII, XXXI |
-| **Mencionado** | **1** | XXVIII |
+| **Parcial** | **7** | XI, XII, XV, XVI, XXII, **XXVIII**, XXXI |
+| **Mencionado** | **0** | — |
 | **No cubierto** | **8** | IV, XVII, XIX, XX, XXV, XXVI, XXIX, XXXII |
 | | **35** | |
 
@@ -170,7 +172,7 @@ Es la única brecha que impide **cerrar el contrato**, no solo cubrir contenido.
 
 | Módulo/tema | Nivel | Dónde estaba | Qué haría falta |
 |---|---|---|---|
-| **XVII · gRPC** (M10) | No cubierto | `lab-08-diplomacia-con-tesoreria/demo-grpc` (v0.8.0), que compilaba y respondía, con job propio en el CI | Recuperar la demo y darle 30 min en el lab-10. Era demo del relator, no práctica del alumno: la brecha es menor de lo que parece |
+| **XVII · gRPC** (M10) | No cubierto | `lab-08-diplomacia-con-tesoreria/demo-grpc` (v0.8.0), que compilaba y respondía, con job propio en el CI | **Se evaluó en la SPEC-037 §4 para el lab-14 y se descartó, medido:** en `repo-maven/` no hay runtime de gRPC ni `protobuf-maven-plugin`, y sobre todo **no hay `protoc`**, que viaja como binario por plataforma. Traerlo son la pila completa más dos ejecutables nativos en la maleta. Sigue siendo demo del relator, no práctica del alumno: la brecha es menor de lo que parece |
 | **XIX · AOP** (M11) | No cubierto | `lab-09-caja-negra` (v0.8.0): aspecto de auditoría con RUT enmascarado | Un paso en el lab-11: `@Aspect` que audite el dominio. Cabe; el PO lo descartó al absorber el lab de AOP en observabilidad (SPEC-031 §0) |
 | **XX · Manejo de archivos** (M11) | No cubierto | `lab-09-caja-negra` (v0.8.0): carga con MIME real por *magic bytes*, anti *path traversal*, descarga en streaming | Un lab propio o media sesión. Es el tema más grande de los que faltan y no tiene sitio natural en el arco actual |
 | **XXV · Eventos de aplicación** (M12) | No cubierto | `lab-11-latidos` (v0.8.0): eventos `AFTER_COMMIT` | Un paso en el lab-12: `@TransactionalEventListener`. Encaja bien con el paso 3 (`@Async`) |
@@ -214,6 +216,7 @@ Suma, y hay que declararlo para que el SII sepa qué recibe de más.
 | **Un lab entero de concurrencia** (3 h) | lab-07 | El temario cubre transacciones en M7 (2,0 h) junto con optimización. El material le da tres horas a la carrera entre hilos, con el fallo reproducido |
 | **Un lab entero de inyección de dependencias** (3 h) | lab-02 | M1 son 2,0 h para fundamentos **y** configuración. La encuesta dijo que **17 de 18 no sabían explicar qué hace Spring Boot** |
 | **Veinte minutos de «qué es un contenedor»** | lab-13 paso 3 | El temario da M15 por sabido a nivel de contenedores. En este grupo, nadie había visto uno |
+| **Un lab entero de microservicios** (3 h) | lab-14 | El temario **no le asigna módulo ni horas**, pese a que el contrato se titula «Desarrollo de Microservicios en Java». La encuesta lo puso **primero de ocho, con 16 de 18 votos**. Cierra el hueco entre el título del contrato y su temario (§6.4) |
 | **La maleta entera** (JDK, Maven, dependencias, PostgreSQL e imagen base en el repositorio) | todo el material | El temario exige `Docker Desktop`, `Red: acceso a Maven Central, Docker Hub y GitHub`. **Las máquinas del SII no tienen nada de eso.** El material corre sin red y sin Docker |
 
 Ese último punto es una **desviación deliberada del contrato en los requisitos técnicos**, no en el
@@ -231,10 +234,10 @@ Se declaran aquí porque afectan a la entrega y su resolución es del PO, no del
 
 | | Contrato | Material |
 |---|---|---|
-| Horas | **36,0** | **42,0** (14 × 3 h) |
-| Sesiones | **12** de 3 h | **14** de 3 h |
+| Horas | **36,0** | **45,0** (15 × 3 h) |
+| Sesiones | **12** de 3 h | **15** de 3 h |
 
-Seis horas y dos sesiones por encima. Y el reparto por módulo tampoco coincide: el material da
+Nueve horas y tres sesiones por encima (eran seis y dos antes del lab-14, ver §6.4). Y el reparto por módulo tampoco coincide: el material da
 3 h a módulos que el contrato dota con 1,5 (M4, M6, M8) y menos de lo comprometido a otros
 (M11 tiene 3,0 h contratadas y se cubre en parte de una sesión compartida).
 
@@ -250,8 +253,26 @@ lo demás pueda probarse— y la mensajería desapareció.
 ### 6.3 · Un módulo por lab no es la regla
 
 Cinco módulos se reparten entre labs (M1 en 00/02/13, M3 en 01/02/03, M5 en 04/05/06, M7 en 06/07,
-M13 sólo su mitad de resiliencia en 10) y dos labs cubren dos módulos (08 cubre M4 y parte de M6;
-11 cubre M14 y parte de M11). La tabla de la §1 lo refleja.
+M13 su mitad de resiliencia en 10 y 14) y tres labs cubren varios módulos (08 cubre M4 y parte de
+M6; 11 cubre M14 y parte de M11; **14 toca M10, M13 y M14 sin ser el titular de ninguno**). La
+tabla de la §1 lo refleja.
+
+### 6.4 · El título del contrato promete algo que su temario no reparte
+
+El contrato se llama **«Desarrollo de Microservicios en Java»**. Sus quince módulos y sus treinta
+y cinco temas **no incluyen ninguno de microservicios**: hay comunicación entre servicios (M10) y
+resiliencia (M13), que son piezas del tema, pero no la arquitectura, ni el gateway, ni una base por
+servicio, ni la consistencia eventual.
+
+Es una discrepancia del contrato consigo mismo, y hasta la SPEC-037 el material la heredaba: el
+arco antiguo la cubría con `lab-14-la-dgt-se-parte-en-pedazos`, que se retiró con el resto del arco
+(SPEC-033) por necesitar Docker Compose y seis servicios.
+
+**El `lab-14-microservicios` (SPEC-037) la cierra**, con cuatro procesos que el alumno arranca a
+mano y sin Docker. Con eso el material cubre el título además del temario. Lo que queda para el PO
+es la aritmética: son **tres horas más** sobre un contrato que ya iba seis por encima, y el lab-14
+**no mapea a ningún módulo contratado como titular** — igual que le pasaba al Lab 14 antiguo, que
+por eso estaba congelado.
 
 ---
 
