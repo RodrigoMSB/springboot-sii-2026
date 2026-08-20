@@ -65,11 +65,12 @@
 - **El manifiesto pedagógico**: `MANIFIESTO.md`. Por qué el curso se enseña así. Quien vaya a
   dictar lo lee **antes** que nada.
 
-- **Un CI de cuatro jobs** (`.github/workflows/material-ci.yml`):
+- **Un CI de cinco jobs** (`.github/workflows/material-ci.yml`):
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
   siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
   necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
-  `proyecto-final/base`) · `labs-sh` (los scripts, en Linux y en Git Bash).
+  `proyecto-final/base`) · **`pasos`** (los guiones que traen el código para pegar no prometen
+  un código que `solucion/` ya no tiene) · `labs-sh` (los scripts, en Linux y en Git Bash).
 
 ## 1.a · Lo que se retiró, y dónde está
 

@@ -10,9 +10,12 @@
 #   2. `siembra` — toda TEORIA.md de un lab con sucesor siembra el módulo N+1
 #      (P-18 del ADN). Detección por PATRÓN, jamás por título literal: los labs
 #      09-12 del curso de Cypress usan otro encabezado y son correctos.
-#   3. `labs` — los 28 proyectos del arco compilan con el `./mvnw` del curso y
+#   3. `labs` — los 37 proyectos del arco compilan con el `./mvnw` del curso y
 #      `--offline` contra `repo-maven/`: si alguien añade una dependencia y
 #      olvida capturarla, este job es lo único que lo caza (SPEC-033).
+#   4. `pasos` — los guiones que traen el código para pegar (SPEC-038) no
+#      prometen un código que `solucion/` ya no tiene. Sin esto, los bloques
+#      cuadran solo mientras nadie toque la solución.
 #
 #  SPEC-033: se retiraron los jobs `app`, `lab14`, `grpc` y `deriva`. Los cuatro
 #  verificaban el arco antiguo (el tronco `dgt-tramites-api`, el sistema de
@@ -25,8 +28,8 @@
 #  tocara `docs/specs/` no dispararía ninguno y quedaría colgado para siempre
 #  esperando un veredicto que nadie iba a emitir. El filtro era una trampa armada.
 #  Se descartaron las alternativas: un job centinela no-op protege menos, y el
-#  filtro fino por job no existe en Actions. Todo PR corre los tres jobs, siempre.
-#  Cuesta ~1 minuto; un PR colgado cuesta más.
+#  filtro fino por job no existe en Actions. Todo PR los corre todos, siempre.
+#  Cuesta ~2 minutos; un PR colgado cuesta más.
 #
 #  El evento `push` a `main` sí conserva filtros: es post-merge, ya no hay nada
 #  que bloquear y ahorra runs.
@@ -171,6 +174,38 @@ jobs:
             exit 1
           fi
           echo "[OK] Todos los labs con sucesor siembran el módulo N+1."
+  # ---------------------------------------------------------------------------
+  #  pasos · el guion no promete un código que la solución ya no tiene.
+  #
+  #  Nace de la SPEC-038, que puso en `labs/lab-04-jpa/PASOS.md` el código exacto
+  #  que el instructor pega en clase, extraído de `solucion/`. Su informe dejó
+  #  dicho el agujero, y este job es el que lo tapa:
+  #
+  #     «Hoy los bloques cuadran porque se acaban de extraer, no porque nada lo
+  #      vigile. Nada impide que mañana alguien toque solucion/ y el guion quede
+  #      mintiendo.»
+  #
+  #  Un guion que promete un código que ya no existe es peor que no tener guion:
+  #  el instructor lo descubre delante de la sala, pegando algo que no compila.
+  #
+  #  No necesita Java ni red: compara texto contra texto. Corre en segundos.
+  #
+  #  Se activa SOLO por el marcador «**Se pega» en un PASOS.md, así que hoy
+  #  cubre el Lab 04 y los que se sumen entran solos, sin tocar este archivo.
+  # ---------------------------------------------------------------------------
+  pasos:
+    name: pasos · el código del guion coincide con solucion/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verificar los guiones con código para pegar
+        run: python3 tools/verificar-pasos-copiables.py
+
   # ---------------------------------------------------------------------------
   #  labs · los catorce proyectos del arco compilan, offline y con la maleta.
   #
