@@ -1,0 +1,24 @@
+server:
+  port: 8200
+
+spring:
+  application:
+    name: lab14-gateway
+
+lab14:
+  contribuyentes:
+    url: http://localhost:8201
+  tramites:
+    url: http://localhost:8202
+  auditoria:
+    url: http://localhost:8203
+  jwt:
+    secreto: ${LAB14_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] GATEWAY - %msg%n"
