@@ -271,13 +271,13 @@ lado a lado:
 
 ```
 terminal de trámites:
-13:50:28.168 INFO [........] TRAMITES - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+14:16:55.294 INFO [2cd88c14] TRAMITES - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
 
 terminal de contribuyentes:
-13:50:28.201 INFO [........] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
+14:16:55.333 INFO [1efa2ebb] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
 ```
 
-**Dos programas distintos, treinta y tres milésimas de diferencia.** Ese salto entre las dos
+**Dos programas distintos, treinta y nueve milésimas de diferencia.** Ese salto entre las dos
 pantallas es todo lo que separa un monolito de un sistema repartido — y todo lo que viene después
 del paso 4 existe por culpa de ese salto.
 
@@ -305,15 +305,15 @@ curl -s -o /dev/null -w "HTTP %{http_code}  en %{time_total}s\n" http://localhos
 **En consola:**
 
 ```
-HTTP 500  en 0.014594s
-HTTP 500  en 0.005028s
-HTTP 500  en 0.005037s
+HTTP 500  en 0.018616s
+HTTP 500  en 0.007050s
+HTTP 500  en 0.006007s
 ```
 
 Y el cuerpo que recibe el usuario:
 
 ```json
-{"timestamp":"2026-08-20T17:48:38.068Z","status":500,
+{"timestamp":"2026-08-20T18:17:14.987Z","status":500,
  "error":"Internal Server Error","path":"/tramites/1"}
 ```
 
@@ -494,12 +494,12 @@ done
 **En consola:**
 
 ```
-HTTP 200 en 0.081257s  {"circuito":"CLOSED","llamadasHttpReales":1,"fallidas":1,...}
-HTTP 200 en 0.004486s  {"circuito":"CLOSED","llamadasHttpReales":2,"fallidas":2,...}
-HTTP 200 en 0.005770s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
-HTTP 200 en 0.003251s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
-HTTP 200 en 0.002771s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
-HTTP 200 en 0.003041s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
+HTTP 200 en 0.106026s  {"circuito":"CLOSED","llamadasHttpReales":1,"fallidas":1,...}
+HTTP 200 en 0.006448s  {"circuito":"CLOSED","llamadasHttpReales":2,"fallidas":2,...}
+HTTP 200 en 0.007348s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
+HTTP 200 en 0.004526s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
+HTTP 200 en 0.004316s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
+HTTP 200 en 0.006239s  {"circuito":"OPEN",  "llamadasHttpReales":3,"fallidas":3,"tasaDeFallo":100.0}
 ```
 
 y el cuerpo:
@@ -516,12 +516,16 @@ y el cuerpo:
 | Lo que recibe el usuario | **HTTP 500**, cuerpo vacío | **HTTP 200** con el trámite y el aviso |
 | Llamadas a un servicio muerto | **1 por petición, siempre** | **3 en total**, y luego cero |
 
+*(La primera petición tarda cien milésimas y las demás cinco: es el circuito cargándose por
+primera vez. Pasa una sola vez por arranque y no tiene nada que ver con el patrón — pero sale en
+pantalla, así que mejor nombrarlo que dejar que alguien lo interprete.)*
+
 **Y ahora las dos cosas que hay que mirar dos veces:**
 
 1. **`llamadasHttpReales` se queda en 3.** De la cuarta petición en adelante, trámites **no toca la
    red**. Sabe que contribuyentes está caído y deja de molestarlo. Cuando el caído está intentando
    arrancar, eso es la diferencia entre ayudarle y estorbarle.
-2. **El tiempo casi no se movió** —de 5 a 3 milésimas— y eso es honesto: un proceso muerto rechaza
+2. **El tiempo casi no se movió** —de unas 6 milésimas a unas 5— y eso es honesto: un proceso muerto rechaza
    la conexión al instante, así que aquí no había espera que ahorrar. El circuito hoy no compró
    velocidad: compró **una respuesta útil** y **dejar en paz al vecino**. La velocidad la compra
    cuando el vecino está lento en vez de muerto, y eso ya se midió en el Lab 10.
@@ -684,21 +688,21 @@ curl -s -D - -o /dev/null -H "Authorization: Bearer $TOKEN" http://localhost:820
 ```
 
 ```
-X-Trace-Id: 114c4051
+X-Trace-Id: f1881d07
 ```
 
 Y ahora se buscan esos ocho caracteres **en las tres terminales**:
 
 ```
-13:50:28.083 INFO [114c4051] GATEWAY        - [GATEWAY] GET /tramites/1 -> tramites
-13:50:28.168 INFO [114c4051] TRAMITES       - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
-13:50:28.201 INFO [114c4051] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
+14:18:48.470 INFO [f1881d07] GATEWAY        - [GATEWAY] GET /tramites/1 -> tramites
+14:18:48.580 INFO [f1881d07] TRAMITES       - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+14:18:48.619 INFO [f1881d07] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
 ```
 
 **Lo que hay que notar:**
 
-> **Tres procesos, tres logs, un id.** Y en orden: la petición entró por la puerta a las .083, salió
-> hacia contribuyentes a las .168, y llegó a las .201.
+> **Tres procesos, tres logs, un id.** Y en orden: la petición entró por la puerta a las .470, salió
+> hacia contribuyentes a las .580, y llegó a las .619.
 
 Sin esto, un sistema repartido **no es depurable**: es una caja negra con cuatro compartimentos que
 no se pueden relacionar entre sí. Con esto, un `grep` reconstruye el viaje entero.
@@ -779,19 +783,19 @@ curl -s -w "\n  el usuario esperó: %{time_total}s\n" -X POST http://localhost:8
 
 ```
 {"id":3,...,"estado":"EN_PROCESO",...}
-  el usuario esperó: 0.039843s
+  el usuario esperó: 0.046069s
 ```
 
 Y las tres líneas de log, mirando las dos terminales:
 
 ```
-13:50:40.241 INFO [0e9499ec] TRAMITES  - [TRAMITES] trámite 3 creado para 11111111-1
-13:50:40.261 INFO [0e9499ec] AUDITORIA - [AUDITORIA] llega el evento TRAMITE_CREADO del trámite 3 — procesando...
-13:50:41.825 INFO [0e9499ec] AUDITORIA - [AUDITORIA] REGISTRADO id=1 del trámite 3
+14:19:00.134 INFO [697ea585] TRAMITES  - [TRAMITES] trámite 3 creado para 11111111-1
+14:19:00.156 INFO [697ea585] AUDITORIA - [AUDITORIA] llega el evento TRAMITE_CREADO del trámite 3 — procesando...
+14:19:01.734 INFO [697ea585] AUDITORIA - [AUDITORIA] REGISTRADO id=1 del trámite 3
 ```
 
-**Lo que hay que notar:** el POST entero le costó al usuario **0,0398 segundos**. Trámites dio el
-trámite por creado a las **40.241**, y auditoría terminó de registrarlo a las **41.825**: **un
+**Lo que hay que notar:** el POST entero le costó al usuario **0,046 segundos**. Trámites dio el
+trámite por creado a las **00.134**, y auditoría terminó de registrarlo a las **01.734**: **un
 segundo y medio más tarde**, con el usuario hace rato en otra pantalla.
 
 > Durante ese segundo y medio, el trámite **existe** y su registro de auditoría **no**. El sistema
@@ -811,17 +815,17 @@ curl -s -w "\n  el usuario esperó: %{time_total}s\n" -X POST http://localhost:8
 
 ```
 {"id":4,"tipo":"TERMINO_GIRO","estado":"EN_PROCESO",...}
-  el usuario esperó: 0.013108s
+  el usuario esperó: 0.014389s
 ```
 
-El trámite **se creó**, en trece milésimas, con auditoría muerta. Y en el log de trámites:
+El trámite **se creó**, en catorce milésimas, con auditoría muerta. Y en el log de trámites:
 
 ```
-WARN [159ce3f1] TRAMITES - [TRAMITES] auditoría no recibió el aviso del trámite 4:
+WARN [3656b3d1] TRAMITES - [TRAMITES] auditoría no recibió el aviso del trámite 4:
                             ResourceAccessException. El trámite queda creado igual.
 ```
 
-> **Ese evento se perdió.** No hay reintento, no hay cola, no hay nada que lo recupere. El trámite 4
+> **Ese evento se perdió.** No hay reintento, no hay cola, no hay nada que lo recupere. Ese trámite
 > existe y no tiene registro de auditoría, y la única prueba de que eso pasó es una línea `WARN` en
 > un log que nadie está mirando.
 
@@ -854,7 +858,7 @@ que se vio hoy.
 
 **Lo que se paga, y hoy se pagó de verdad:**
 
-- **Latencia.** Un `findByRut()` de nanosegundos pasó a ser una llamada de red — treinta y tres
+- **Latencia.** Un `findByRut()` de nanosegundos pasó a ser una llamada de red — treinta y nueve
   milésimas, y eso en `localhost`.
 - **El fallo en cascada.** Un servicio caído devolvió **500** en otro que estaba sano, y hubo que
   escribir un circuit breaker para arreglar un problema que en el monolito **no existía**.

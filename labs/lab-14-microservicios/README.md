@@ -48,7 +48,7 @@ Contribuyentes se apaga, y se pide un trámite que **está entero en la base de 
 
 | | respuesta al usuario | llamadas HTTP a un servicio muerto |
 |---|---|---|
-| **Paso 4** — sin protección | **HTTP 500**, cuerpo vacío, en 0,005 s | 1 por cada petición, para siempre |
+| **Paso 4** — sin protección | **HTTP 500**, cuerpo vacío, en 0,006–0,019 s | 1 por cada petición, para siempre |
 | **Paso 5** — con circuit breaker | **HTTP 200** con el trámite y `"estadoDelNombre": "NO_DISPONIBLE"` | 3, y después **el contador se congela** |
 
 Las dos filas son el arco del día, y ninguna de las dos es sobre velocidad:
