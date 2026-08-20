@@ -2,7 +2,7 @@
 
 **Esto no es un laboratorio.** Es el instrumento con el que se evalúa el curso.
 
-En los catorce labs se construyó en vivo, con guion y con la solución al lado. Aquí no hay guion:
+En los quince labs se construyó en vivo, con guion y con la solución al lado. Aquí no hay guion:
 hay un requerimiento de negocio incompleto en los bordes, tres horas, y una rúbrica que se puede
 leer antes de empezar.
 
@@ -71,7 +71,7 @@ El contrato del curso reparte la evaluación así:
 La aprobación exige nota mínima 4,0 y 75 % de asistencia. Dentro de **este** instrumento, el umbral
 es **núcleo verde Y Criterio ≥ Suficiente**: todo funcionando y sin criterio **no aprueba**.
 
-## Los catorce labs están detrás de cada requisito
+## Los labs están detrás de cada requisito
 
 No se evalúa nada que no se haya enseñado. La correspondencia completa está en el informe de la
 SPEC-035; en corto:
