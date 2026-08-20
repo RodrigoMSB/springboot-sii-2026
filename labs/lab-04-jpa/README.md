@@ -40,8 +40,9 @@ Y la base **no se borra al apagar**. Lo que guardaste sigue ahí la próxima vez
 vive en `.datos-pg/`, dentro del propio proyecto. Eso es lo que hace que este lab se llame
 guardar y recuperar y no solo guardar.
 
-En `practica/` las ocho demos están **comentadas** en `Lab04Application`. Cada paso descomenta
-la suya, así que el programa crece contigo: si algo se rompe, sabes qué línea lo rompió.
+En `practica/` el `CommandLineRunner` de `Lab04Application` llega **vacío**. Cada paso agrega su
+llamada —el guion trae la línea exacta—, así que el programa crece contigo: si algo se rompe,
+sabes qué línea lo rompió.
 
 ## El SQL sale en la consola
 
