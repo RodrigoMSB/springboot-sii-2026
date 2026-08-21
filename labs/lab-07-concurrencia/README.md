@@ -46,8 +46,7 @@ cd practica          # o solucion
 | `practica/` | 8091 | **55438** |
 | `solucion/` | 8092 | **55439** |
 
-En `practica/` las tres demos están **comentadas** en `Lab07Application`. Cada paso descomenta la
-suya.
+En `practica/` el `CommandLineRunner` de `Lab07Application` llega **vacío**. Cada paso agrega su llamada —el guion trae la línea exacta—.
 
 ## Los números del laboratorio
 

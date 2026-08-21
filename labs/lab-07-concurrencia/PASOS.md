@@ -10,7 +10,7 @@ cd practica
 **Se queda corriendo**: se apaga con **Ctrl+C**. Escucha en el **8091** y su base en el **55438**
 (`solucion/`, en el 8092 y el 55439).
 
-Las tres demos están **comentadas** en `Lab07Application`. El andamiaje —lanzar los hilos, contar
+En `practica/` el `CommandLineRunner` de `Lab07Application` llega **vacío**. El andamiaje —lanzar los hilos, contar
 repetidos, imprimir el informe— **viene dado**: hoy no se aprende a lanzar hilos.
 
 ---
@@ -81,10 +81,25 @@ public Folio emitirIngenuo(int anio) {
 
 Dos líneas. **Léanse buscándoles el error, porque no lo tienen.**
 
-**Se escribe:** la demo 1 — `prepararElAnio()`, un bucle de 10 `emisor.emitirIngenuo(ANIO)`, e
-`informe()`.
+**Se pega:** en `practica/src/main/java/cl/dgt/concurrencia/demos/DemosConcurrencia.java`, **reemplazando el método `deUnoEnUno()` entero**.
 
-**Se descomenta:** `demos.deUnoEnUno();`
+```java
+    public void deUnoEnUno() {
+        seccion(1, "DE UNO EN UNO · secuencial");
+
+        prepararElAnio();
+        for (int i = 0; i < 10; i++) {
+            emisor.emitirIngenuo(ANIO);
+        }
+        informe();
+    }
+```
+
+**Se agrega al runner:** en `Lab07Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.deUnoEnUno();
+```
 
 **En consola:**
 
@@ -109,10 +124,24 @@ En este punto cualquiera firmaría que ese método está bien. Y de uno en uno, 
 hecho (`enParalelo`), y hace algo importante: los veinte hilos esperan en una barrera y **salen
 todos juntos**, para que la carrera ocurra de verdad y no por casualidad.
 
-**Se escribe:** la demo 2 — `prepararElAnio()`, `enParalelo(i -> emisor.emitirIngenuo(ANIO))`, e
-`informe()`. **El mismo método del paso 1.** No se cambia ni una letra.
+**Se pega:** en `practica/src/main/java/cl/dgt/concurrencia/demos/DemosConcurrencia.java`, **reemplazando el método `elCrimen()` entero**. Es la demo 1 con una sola
+diferencia: las diez emisiones salen **a la vez**.
 
-**Se descomenta:** `demos.elCrimen();`
+```java
+    public void elCrimen() {
+        seccion(2, "EL CRIMEN · " + EN_PARALELO + " emisiones a la vez, sin candado");
+
+        prepararElAnio();
+        enParalelo(i -> emisor.emitirIngenuo(ANIO));
+        informe();
+    }
+```
+
+**Se agrega al runner:** en `Lab07Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.elCrimen();
+```
 
 **En consola:**
 
@@ -182,34 +211,57 @@ los demás **esperan ahí** hasta que la suelte. Se hace con `@Lock(LockModeType
 detalle: **un bloqueo pesimista bloquea filas**. Si la fila no existe, no hay nada que bloquear y
 no protege nada.
 
-**Se escribe:** en `repositories/FolioRepository.java`:
-
-```java
-@Lock(LockModeType.PESSIMISTIC_WRITE)
-@Query("select f from Folio f where f.anio = :anio and f.numero = 1")
-Optional<Folio> bloquearLaApertura(@Param("anio") int anio);
-```
-
-en `servicios/EmisorDeFolios.java`, el método nuevo:
-
-```java
-@Transactional
-public Folio emitirConCandado(int anio) {
-    folios.bloquearLaApertura(anio)
-            .orElseThrow(() -> new IllegalStateException(
-                    "El año " + anio + " no tiene folio de apertura: no hay nada que bloquear."));
-
-    int ultimo = folios.maxNumeroDe(anio).orElse(0);
-    return folios.save(new Folio(anio, ultimo + 1));
-}
-```
-
-y la demo 3, igual que la 2 pero llamando a `emitirConCandado`.
-
 **El orden importa:** primero el candado, **después** leer el máximo. Al revés no serviría de
 nada, porque se leería antes de tener el turno.
 
-**Se descomenta:** `demos.conCandado();`
+**Se pega (1 de 4):** en `repositories/FolioRepository.java`, **arriba**, con los imports.
+
+```java
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+```
+
+**Se pega (2 de 4):** en el mismo archivo, **dentro de la interfaz**.
+
+```java
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select f from Folio f where f.anio = :anio and f.numero = 1")
+    Optional<Folio> bloquearLaApertura(@Param("anio") int anio);
+```
+
+**Se pega (3 de 4):** en `servicios/EmisorDeFolios.java`, **antes de la llave que cierra la clase**
+— es un método nuevo, no reemplaza a ninguno.
+
+```java
+    @Transactional
+    public Folio emitirConCandado(int anio) {
+        folios.bloquearLaApertura(anio)
+                .orElseThrow(() -> new IllegalStateException(
+                        "El año " + anio + " no tiene folio de apertura: no hay nada que bloquear."));
+
+        int ultimo = folios.maxNumeroDe(anio).orElse(0);
+        return folios.save(new Folio(anio, ultimo + 1));
+    }
+```
+
+**Se pega (4 de 4):** en `practica/src/main/java/cl/dgt/concurrencia/demos/DemosConcurrencia.java`, **reemplazando el método `conCandado()` entero**. Es la demo 2
+llamando a `emitirConCandado` en vez de a `emitirIngenuo`.
+
+```java
+    public void conCandado() {
+        seccion(3, "CON CANDADO · " + EN_PARALELO + " a la vez, con bloqueo pesimista");
+
+        prepararElAnio();
+        enParalelo(i -> emisor.emitirConCandado(ANIO));
+        informe();
+    }
+```
+
+**Se agrega al runner:** en `Lab07Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.conCandado();
+```
 
 **En consola:**
 

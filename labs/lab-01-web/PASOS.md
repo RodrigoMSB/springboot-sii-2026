@@ -49,7 +49,7 @@ laboratorio de hoy.
 peticiones»; `@GetMapping("/hola")` marca el método como «yo respondo a esa ruta». Spring lee
 las anotaciones al arrancar y arma la tabla de rutas. **Nadie registra nada a mano.**
 
-**Se escribe:** `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/web/controllers/HolaController.java` — el archivo entero.
 
 ```java
 package cl.dgt.web.controllers;
@@ -64,6 +64,7 @@ public class HolaController {
     public String hola() {
         return "Hola, mundo.";
     }
+
 }
 ```
 
@@ -89,13 +90,19 @@ tabla de rutas: la escribió Spring leyendo la anotación.
 **Se explica:** las llaves en la ruta marcan un hueco. `@PathVariable` dice «lo que venga en ese
 hueco, mételo en este parámetro». Se usa cuando la ruta **identifica una cosa concreta**.
 
-**Se escribe:** en el mismo controller, un método más:
+**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`, **arriba**, con los imports.
 
 ```java
-@GetMapping("/hola/{nombre}")
-public String holaANombre(@PathVariable String nombre) {
-    return "Hola, " + nombre + ".";
-}
+import org.springframework.web.bind.annotation.PathVariable;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+```java
+    @GetMapping("/hola/{nombre}")
+    public String holaANombre(@PathVariable String nombre) {
+        return "Hola, " + nombre + ".";
+    }
 ```
 
 **En navegador:** `http://localhost:8081/hola/Carolina` y después `.../hola/Ignacio`
@@ -119,14 +126,20 @@ duda clásica del día, que conviene dejar dicha en voz alta:
 | `@PathVariable` — `/productos/7` | La ruta **identifica** algo. El 7 *es* el recurso. |
 | `@RequestParam` — `/productos?orden=precio` | Modifica **cómo** se pide. El recurso es el mismo. |
 
-**Se escribe:**
+**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`, **arriba**, con los imports.
 
 ```java
-@GetMapping("/saludo")
-public String saludo(@RequestParam String nombre,
-                     @RequestParam(defaultValue = "false") boolean formal) {
-    return formal ? "Buenos días, " + nombre + "." : "Hola, " + nombre + ".";
-}
+import org.springframework.web.bind.annotation.RequestParam;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+```java
+    @GetMapping("/saludo")
+    public String saludo(@RequestParam String nombre,
+                         @RequestParam(defaultValue = "false") boolean formal) {
+        return formal ? "Buenos días, " + nombre + "." : "Hola, " + nombre + ".";
+    }
 ```
 
 **En navegador:**
@@ -147,7 +160,8 @@ daría un **400**: vale la pena probarlo quitándolo un momento.
 Se escribe un `record` —una clase de datos de una línea— y se devuelve tal cual: nadie arma el
 JSON a mano.
 
-**Se escribe:** `practica/src/main/java/cl/dgt/web/dto/SaludoDto.java`
+**Se pega (1 de 3):** archivo **nuevo** `practica/src/main/java/cl/dgt/web/dto/SaludoDto.java`
+— el archivo entero.
 
 ```java
 package cl.dgt.web.dto;
@@ -156,13 +170,21 @@ public record SaludoDto(String mensaje, String para, boolean formal) {
 }
 ```
 
-y en el controller:
+**Se pega (2 de 3):** en `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`, **arriba**, con los imports.
 
 ```java
-@GetMapping("/saludos/{nombre}")
-public SaludoDto saludoDe(@PathVariable String nombre) {
-    return new SaludoDto("Hola, " + nombre + ".", nombre, false);
-}
+import cl.dgt.web.dto.SaludoDto;
+```
+
+**Se pega (3 de 3):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+<!-- pasos:intermedio · el paso 6 reescribe este método para envolverlo en ResponseEntity -->
+
+```java
+    @GetMapping("/saludos/{nombre}")
+    public SaludoDto saludoDe(@PathVariable String nombre) {
+        return new SaludoDto("Hola, " + nombre + ".", nombre, false);
+    }
 ```
 
 **En navegador:** `http://localhost:8081/saludos/Carolina`
@@ -191,7 +213,8 @@ nadie la pidiera por su nombre.
 algo más grande que una palabra. `@RequestBody` es el camino inverso del paso 4: el JSON que
 manda el cliente se convierte en objeto Java **antes** de que empiece el método.
 
-**Se escribe:** `practica/src/main/java/cl/dgt/web/dto/SolicitudSaludoDto.java`
+**Se pega (1 de 3):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/web/dto/SolicitudSaludoDto.java` — el archivo entero.
 
 ```java
 package cl.dgt.web.dto;
@@ -200,16 +223,26 @@ public record SolicitudSaludoDto(String nombre, boolean formal) {
 }
 ```
 
-y en el controller:
+**Se pega (2 de 3):** en `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`, **arriba**, con los imports.
 
 ```java
-@PostMapping("/saludos")
-public SaludoDto crearSaludo(@RequestBody SolicitudSaludoDto solicitud) {
-    String texto = solicitud.formal()
-            ? "Buenos días, " + solicitud.nombre() + "."
-            : "Hola, " + solicitud.nombre() + ".";
-    return new SaludoDto(texto, solicitud.nombre(), solicitud.formal());
-}
+import cl.dgt.web.dto.SolicitudSaludoDto;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+```
+
+**Se pega (3 de 3):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+<!-- pasos:intermedio · el paso 6 reescribe este método para devolver 201 -->
+
+```java
+    @PostMapping("/saludos")
+    public SaludoDto crearSaludo(@RequestBody SolicitudSaludoDto solicitud) {
+        String texto = solicitud.formal()
+                ? "Buenos días, " + solicitud.nombre() + "."
+                : "Hola, " + solicitud.nombre() + ".";
+        return new SaludoDto(texto, solicitud.nombre(), solicitud.formal());
+    }
 ```
 
 **Se prueba con Postman** (`POST`, cuerpo *raw · JSON*), o con `curl`:
@@ -239,26 +272,46 @@ es una sutileza: quien llama a la API decide qué hacer **mirando el código**, 
 cuerpo. `ResponseEntity` es el sobre que envuelve la respuesta y lleva el código escrito por
 fuera.
 
-**Se escribe:** se cambian los dos métodos del paso 4 y del paso 5.
+Se cambian los **dos** métodos, y cambian sus firmas: lo que devolvían era el DTO pelado y
+ahora es un `ResponseEntity`, el sobre que lleva el código escrito por fuera.
 
-El GET, que además ahora puede decir «no está»:
+**Se pega (1 de 4):** en `practica/src/main/java/cl/dgt/web/controllers/HolaController.java`, **arriba**, con los imports.
 
 ```java
-private static final List<String> CONOCIDOS = List.of("mundo", "Carolina", "Ignacio");
-
-@GetMapping("/saludos/{nombre}")
-public ResponseEntity<SaludoDto> saludoDe(@PathVariable String nombre) {
-    if (!CONOCIDOS.contains(nombre)) {
-        return ResponseEntity.notFound().build();
-    }
-    return ResponseEntity.ok(new SaludoDto("Hola, " + nombre + ".", nombre, false));
-}
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.util.List;
 ```
 
-El POST, que crea:
+**Se pega (2 de 4):** en el mismo archivo, **justo debajo** de `public class HolaController {`.
 
 ```java
-return ResponseEntity.status(HttpStatus.CREATED).body(saludo);
+    private static final List<String> CONOCIDOS = List.of("mundo", "Carolina", "Ignacio");
+```
+
+**Se pega (3 de 4):** **reemplazando el método `saludoDe()` entero** — el del paso 4.
+
+```java
+    @GetMapping("/saludos/{nombre}")
+    public ResponseEntity<SaludoDto> saludoDe(@PathVariable String nombre) {
+        if (!CONOCIDOS.contains(nombre)) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new SaludoDto("Hola, " + nombre + ".", nombre, false));
+    }
+```
+
+**Se pega (4 de 4):** **reemplazando el método `crearSaludo()` entero** — el del paso 5.
+
+```java
+    @PostMapping("/saludos")
+    public ResponseEntity<SaludoDto> crearSaludo(@RequestBody SolicitudSaludoDto solicitud) {
+        String texto = solicitud.formal()
+                ? "Buenos días, " + solicitud.nombre() + "."
+                : "Hola, " + solicitud.nombre() + ".";
+        SaludoDto saludo = new SaludoDto(texto, solicitud.nombre(), solicitud.formal());
+        return ResponseEntity.status(HttpStatus.CREATED).body(saludo);
+    }
 ```
 
 **En consola:** los tres códigos, uno detrás de otro:

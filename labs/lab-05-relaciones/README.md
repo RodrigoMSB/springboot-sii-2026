@@ -54,8 +54,7 @@ No hace falta instalar nada: PostgreSQL viaja dentro del proyecto, como en el La
 El programa corre las demos, imprime… y **se queda corriendo**. **Se apaga con Ctrl+C.** La base
 **no se borra al apagar**: vive en `.datos-pg/`, dentro del propio proyecto.
 
-En `practica/` las seis demos están **comentadas** en `Lab05Application`. Cada paso descomenta la
-suya.
+En `practica/` el `CommandLineRunner` de `Lab05Application` llega **vacío**. Cada paso agrega su llamada —el guion trae la línea exacta—.
 
 ## Mirar la base por fuera
 

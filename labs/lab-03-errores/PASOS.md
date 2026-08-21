@@ -74,7 +74,9 @@ una excepción que diga eso.
 Fíjate en lo que **no** lleva: ninguna anotación de HTTP, ningún 404. Esta clase no sabe que
 existe la web, y por eso serviría igual en un programa de consola.
 
-**Se escribe:** `practica/src/main/java/cl/dgt/errores/exceptions/ProductoNoEncontradoException.java`
+**Se pega (1 de 3):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/errores/exceptions/ProductoNoEncontradoException.java` — el archivo
+entero.
 
 ```java
 package cl.dgt.errores.exceptions;
@@ -87,10 +89,22 @@ public class ProductoNoEncontradoException extends RuntimeException {
 }
 ```
 
-y en `ProductoController`, la línea del `orElseThrow()`:
+**Se pega (2 de 3):** en `controllers/ProductoController.java`, **arriba**, con los imports.
 
 ```java
-.orElseThrow(() -> new ProductoNoEncontradoException(id));
+import cl.dgt.errores.exceptions.ProductoNoEncontradoException;
+```
+
+**Se pega (3 de 3):** en el mismo archivo, **reemplazando el método `porId()` entero**.
+
+```java
+    @GetMapping("/{id}")
+    public Producto porId(@PathVariable Long id) {
+        return base.stream()
+                .filter(p -> p.id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new ProductoNoEncontradoException(id));
+    }
 ```
 
 **En consola:** volver a pedir `curl -s http://localhost:8085/productos/99`
@@ -117,13 +131,15 @@ acepte esa excepción, y usa lo que devuelva como respuesta.
 No hay que registrarla en ninguna parte. No hay que llamarla desde ningún sitio. Y vale para
 **todos** los controllers de la aplicación, presentes y futuros.
 
-**Se escribe:** primero la forma que van a tener todos los errores,
-`practica/src/main/java/cl/dgt/errores/dto/ErrorRespuesta.java`
+**Se pega (1 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/errores/dto/ErrorRespuesta.java` — el archivo entero. (`campos` se
+usa en el paso 4; `@JsonInclude(NON_NULL)` hace que, mientras esté vacío, ni aparezca en el JSON.)
 
 ```java
 package cl.dgt.errores.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.Instant;
 import java.util.Map;
 
@@ -136,10 +152,10 @@ public record ErrorRespuesta(String mensaje, int codigo, Instant timestamp, Map<
 }
 ```
 
-(`campos` se usa en el paso 4. `@JsonInclude(NON_NULL)` hace que, mientras esté vacío, ni
-aparezca en el JSON.)
+**Se pega (2 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/errores/exceptions/ManejadorDeErrores.java` — el archivo entero.
 
-y el traductor, `practica/src/main/java/cl/dgt/errores/exceptions/ManejadorDeErrores.java`
+<!-- pasos:intermedio · los pasos 4, 5 y 6 le van añadiendo handlers -->
 
 ```java
 package cl.dgt.errores.exceptions;
@@ -149,6 +165,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 @RestControllerAdvice
 public class ManejadorDeErrores {
@@ -194,9 +211,12 @@ HTTP/1.1 201
 
 Un producto sin nombre y con precio negativo, creado tan tranquilamente.
 
-**Se escribe:** las anotaciones en `dto/ProductoNuevoDto.java`
+**Se pega (1 de 4):** `practica/src/main/java/cl/dgt/errores/dto/ProductoNuevoDto.java` — el
+archivo entero, **borrando lo que había**.
 
 ```java
+package cl.dgt.errores.dto;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
@@ -206,25 +226,52 @@ public record ProductoNuevoDto(
 }
 ```
 
-un `@Valid` en el controller —**la segunda y última línea que se toca ahí**—:
+**Se pega (2 de 4):** en `controllers/ProductoController.java`, **arriba**, con los imports.
 
 ```java
-public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoNuevoDto nuevo) {
+import jakarta.validation.Valid;
 ```
 
-y un segundo handler en `ManejadorDeErrores`:
+**Se pega (3 de 4):** en el mismo archivo, **reemplazando el método `crear()` entero** — es la
+segunda y última línea que se toca ahí.
 
 ```java
-@ExceptionHandler(MethodArgumentNotValidException.class)
-public ResponseEntity<ErrorRespuesta> validacion(MethodArgumentNotValidException e) {
-    Map<String, String> campos = new HashMap<>();
-    e.getBindingResult().getFieldErrors()
-            .forEach(error -> campos.put(error.getField(), error.getDefaultMessage()));
+    @PostMapping
+    public ResponseEntity<Producto> crear(@Valid @RequestBody ProductoNuevoDto nuevo) {
+        // El id lo pone el servidor, no quien llama: por eso el DTO de entrada
+        // no lo trae y el de salida sí.
+        Producto producto = new Producto(siguienteId.getAndIncrement(), nuevo.nombre(), nuevo.precio());
+        base.add(producto);
+        // 201 y no 200: la petición no solo respondió, creó algo. Y se devuelve
+        // el producto ya con su id, para que quien llama no tenga que pedirlo.
+        return ResponseEntity.status(HttpStatus.CREATED).body(producto);
+    }
+```
 
-    ErrorRespuesta cuerpo = new ErrorRespuesta(
-            "Hay datos inválidos en la petición.", 400, Instant.now(), campos);
-    return ResponseEntity.badRequest().body(cuerpo);
-}
+**Se pega (4 de 4):** en `exceptions/ManejadorDeErrores.java`, primero estos imports **arriba**, y
+después el handler **antes de la llave que cierra la clase**.
+
+```java
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+```
+
+```java
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorRespuesta> validacion(MethodArgumentNotValidException e) {
+        Map<String, String> campos = new HashMap<>();
+        e.getBindingResult().getFieldErrors()
+                .forEach(error -> campos.put(error.getField(), error.getDefaultMessage()));
+
+        // Constructor completo y no el atajo `de(...)`: este es el único error
+        // que sí tiene detalle por campo.
+        ErrorRespuesta cuerpo = new ErrorRespuesta(
+                "Hay datos inválidos en la petición.", 400, Instant.now(), campos);
+        // `badRequest()` es el atajo de `status(HttpStatus.BAD_REQUEST)`: 400.
+        return ResponseEntity.badRequest().body(cuerpo);
+    }
 ```
 
 **En consola:** el mismo POST de antes:
@@ -257,17 +304,29 @@ Sale otra vez la traza completa, ahora de una `ArithmeticException: / by zero`. 
 diferencia con el paso 1:** ese error no se puede prever uno por uno, porque son infinitos. Lo
 que se puede hacer es no dejar salir ninguno.
 
-**Se escribe:** el tercer handler, con dos ideas dentro:
+**Se pega (1 de 3):** en `exceptions/ManejadorDeErrores.java`, **arriba**, con los imports.
 
 ```java
-private static final Logger log = LoggerFactory.getLogger(ManejadorDeErrores.class);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+```
 
-@ExceptionHandler(Exception.class)
-public ResponseEntity<ErrorRespuesta> todoLoDemas(Exception e) {
-    log.error("Error no previsto atendiendo una petición", e);       // ← todo, para la casa
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ErrorRespuesta.de("Ocurrió un error inesperado. Inténtalo más tarde.", 500));
-}
+**Se pega (2 de 3):** en el mismo archivo, **justo debajo** de `public class ManejadorDeErrores {`.
+
+```java
+    private static final Logger log = LoggerFactory.getLogger(ManejadorDeErrores.class);
+```
+
+**Se pega (3 de 3):** en el mismo archivo, **antes de la llave que cierra la clase**. Lleva dos
+ideas dentro: el log completo para la casa, y el mensaje corto para quien llama.
+
+```java
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorRespuesta> todoLoDemas(Exception e) {
+        log.error("Error no previsto atendiendo una petición", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorRespuesta.de("Ocurrió un error inesperado. Inténtalo más tarde.", 500));
+    }
 ```
 
 y se **quitan** del `application.yml` los tres ajustes de `spring.web.error`, que ya no pintan
@@ -315,16 +374,22 @@ HTTP/1.1 500
 **500 por escribir mal una URL.** Spring lanza una `NoResourceFoundException` para decir «esa
 ruta no corresponde a nada», y el handler general se la tragó como si fuera un fallo del sistema.
 
-**Se escribe:** un handler más, antes del general:
+Un handler más, **antes** del general.
+
+**Se pega (1 de 2):** en `exceptions/ManejadorDeErrores.java`, **arriba**, con los imports.
 
 ```java
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+```
 
-@ExceptionHandler(NoResourceFoundException.class)
-public ResponseEntity<ErrorRespuesta> rutaNoExiste(NoResourceFoundException e) {
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ErrorRespuesta.de("La ruta pedida no existe.", 404));
-}
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+```java
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorRespuesta> rutaNoExiste(NoResourceFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorRespuesta.de("La ruta pedida no existe.", 404));
+    }
 ```
 
 ```

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-037 — el Lab 14, microservicios sin Docker. El arco pasa a quince labs.*
+*Última actualización: SPEC-039 — los quince guiones traen ya el código listo para pegar.*
 
 ---
 
@@ -45,6 +45,10 @@
   - Los **20 requisitos del encargo están atados a su lab y su paso**: no se evalúa nada que no se
     haya enseñado.
 
+- **Los quince `PASOS.md` traen el código listo para pegar** (SPEC-038 y -039): cada paso dice el
+  bloque exacto, el archivo y el sitio. El instructor lo tiene en una ventana y `practica/` en la
+  otra. `instructor/` queda para preparar la clase y para el *por qué*.
+
 - **La estructura de tres carpetas rige en los quince** (SPEC-031, -032, -033, -037): `practica/` sin
   una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
   explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
@@ -69,8 +73,9 @@
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
   siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
   necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
-  `proyecto-final/base`) · **`pasos`** (los guiones que traen el código para pegar no prometen
-  un código que `solucion/` ya no tiene) · `labs-sh` (los scripts, en Linux y en Git Bash).
+  `proyecto-final/base`) · **`pasos`** (los **quince** guiones traen el código para pegar y ninguno
+  promete un código que `solucion/` ya no tenga: 146 bloques y 87 métodos comprobados contra la
+  solución) · `labs-sh` (los scripts, en Linux y en Git Bash).
 
 ## 1.a · Lo que se retiró, y dónde está
 

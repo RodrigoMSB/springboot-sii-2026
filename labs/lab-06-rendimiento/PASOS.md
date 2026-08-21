@@ -36,10 +36,52 @@ System.out.println("  CONSULTAS: " + contador.consultas()
 **Se explica:** la pantalla es «lista de contribuyentes, con cuántos trámites tiene cada uno». Se
 escribe de la forma más natural del mundo: traer todos, y para cada uno mirar su lista.
 
-**Se escribe:** la demo 1. `contribuyentes.findAll()`, recorrer, y sumar `c.getTramites().size()`
-de cada uno. Medir con el molde.
+**Se pega (1 de 3):** en `practica/src/main/java/cl/dgt/rendimiento/demos/DemosRendimiento.java`, **arriba**, con los imports.
 
-**Se descomenta:** `demos.elCrimen();`
+```java
+import cl.dgt.rendimiento.entities.Contribuyente;
+import java.util.List;
+```
+
+**Se pega (2 de 3):** en el mismo archivo, **antes de la llave que cierra la clase**. Es el ayudante
+que imprime el contador de consultas y el tiempo: lo usan las cinco demos.
+
+```java
+    private void informe(int cuantos, long totalTramites, long empezo) {
+        System.out.println("  " + cuantos + " contribuyentes · " + totalTramites + " trámites");
+        System.out.println("  CONSULTAS: " + contador.consultas()
+                + "   ·   TIEMPO: " + (System.currentTimeMillis() - empezo) + " ms");
+    }
+```
+
+**Se pega (3 de 3):** en el mismo archivo, **reemplazando el método `elCrimen()` entero**. Trae los
+contribuyentes con `findAll()`, los recorre, y suma `c.getTramites().size()` — que es tocar la
+relación.
+
+```java
+    @Transactional(readOnly = true)
+    public void elCrimen() {
+        seccion(1, "EL CRIMEN · findAll() y tocar la relación");
+
+        contador.reiniciar();
+        long empezo = System.currentTimeMillis();
+
+        List<Contribuyente> todos = contribuyentes.findAll();
+        long totalTramites = 0;
+        for (Contribuyente c : todos) {
+            totalTramites += c.getTramites().size();   // <-- aquí, una consulta por vuelta
+        }
+
+        informe(todos.size(), totalTramites, empezo);
+    }
+```
+
+**Se agrega al runner:** en `Lab06Application.java`, dentro de `return args -> {`, debajo de
+`cargador.sembrarSiHaceFalta();`:
+
+```java
+            demos.elCrimen();
+```
 
 **En consola:**
 
@@ -71,18 +113,49 @@ problema no aparece hasta que hay datos de verdad.
 **Se explica:** el problema no es la entidad — es que se pidieron los contribuyentes sin decir que
 también harían falta sus trámites. Se puede decir: **en la misma consulta, tráete las dos cosas**.
 
-**Se escribe:** en `repositories/ContribuyenteRepository.java`:
-
-```java
-@Query("select distinct c from Contribuyente c left join fetch c.tramites")
-List<Contribuyente> conJoinFetch();
-```
-
-y la demo 2: **exactamente igual que la 1**, cambiando `findAll()` por `conJoinFetch()`.
-
 El `distinct` hace falta porque el join devuelve el contribuyente repetido una vez por trámite.
 
-**Se descomenta:** `demos.conJoinFetch();`
+**Se pega (1 de 3):** en `repositories/ContribuyenteRepository.java`, **arriba**, con los imports.
+
+```java
+import org.springframework.data.jpa.repository.Query;
+import java.util.List;
+```
+
+**Se pega (2 de 3):** en el mismo archivo, **dentro de la interfaz**.
+
+```java
+    @Query("select distinct c from Contribuyente c left join fetch c.tramites")
+    List<Contribuyente> conJoinFetch();
+```
+
+**Se pega (3 de 3):** en `practica/src/main/java/cl/dgt/rendimiento/demos/DemosRendimiento.java`, **reemplazando el método `conJoinFetch()` entero**. Es exactamente
+igual que `elCrimen()`, cambiando `findAll()` por `conJoinFetch()`.
+
+```java
+    @Transactional(readOnly = true)
+    public void conJoinFetch() {
+        seccion(2, "JOIN FETCH · traerlo todo de una vez");
+
+        contador.reiniciar();
+        long empezo = System.currentTimeMillis();
+
+        List<Contribuyente> todos = contribuyentes.conJoinFetch();
+        long totalTramites = 0;
+        for (Contribuyente c : todos) {
+            totalTramites += c.getTramites().size();   // ya están cargados: no consulta nada
+        }
+
+        informe(todos.size(), totalTramites, empezo);
+    }
+```
+
+**Se agrega al runner:** en `Lab06Application.java`, dentro de `return args -> {`, debajo de
+`cargador.sembrarSiHaceFalta();`:
+
+```java
+            demos.conJoinFetch();
+```
 
 **En consola:**
 
@@ -104,16 +177,45 @@ Y no se tocó la entidad. Eso es lo que hay que subrayar: el arreglo vive en la 
 **Se explica:** lo mismo, sin escribir JPQL. Se declara un método y se le dice, por anotación, qué
 relación tiene que venir cargada.
 
-**Se escribe:** en el repositorio:
+**Se pega (1 de 3):** en `repositories/ContribuyenteRepository.java`, **arriba**, con los imports.
 
 ```java
-@EntityGraph(attributePaths = "tramites")
-List<Contribuyente> findAllBy();
+import org.springframework.data.jpa.repository.EntityGraph;
 ```
 
-y la demo 3, igual que las anteriores.
+**Se pega (2 de 3):** en el mismo archivo, **dentro de la interfaz**.
 
-**Se descomenta:** `demos.conEntityGraph();`
+```java
+    @EntityGraph(attributePaths = "tramites")
+    List<Contribuyente> findAllBy();
+```
+
+**Se pega (3 de 3):** en `practica/src/main/java/cl/dgt/rendimiento/demos/DemosRendimiento.java`, **reemplazando el método `conEntityGraph()` entero**.
+
+```java
+    @Transactional(readOnly = true)
+    public void conEntityGraph() {
+        seccion(3, "@EntityGraph · lo mismo, sin JPQL");
+
+        contador.reiniciar();
+        long empezo = System.currentTimeMillis();
+
+        List<Contribuyente> todos = contribuyentes.findAllBy();
+        long totalTramites = 0;
+        for (Contribuyente c : todos) {
+            totalTramites += c.getTramites().size();
+        }
+
+        informe(todos.size(), totalTramites, empezo);
+    }
+```
+
+**Se agrega al runner:** en `Lab06Application.java`, dentro de `return args -> {`, debajo de
+`cargador.sembrarSiHaceFalta();`:
+
+```java
+            demos.conEntityGraph();
+```
 
 **En consola:**
 
@@ -139,7 +241,8 @@ Los dos son correctos. Lo incorrecto es no elegir ninguno.
 **Se explica:** hasta ahora se traen **entidades**: objetos completos, con todas sus columnas, que
 Hibernate se queda vigilando por si cambian. ¿Y si la pantalla solo muestra tres datos?
 
-**Se escribe:** el record `dto/ResumenContribuyente.java`:
+**Se pega (1 de 5):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/rendimiento/dto/ResumenContribuyente.java` — el archivo entero.
 
 ```java
 package cl.dgt.rendimiento.dto;
@@ -148,22 +251,56 @@ public record ResumenContribuyente(String rut, String razonSocial, long cuantosT
 }
 ```
 
-y en el repositorio:
+**Se pega (2 de 5):** en `repositories/ContribuyenteRepository.java`, **arriba**, con los imports.
 
 ```java
-@Query("""
-        select new cl.dgt.rendimiento.dto.ResumenContribuyente(c.rut, c.razonSocial, count(t))
-        from Contribuyente c
-        left join c.tramites t
-        group by c.id, c.rut, c.razonSocial
-        order by c.id
-        """)
-List<ResumenContribuyente> resumen();
+import cl.dgt.rendimiento.dto.ResumenContribuyente;
 ```
 
-y la demo 4, que suma los `cuantosTramites` e imprime la primera fila.
+**Se pega (3 de 5):** en el mismo archivo, **dentro de la interfaz**.
 
-**Se descomenta:** `demos.conProyeccion();`
+```java
+    @Query("""
+            select new cl.dgt.rendimiento.dto.ResumenContribuyente(c.rut, c.razonSocial, count(t))
+            from Contribuyente c
+            left join c.tramites t
+            group by c.id, c.rut, c.razonSocial
+            order by c.id
+            """)
+    List<ResumenContribuyente> resumen();
+```
+
+**Se pega (4 de 5):** en `practica/src/main/java/cl/dgt/rendimiento/demos/DemosRendimiento.java`, **arriba**, con los imports.
+
+```java
+import cl.dgt.rendimiento.dto.ResumenContribuyente;
+```
+
+**Se pega (5 de 5):** en el mismo archivo, **reemplazando el método `conProyeccion()` entero**.
+Suma los `cuantosTramites` e imprime la primera fila.
+
+```java
+    @Transactional(readOnly = true)
+    public void conProyeccion() {
+        seccion(4, "PROYECCIÓN · traer solo lo que se muestra");
+
+        contador.reiniciar();
+        long empezo = System.currentTimeMillis();
+
+        List<ResumenContribuyente> resumen = contribuyentes.resumen();
+        long totalTramites = resumen.stream().mapToLong(ResumenContribuyente::cuantosTramites).sum();
+
+        informe(resumen.size(), totalTramites, empezo);
+        System.out.println("  primera fila -> " + resumen.getFirst());
+    }
+```
+
+**Se agrega al runner:** en `Lab06Application.java`, dentro de `return args -> {`, debajo de
+`cargador.sembrarSiHaceFalta();`:
+
+```java
+            demos.conProyeccion();
+```
 
 **En consola:**
 
@@ -190,14 +327,47 @@ problema es que los trámites no vienen, que vengan siempre». Es decir, `EAGER`
 
 Se va a probar. Y se va a medir, que es distinto de opinar.
 
-**Se escribe:** en `entities/Contribuyente.java`, una palabra:
+**Se pega (1 de 2):** en `entities/Contribuyente.java`, **reemplazando la línea del
+`@OneToMany`**. Es una palabra, y es la que se va a medir.
+
+<!-- pasos:intermedio · al final del paso se vuelve a LAZY, que es como está en solucion/ -->
 
 ```java
-@OneToMany(mappedBy = "contribuyente", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "contribuyente", fetch = FetchType.EAGER)
 ```
 
-**Se descomenta:** `demos.laPantallaQueNoNecesitaTramites();` — si no estaba ya. Es un listado que
-solo usa la razón social y **no toca ni un trámite**.
+**Se pega (2 de 2):** en `practica/src/main/java/cl/dgt/rendimiento/demos/DemosRendimiento.java`, **reemplazando el método `laPantallaQueNoNecesitaTramites()`
+entero** — si no lo has pegado ya. Es un listado que solo usa la razón social y **no toca ni un
+trámite**.
+
+```java
+    @Transactional(readOnly = true)
+    public void laPantallaQueNoNecesitaTramites() {
+        seccion(5, "LA OTRA PANTALLA · solo razones sociales");
+
+        contador.reiniciar();
+        long empezo = System.currentTimeMillis();
+
+        List<Contribuyente> todos = contribuyentes.findAll();
+        long letras = 0;
+        for (Contribuyente c : todos) {
+            letras += c.getRazonSocial().length();     // no se toca ni un trámite
+        }
+
+        System.out.println("  " + todos.size() + " contribuyentes · " + letras + " letras en total");
+        System.out.println("  CONSULTAS: " + contador.consultas()
+                + "   ·   TIEMPO: " + (System.currentTimeMillis() - empezo) + " ms");
+    }
+```
+
+**Se agrega al runner:** en `Lab06Application.java`, dentro de `return args -> {`, debajo de
+`cargador.sembrarSiHaceFalta();`:
+
+```java
+            demos.laPantallaQueNoNecesitaTramites();
+```
+
+— si no estaba ya.
 
 **En consola, antes de tocar nada (LAZY):**
 
@@ -231,7 +401,11 @@ Hay que leer esa tabla dos veces, porque dice algo más fuerte de lo que se espe
 > proyección. `EAGER` es una decisión tomada en el sitio equivocado: en la entidad, que la usan
 > todas las pantallas, en vez de en la consulta, que es de una sola.
 
-**Volver a `LAZY` antes de terminar.**
+**Volver a `LAZY` antes de terminar**, que es como se queda:
+
+```java
+    @OneToMany(mappedBy = "contribuyente")
+```
 
 ---
 

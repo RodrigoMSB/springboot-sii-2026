@@ -43,7 +43,7 @@ Doscientos. Desde cualquier máquina que alcance el puerto, sin identificarse. *
 **Se explica:** no se va a configurar nada todavía. Sólo se añade la dependencia y se arranca,
 para ver qué hace Spring Security **antes** de que nadie le diga nada.
 
-**Se escribe:** en `practica/pom.xml`, junto a las demás dependencias:
+**Se pega:** en `practica/pom.xml`, **dentro de `<dependencies>`**, junto a las demás.
 
 ```xml
     <dependency>
@@ -95,7 +95,9 @@ configuración, y lo primero que se dice es qué es público y qué no.
 Se empieza con un usuario **en memoria**, escrito a mano, porque el asunto de este paso son las
 rutas, no de dónde salen los usuarios. Eso es el paso 3.
 
-**Se escribe:** `practica/src/main/java/cl/dgt/seguridad/seguridad/SeguridadConfig.java`
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/SeguridadConfig.java` — el archivo entero.
+
+<!-- pasos:intermedio · los pasos 3, 4, 5 y 6 lo van cambiando -->
 
 ```java
 package cl.dgt.seguridad.seguridad;
@@ -173,10 +175,19 @@ BCrypt añade dos cosas sobre un hash normal:
 - **Costo**: es **lento a propósito**. El `10` del hash significa 2¹⁰ vueltas. Al que hace login
   le cuesta unos milisegundos; al que prueba millones de claves por segundo le arruina el negocio.
 
-**Se escribe:** `seguridad/UsuarioDetailsService.java` — el puente entre la tabla y Spring
-Security:
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/UsuarioDetailsService.java` — el archivo entero.
+Es el puente entre la tabla y Spring Security.
 
 ```java
+package cl.dgt.seguridad.seguridad;
+
+import cl.dgt.seguridad.repositories.UsuarioRepository;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
 @Service
 public class UsuarioDetailsService implements UserDetailsService {
 
@@ -201,6 +212,14 @@ public class UsuarioDetailsService implements UserDetailsService {
 y `services/SembradorDeUsuarios.java`, que crea los dos usuarios la primera vez:
 
 ```java
+package cl.dgt.seguridad.services;
+
+import cl.dgt.seguridad.entities.Usuario;
+import cl.dgt.seguridad.repositories.UsuarioRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
 @Component
 public class SembradorDeUsuarios implements CommandLineRunner {
 
@@ -220,6 +239,7 @@ public class SembradorDeUsuarios implements CommandLineRunner {
         repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
         repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
 
+        System.out.println("[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)");
         repositorio.findAll().forEach(u ->
                 System.out.printf("[semilla] %-5s %-8s %s%n", u.getNombre(), u.getRol(), u.getClaveHash()));
     }
@@ -271,9 +291,21 @@ base y calcula BCrypt **cada vez**. Es lento y obliga a que la clave viaje una y
 La alternativa: se hace login **una vez** y se recibe un **JWT** — un papel firmado que dice quién
 eres y hasta cuándo vale. En las siguientes peticiones se manda el papel.
 
-**Se escribe:** `seguridad/ServicioDeTokens.java`
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/ServicioDeTokens.java` — el archivo entero.
 
 ```java
+package cl.dgt.seguridad.seguridad;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.stream.Collectors;
+
 @Service
 public class ServicioDeTokens {
 
@@ -309,6 +341,22 @@ public class ServicioDeTokens {
 y `controllers/AuthController.java`:
 
 ```java
+package cl.dgt.seguridad.controllers;
+
+import cl.dgt.seguridad.seguridad.ServicioDeTokens;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -414,7 +462,8 @@ no va tapado.
 hace un filtro, y no hay que escribirlo: se declara la aplicación como *resource server* y Spring
 pone el filtro.
 
-**Se escribe:** en `pom.xml`, la segunda dependencia del día:
+**Se pega:** en `practica/pom.xml`, **dentro de `<dependencies>`** — la segunda dependencia del
+día.
 
 ```xml
     <dependency>
@@ -441,7 +490,19 @@ decodificador, y la sesión se apaga:
     }
 ```
 
-Y en `ProductoController`, el endpoint que demuestra que el token llegó entero:
+Y en `ProductoController`, el endpoint que demuestra que el token llegó entero.
+
+**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/seguridad/controllers/ProductoController.java`,
+**arriba**, con los imports.
+
+```java
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.util.Map;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
 
 ```java
     @GetMapping("/quien-soy")
@@ -484,7 +545,8 @@ nada compartido entre ellos.
 **Se explica:** hasta aquí, todo el que entra puede hacer todo. Falta la segunda mitad:
 **autenticación** es quién eres; **autorización** es qué te toca.
 
-**Se escribe:** en `ProductoController`, el endpoint restringido:
+**Se pega:** en `practica/src/main/java/cl/dgt/seguridad/controllers/ProductoController.java`, **antes de la llave que cierra la
+clase** — es un endpoint nuevo, no reemplaza a ninguno.
 
 ```java
     @GetMapping("/administracion")
@@ -493,10 +555,12 @@ nada compartido entre ellos.
     }
 ```
 
-y en `SeguridadConfig`, la regla — **antes** de `anyRequest()`, que si no nunca se llega a ella:
+**Se pega:** en `seguridad/SeguridadConfig.java`, **reemplazando la línea de `anyRequest()`** por
+estas dos. El orden importa: la regla del ADMIN va **antes**, que si no nunca se llega a ella.
 
 ```java
                         .requestMatchers("/productos/administracion").hasRole("ADMIN")
+                        .anyRequest().authenticated())
 ```
 
 **Se corre:** se piden dos tokens, uno de cada usuario, y se cruzan las peticiones.

@@ -60,7 +60,7 @@ $ curl -o /dev/null -w "%{http_code}\n" http://localhost:8101/actuator/health
 **Se explica:** Actuator añade endpoints de diagnóstico. Con la dependencia basta, pero **lo
 importante del paso es lo que se deja fuera**.
 
-**Se escribe:** en `pom.xml`:
+**Se pega:** en `practica/pom.xml`, **dentro de `<dependencies>`**.
 
 ```xml
     <dependency>
@@ -130,7 +130,9 @@ atado al **hilo** que atiende la petición, que el sistema de logs sabe leer.
 Lo bueno: se pone **una vez**, en un filtro, y a partir de ahí no hay que pasarlo por parámetro a
 ningún sitio.
 
-**Se escribe:** `observabilidad/FiltroDeCorrelacion.java`
+**Se pega:** archivo **nuevo**
+`practica/src/main/java/cl/dgt/observabilidad/observabilidad/FiltroDeCorrelacion.java` — el
+archivo entero.
 
 ```java
 @Component
@@ -214,7 +216,8 @@ $ curl -H "X-Trace-Id: MI-ID-123" http://localhost:8101/tramites
 pool de conexiones—. Lo que no puede traer es **cuántos trámites se emitieron**, porque eso sólo lo
 sabe esta aplicación.
 
-**Se escribe:** en `TramiteController`, el contador y su uso:
+**Se pega:** en `practica/src/main/java/cl/dgt/observabilidad/controllers/TramiteController.java`,
+el contador y su uso: los imports **arriba**, el campo y el constructor **dentro de la clase**.
 
 ```java
     private final Counter emitidos;
@@ -274,7 +277,7 @@ cada quince segundos.
 Sirve para un semáforo y para nada más. Si un día dice `DOWN`, la pregunta siguiente —**¿qué se
 cayó?**— no tiene respuesta.
 
-**Se escribe:** en `application.yml`:
+**Se pega:** en `practica/src/main/resources/application.yml`.
 
 ```yaml
 management:
@@ -368,7 +371,7 @@ La respuesta —y hay que dejar que se equivoquen primero:
   «apagada».
 - **readiness: DOWN.** No puede atender. Que dejen de mandarle tráfico hasta que la base vuelva.
 
-**Se escribe:** en `application.yml`:
+**Se pega:** en `practica/src/main/resources/application.yml`.
 
 ```yaml
 management:
