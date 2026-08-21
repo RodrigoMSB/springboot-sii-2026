@@ -92,7 +92,7 @@ mensaje, se construye otro jar de 21 MB **entero** y hay que moverlo entero.
 Y sin embargo, de esos 21 MB, **20,9 no cambiaron**: son Spring, Tomcat y Jackson, exactamente los
 mismos de ayer. Lo que cambió son unos pocos kilobytes.
 
-**Se escribe:** en `pom.xml`, dentro del plugin de Spring Boot:
+**Se pega:** en `practica/pom.xml`, **dentro del plugin de Spring Boot**.
 
 ```xml
       <plugin>
@@ -211,7 +211,7 @@ sitio: en las máquinas del SII no hay Docker y no se puede instalar.
 **Se explica:** Jib es un plugin de Maven que escribe una imagen OCI directamente. No necesita
 demonio de Docker, ni permisos de administrador, ni un `Dockerfile`.
 
-**Se escribe:** en `pom.xml`, dentro de `<plugins>`:
+**Se pega:** en `practica/pom.xml`, **dentro de `<plugins>`**.
 
 ```xml
       <plugin>
@@ -327,7 +327,8 @@ espera son otros.
 
 Un artefacto, todos los ambientes. Lo que cambia va **fuera**.
 
-**Se escribe:** dos archivos de perfil. `resources/application-dev.yml`:
+**Se pega:** archivo **nuevo** `practica/src/main/resources/application-dev.yml` — el archivo
+entero. (Después el otro, `application-prod.yml`.)
 
 ```yaml
 lab12:

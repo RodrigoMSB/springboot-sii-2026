@@ -46,8 +46,7 @@ cd practica          # o solucion
 | `practica/` | 8089 | **55436** |
 | `solucion/` | 8090 | **55437** |
 
-En `practica/` las cinco demos están **comentadas** en `Lab06Application`. Cada paso descomenta la
-suya.
+En `practica/` el `CommandLineRunner` de `Lab06Application` llega **vacío**. Cada paso agrega su llamada —el guion trae la línea exacta—.
 
 ## Hoy el SQL está apagado
 

@@ -179,7 +179,11 @@ paso 3.
 que decir en voz alta antes de escribir nada: puede **tardar**, y puede **fallar**. Un `findByRut()`
 no hacía ninguna de las dos cosas por su cuenta.
 
-**Se escribe**, archivo nuevo, `tramites/src/main/java/cl/dgt/tramites/clientes/ClienteContribuyentes.java`:
+**Se pega:** archivo **nuevo**
+`practica/tramites/src/main/java/cl/dgt/tramites/clientes/ClienteContribuyentes.java` — el
+archivo entero.
+
+<!-- pasos:intermedio · el paso 5 lo reescribe con el circuito y el 7 le añade la cabecera -->
 
 ```java
 package cl.dgt.tramites.clientes;
@@ -230,7 +234,10 @@ Dos cosas que merecen una frase cada una:
   obligaría a desplegar los dos a la vez — y ahí se perdió la independencia por la que se partió el
   sistema.
 
-**Se escribe**, en `services/TramiteService.java`: recibir el cliente y usarlo.
+**Se pega:** en `practica/tramites/src/main/java/cl/dgt/tramites/services/TramiteService.java` —
+recibir el cliente y usarlo.
+
+<!-- pasos:intermedio · el paso 5 lo reescribe con el circuito, y el 7 le anade la cabecera del id -->
 
 ```java
     private final TramiteRepository repositorio;
@@ -243,6 +250,8 @@ Dos cosas que merecen una frase cada una:
 ```
 
 y el método que cose los dos datos:
+
+<!-- pasos:intermedio · el paso 5 lo cambia para tratar la ausencia como caso normal -->
 
 ```java
     private TramiteDto conNombre(Tramite tramite) {
@@ -364,7 +373,10 @@ para que no arda el edificio. Tres estados:
 | **ABIERTO** | rechaza sin llamar (*falla rápido*) | pasa el tiempo → MEDIO ABIERTO |
 | **MEDIO ABIERTO** | deja pasar unas pocas de prueba | van bien → CERRADO · van mal → ABIERTO |
 
-**Se escribe**, en `ClienteContribuyentes.java`. Primero el circuito, en el constructor:
+**Se pega:** en `practica/tramites/src/main/java/cl/dgt/tramites/clientes/ClienteContribuyentes.java`.
+Primero el circuito, **dentro del constructor**:
+
+<!-- pasos:intermedio · el paso 5 lo reescribe -->
 
 ```java
     private final CircuitBreaker circuito;
@@ -435,6 +447,8 @@ Después, `ficha()` cambia de forma: en vez de lanzar, devuelve `Optional`.
 ```
 
 Y el tablero, para poder mirar el circuito por dentro:
+
+<!-- pasos:intermedio · el paso 7 le anade la cabecera del id de correlacion -->
 
 ```java
     public Map<String, Object> estadoDelCircuito() {
@@ -554,7 +568,8 @@ para dejar la puerta abierta.
 Un **API gateway** es la recepción del edificio: una sola dirección pública, y dentro, quien haga
 falta.
 
-**Se escribe**, en `gateway/enrutado/TablaDeRutas.java`, sustituyendo el `TODO`:
+**Se pega:** en `practica/gateway/src/main/java/cl/dgt/gateway/enrutado/TablaDeRutas.java`,
+**sustituyendo la línea del `TODO`**:
 
 ```java
         this.rutas = List.of(
@@ -573,7 +588,8 @@ cambiar un puerto es editar texto, no recompilar.
 > la dirección que le dieron no conteste. El circuit breaker del paso 5 no está por si acaso: está
 > porque la lista es falible por diseño.
 
-**Se escribe**, en `gateway/seguridad/SeguridadConfig.java`, sustituyendo el otro `TODO`:
+**Se pega:** en `practica/gateway/src/main/java/cl/dgt/gateway/seguridad/SeguridadConfig.java`,
+**sustituyendo las dos líneas del otro `TODO`**:
 
 ```java
                 .authorizeHttpRequests(rutas -> rutas
@@ -658,7 +674,7 @@ esto es lo que hay — las dos líneas del paso 3, miradas otra vez:
 mandó ninguno. Con dos líneas y cuarenta milésimas de diferencia todavía se adivina; con cuatro
 servicios y mil peticiones por minuto, no.
 
-**Se escribe**, dos líneas en dos archivos.
+**Se pega:** dos líneas, en dos archivos.
 
 En `gateway/enrutado/Enrutador.java`, en el método `reenviar`:
 
@@ -731,7 +747,8 @@ procesos. Hay que elegir, y las dos opciones se pagan:
 Hoy se elige la segunda, que es lo que casi siempre se elige para una auditoría: registrar es
 importante, pero no tanto como poder trabajar.
 
-**Se escribe**, archivo nuevo, `tramites/clientes/ClienteAuditoria.java` — lo importante son las
+**Se pega:** archivo **nuevo**
+`practica/tramites/src/main/java/cl/dgt/tramites/clientes/ClienteAuditoria.java` — lo importante son las
 tres líneas del `Thread.ofVirtual()`:
 
 ```java

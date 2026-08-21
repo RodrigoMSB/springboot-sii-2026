@@ -27,9 +27,27 @@
 #  sin documentación (regla de la casa) y `solucion/` lleva la suya, así que los
 #  bloques del guion nunca van a traer los comentarios de la solución.
 #
+#  BLOQUES INTERMEDIOS. Algunos labs escriben en un paso una versión que un paso
+#  posterior reescribe (el Lab 01 lo hace dos veces: los pasos 4 y 5 devuelven un
+#  DTO y el paso 6 los envuelve en ResponseEntity). Esa versión intermedia es
+#  código real que el instructor pega, pero NO está en `solucion/` — la solución
+#  guarda el estado final. Se marcan así, en la línea de encima del bloque:
+#
+#      <!-- pasos:intermedio · lo reescribe el paso 6 -->
+#
+#  y este script las salta. **Las cuenta y las imprime**, para que saltarse un
+#  bloque sea una decisión visible y no una forma barata de poner esto en verde.
+#
 #  QUÉ **NO** COMPRUEBA, y conviene saberlo: que el guion esté completo. Si
 #  alguien añade un método a `solucion/` y no lo menciona en el guion, esto pasa
 #  en verde. Vigila que lo que el guion DICE sea verdad, no que lo diga todo.
+#
+#  QUÉ BLOQUES MIRA. Solo los que cuelgan de un «**Se pega**». Un `PASOS.md`
+#  también enseña código que YA ESTÁ en `practica/` —para mirarlo y criticarlo,
+#  como el `.orElseThrow()` sin argumentos del Lab 03— y ese no se pega ni tiene
+#  por qué estar en `solucion/`. Se resuelve por posición: se mira hacia atrás
+#  desde el bloque, y solo cuenta si lo primero que aparece es un «Se pega» y no
+#  un «Se explica», «En consola», «Se corre» o «Se prueba».
 #
 #  ALCANCE: cualquier lab cuyo `PASOS.md` contenga el marcador «**Se pega». Hoy
 #  es solo el 04; si la SPEC-038 se extiende, los nuevos entran solos.
@@ -64,9 +82,16 @@ def metodos_de(texto):
     método a efectos de lo que el instructor pega.
     """
     lineas = texto.split("\n")
+    # Sin exigir modificador de acceso: los métodos de test de JUnit son
+    # package-private (`void elPrecioConIva...()`) y sin esto quedaban fuera de
+    # la comprobación fuerte, que es justo la que caza una línea añadida.
     firma = re.compile(
-        r"^\s{4}(?:public|private|protected)\s+[\w<>,\[\]\s\.\?]+\s+(\w+)\s*\([^;]*$|"
-        r"^\s{4}(?:public|private|protected)\s+[\w<>,\[\]\s\.\?]+\s+(\w+)\s*\(.*\)\s*\{"
+        r"^\s{4}(?!.*\b(?:class|interface|enum|record)\b)"
+        r"(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*"
+        r"[\w<>,\[\]\.\?]+\s+(\w+)\s*\([^;]*$|"
+        r"^\s{4}(?!.*\b(?:class|interface|enum|record)\b)"
+        r"(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*"
+        r"[\w<>,\[\]\.\?]+\s+(\w+)\s*\(.*\)\s*\{"
     )
     encontrados = {}
     i = 0
@@ -97,6 +122,8 @@ def metodos_de(texto):
 def revisar_lab(lab):
     pasos = lab / "PASOS.md"
     solucion = lab / "solucion"
+    # `rglob` sobre solucion/ ya cubre src/main y src/test, y los sub-proyectos
+    # de un lab multi-módulo (el 14 son cuatro servicios).
     fuentes = sorted(solucion.rglob("*.java")) if solucion.is_dir() else []
     if not fuentes:
         return [f"{lab.name}: tiene «{MARCADOR}» en PASOS.md pero no encuentro fuentes en solucion/"]
@@ -109,7 +136,30 @@ def revisar_lab(lab):
         for nombre, cuerpos in metodos_de(texto).items():
             metodos_solucion.setdefault(nombre, []).extend(cuerpos)
 
-    bloques = re.findall(r"```java\n(.*?)```", pasos.read_text(), re.S)
+    texto = pasos.read_text()
+    # Marcadores de sección: SIEMPRE a principio de línea y en negrita. Buscarlos
+    # con `rfind` sobre el texto crudo fallaba, porque «Se pega» también aparece
+    # citado a media frase.
+    MARCA = re.compile(r"^\*\*(Se pega|Se explica|Se escribe|En consola|Se corre|"
+                       r"Se prueba|Se hace|En navegador|Se agrega|Lo que|Se descomenta)",
+                       re.M)
+    bloques, n_saltados, n_ajenos = [], 0, 0
+    for m in re.finditer(r"```java\n(.*?)```", texto, re.S):
+        antes = texto[:m.start()]
+        marcas = MARCA.findall(antes)
+        # ¿este bloque cuelga de un «Se pega»? La última marca manda.
+        # «Se agrega al runner» también es pegar: esas líneas están en el
+        # `Lab0NApplication` de solucion/ y conviene vigilarlas igual.
+        if not marcas or marcas[-1] not in ("Se pega", "Se agrega"):
+            n_ajenos += 1
+            continue
+        i_pega = antes.rfind("**Se pega")
+        # ¿está marcado como version intermedia?
+        cola = antes[antes.rfind("```") + 3:] if "```" in antes else antes
+        if "pasos:intermedio" in antes[i_pega:]:
+            n_saltados += 1
+            continue
+        bloques.append(m.group(1))
     fallos = []
     n_lineas = 0
     n_metodos = 0
@@ -141,8 +191,10 @@ def revisar_lab(lab):
                         f"      guion    ({len(cuerpo)} líneas): {cuerpo[:3]}\n"
                         f"      solucion ({len(esperado)} líneas): {esperado[:3]}")
 
+    extra = (f" · {n_saltados} intermedios" if n_saltados else "") + \
+            (f" · {n_ajenos} de solo mirar" if n_ajenos else "")
     print(f"  [{'OK' if not fallos else 'ERROR'}] {lab.name}: "
-          f"{len(bloques)} bloques · {n_lineas} líneas · {n_metodos} métodos completos")
+          f"{len(bloques)} bloques · {n_lineas} líneas · {n_metodos} métodos completos{extra}")
     return fallos
 
 

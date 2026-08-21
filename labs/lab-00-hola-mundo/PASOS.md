@@ -24,7 +24,7 @@ contenedor no tiene nada dentro; el resto del curso consiste en irle metiendo co
 
 **Se escribe:** nada.
 
-**Se descomenta:** nada.
+**Se agrega al runner:** nada.
 
 **En consola:** el `./mvnw spring-boot:run` tal cual viene:
 
@@ -61,12 +61,13 @@ Tres cosas que vale la pena señalar en voz alta:
 la aplicación ya está lista». **Nadie lo llama desde el `main`.** Spring lo encuentra porque
 está anotado, y lo ejecuta él. Esa es, en pequeño, la idea de todo el framework.
 
-**Se escribe:** en `HolaMundoApplication.java`, reemplazar el `// escribe aquí` por:
+**Se pega:** en `practica/src/main/java/cl/dgt/hola/HolaMundoApplication.java`, **reemplazando
+las dos líneas de comentario** que hay dentro de `return args -> {`.
 
 ```java
-System.out.println();
-System.out.println("  Hola, mundo. Esto lo escribí yo.");
-System.out.println();
+            System.out.println();
+            System.out.println("  Hola, mundo. Esto lo escribí yo.");
+            System.out.println();
 ```
 
 **En consola:** el mismo arranque de antes, y al final:
@@ -89,7 +90,8 @@ El mensaje sale **después** de `Started`, no antes. Ese orden no es casualidad:
 **Se explica:** no todo se cambia tocando Java. `src/main/resources/application.yml` es el
 archivo de configuración, y Spring lo lee al arrancar.
 
-**Se escribe:** en `application.yml`, cambiar el nombre:
+**Se pega:** en `practica/src/main/resources/application.yml`, **reemplazando el bloque
+`spring:` que ya está** (son sus tres primeras líneas).
 
 ```yaml
 spring:

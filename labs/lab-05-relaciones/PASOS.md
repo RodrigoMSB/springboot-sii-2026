@@ -11,8 +11,7 @@ cd practica
 **El programa se queda corriendo**: se apaga con **Ctrl+C**. Escucha en el **8087** y su base en
 el **55434** (`solucion/`, en el 8088 y el 55435).
 
-Las seis llamadas a las demos están **comentadas** en `Lab05Application`. Cada paso llena un
-método de `DemosRelaciones` y descomenta su línea.
+En `practica/` el `CommandLineRunner` de `Lab05Application` llega **vacío**. Cada paso llena un método de la clase de demos y agrega su llamada.
 
 > **Lo que hay que mirar hoy no es lo que imprimen los métodos.** Es el SQL que sale entre medio,
 > y sobre todo **cuántas veces**.
@@ -26,38 +25,90 @@ el nombre `@ManyToOne`. Y una regla que vale para todo JPA: **la relación vive 
 columna**. Abrir `db/migration/V1__contribuyente_y_tramite.sql` y mirar la última línea de la
 tabla `tramite` — ahí está `contribuyente_id`. La clase tiene que decir lo mismo.
 
-**Se escribe:** en `entities/Tramite.java`, donde dice `// escribe aquí`:
+**Se pega (1 de 5):** en `entities/Tramite.java`, **arriba**, con los imports.
 
 ```java
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "contribuyente_id", nullable = false)
-private Contribuyente contribuyente;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 ```
 
-más su getter, y el cuarto parámetro del constructor:
+**Se pega (2 de 5):** en el mismo archivo, **donde dice `// escribe aquí`**.
 
 ```java
-public Tramite(String tipo, String estado, LocalDate fecha, Contribuyente contribuyente) {
-    ...
-    this.contribuyente = contribuyente;
-}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contribuyente_id", nullable = false)
+    private Contribuyente contribuyente;
 ```
 
-Y en `demos/DemosRelaciones.java`, la demo 1. Empieza contando lo que quedó de la vez anterior —la
-base persiste, como en el Lab 04— y borrando:
+**Se pega (3 de 5):** en el mismo archivo, **reemplazando el constructor público entero** — el de
+tres parámetros. Ahora son cuatro.
 
 ```java
-System.out.println("  al arrancar había " + contribuyentes.count() + " contribuyentes y "
-        + tramites.count() + " trámites de la vez anterior");
-
-tramites.deleteAll();        // los trámites PRIMERO: la clave foránea no deja
-contribuyentes.deleteAll();  // borrar un contribuyente que tenga trámites
+    public Tramite(String tipo, String estado, LocalDate fecha, Contribuyente contribuyente) {
+        this.tipo = tipo;
+        this.estado = estado;
+        this.fecha = fecha;
+        this.contribuyente = contribuyente;
+    }
 ```
 
-y después guarda 3 contribuyentes y 6 trámites, 2 por contribuyente, dejando el id del primero en
-`this.primerTramiteId`.
+**Se pega (4 de 5):** en el mismo archivo, **antes de la llave que cierra la clase**, su getter.
 
-**Se descomenta:** `demos.guardarConRelacion();`
+```java
+    public Contribuyente getContribuyente() {
+        return contribuyente;
+    }
+```
+
+**Se pega (5 de 5):** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, primero estos imports **arriba**, y después **reemplazando el método
+`guardarConRelacion()` entero**. Empieza contando lo que quedó de la vez anterior —la base
+persiste, como en el Lab 04— y borrando: los trámites primero, que la clave foránea no deja borrar
+un contribuyente que tenga trámites.
+
+```java
+import cl.dgt.relaciones.entities.Contribuyente;
+import cl.dgt.relaciones.entities.Tramite;
+import java.time.LocalDate;
+```
+
+```java
+    public void guardarConRelacion() {
+        seccion(1, "GUARDAR CON RELACIÓN · @ManyToOne");
+
+        System.out.println("  al arrancar había " + contribuyentes.count() + " contribuyentes y "
+                + tramites.count() + " trámites de la vez anterior");
+
+        tramites.deleteAll();
+        contribuyentes.deleteAll();
+
+        Contribuyente andes = contribuyentes.save(
+                new Contribuyente("76.543.210-K", "Comercial Andes Ltda."));
+        Contribuyente rutaSur = contribuyentes.save(
+                new Contribuyente("77.111.222-3", "Transportes Ruta Sur SpA"));
+        Contribuyente espiga = contribuyentes.save(
+                new Contribuyente("78.999.888-1", "Panadería La Espiga EIRL"));
+        System.out.println("  3 contribuyentes guardados");
+
+        Tramite primero = tramites.save(new Tramite(
+                "Declaración F29", "RECIBIDO", LocalDate.of(2026, 3, 10), andes));
+        this.primerTramiteId = primero.getId();
+
+        tramites.save(new Tramite("Certificado de situación", "EMITIDO", LocalDate.of(2026, 7, 2), andes));
+        tramites.save(new Tramite("Declaración F29", "RECIBIDO", LocalDate.of(2026, 4, 5), rutaSur));
+        tramites.save(new Tramite("Inicio de actividades", "APROBADO", LocalDate.of(2026, 1, 20), rutaSur));
+        tramites.save(new Tramite("Declaración F29", "OBSERVADO", LocalDate.of(2026, 5, 18), espiga));
+        tramites.save(new Tramite("Cambio de domicilio", "APROBADO", LocalDate.of(2026, 6, 30), espiga));
+        System.out.println("  6 trámites guardados, 2 por contribuyente");
+        System.out.println("  el trámite " + primerTramiteId + " es de " + andes.getRazonSocial());
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.guardarConRelacion();
+```
 
 **En consola:**
 
@@ -101,13 +152,31 @@ persistiendo, y es la prueba de que lo guardado sobrevivió al Ctrl+C.
 el contribuyente **no vino** con el trámite. Vino el trámite y nada más. Cuando se le pide el
 contribuyente, JPA va a la base a buscarlo — y eso es un SELECT más.
 
-**Se escribe:** la demo 2. Cargar el trámite `primerTramiteId`, imprimirlo, imprimir una marca, y
-**solo entonces** pedir `tramite.getContribuyente().getRazonSocial()`.
-
 El método ya viene con `@Transactional(readOnly = true)`. Es a propósito: sin eso, la sesión
 estaría cerrada al llegar aquí. Eso es el paso 5.
 
-**Se descomenta:** `demos.navegarDeTramiteAContribuyente();`
+**Se pega:** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, **reemplazando el método `navegarDeTramiteAContribuyente()` entero**. Carga el
+trámite, lo imprime, imprime una marca, y **solo entonces** pide el contribuyente.
+
+```java
+    @Transactional(readOnly = true)
+    public void navegarDeTramiteAContribuyente() {
+        seccion(2, "NAVEGAR · tramite -> contribuyente");
+
+        Tramite tramite = tramites.findById(primerTramiteId).orElseThrow();
+        System.out.println("  trámite cargado: " + tramite);
+        System.out.println("  --- todavía NO se ha tocado el contribuyente ---");
+
+        String razon = tramite.getContribuyente().getRazonSocial();
+        System.out.println("  ahora sí: " + razon);
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.navegarDeTramiteAContribuyente();
+```
 
 **En consola:**
 
@@ -146,17 +215,56 @@ dónde mirar: `mappedBy = "contribuyente"` significa «la relación está guarda
 
 **Este lado no guarda nada.** Sirve para navegar y nada más.
 
-**Se escribe:** en `entities/Contribuyente.java`:
+**Se pega (1 de 4):** en `entities/Contribuyente.java`, **arriba**, con los imports.
 
 ```java
-@OneToMany(mappedBy = "contribuyente")
-private List<Tramite> tramites = new ArrayList<>();
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
 ```
 
-más su getter. Y la demo 3: buscar el contribuyente por RUT, imprimir su razón social y una marca,
-y solo entonces recorrer `andes.getTramites()`.
+**Se pega (2 de 4):** en el mismo archivo, **donde dice `// escribe aquí`**.
 
-**Se descomenta:** `demos.listarTramitesDeUnContribuyente();`
+```java
+    @OneToMany(mappedBy = "contribuyente")
+    private List<Tramite> tramites = new ArrayList<>();
+```
+
+**Se pega (3 de 4):** en el mismo archivo, **antes de la llave que cierra la clase**.
+
+```java
+    public List<Tramite> getTramites() {
+        return tramites;
+    }
+```
+
+**Se pega (4 de 4):** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, el import **arriba** y después **reemplazando el método
+`listarTramitesDeUnContribuyente()` entero**.
+
+```java
+import java.util.List;
+```
+
+```java
+    @Transactional(readOnly = true)
+    public void listarTramitesDeUnContribuyente() {
+        seccion(3, "LADO ESPEJO · @OneToMany(mappedBy)");
+
+        Contribuyente andes = contribuyentes.findByRut("76.543.210-K").orElseThrow();
+        System.out.println("  contribuyente: " + andes.getRazonSocial());
+        System.out.println("  --- todavía NO se ha tocado la lista ---");
+
+        List<Tramite> suyos = andes.getTramites();
+        System.out.println("  tiene " + suyos.size() + " trámites:");
+        suyos.forEach(t -> System.out.println("    " + t));
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.listarTramitesDeUnContribuyente();
+```
 
 **En consola:**
 
@@ -184,11 +292,25 @@ Otra vez el mismo patrón: el segundo SELECT llega cuando se toca la lista.
 
 **Se explica:** LAZY tiene fama de complicado y EAGER de cómodo. Se va a medir cuál sale caro.
 
-**Se escribe:** la demo 4. Traer los 6 trámites con `findAll()` y **no tocar el contribuyente de
-ninguno**. Imprimir una marca antes y otra después, para poder contar los bloques `Hibernate:`
-que salen entre las dos.
+**Se pega:** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, **reemplazando el método `lazyContraEager()` entero**. Trae los 6 trámites
+con `findAll()` y **no toca el contribuyente de ninguno**.
 
-**Se descomenta:** `demos.lazyContraEager();`
+```java
+    public void lazyContraEager() {
+        seccion(4, "LAZY vs EAGER · contar los SELECT");
+
+        System.out.println("  >>>>>> EMPIEZA EL CONTEO — cuenta los 'Hibernate:' hasta la marca de fin");
+        List<Tramite> todos = tramites.findAll();
+        System.out.println("  <<<<<< FIN DEL CONTEO — " + todos.size() + " trámites traídos");
+        System.out.println("  (no se tocó el contribuyente de ninguno)");
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.lazyContraEager();
+```
 
 **En consola, con LAZY (como está ahora):**
 
@@ -244,10 +366,38 @@ hay a dónde ir**? El repositorio abre una transacción, la cierra, y devuelve u
 desconectado de la base. Pedirle ahora la relación es pedirle un SELECT a una sesión que ya no
 existe.
 
-**Se escribe:** la demo 5 — exactamente lo mismo que la 2, pero fijándose en que este método
-**no** lleva `@Transactional`. Atrapar la excepción e imprimirla, para que el programa siga.
+**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, **arriba**, con los imports.
 
-**Se descomenta:** `demos.elErrorDeLaSesionCerrada();`
+```java
+import org.hibernate.LazyInitializationException;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **reemplazando el método `elErrorDeLaSesionCerrada()`
+entero**. Es exactamente lo mismo que la demo 2 — pero fíjate en que este método **no** lleva
+`@Transactional`.
+
+```java
+    public void elErrorDeLaSesionCerrada() {
+        seccion(5, "LazyInitializationException · fuera de la transacción");
+
+        Tramite tramite = tramites.findById(primerTramiteId).orElseThrow();
+        System.out.println("  trámite cargado (y la sesión ya se cerró): " + tramite);
+
+        try {
+            String razon = tramite.getContribuyente().getRazonSocial();
+            System.out.println("  razón social: " + razon + "   <-- si ves esto, algo cambió");
+        } catch (LazyInitializationException e) {
+            System.out.println("  REVENTÓ, y está bien: " + e.getClass().getSimpleName());
+            System.out.println("  mensaje: " + e.getMessage());
+        }
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.elErrorDeLaSesionCerrada();
+```
 
 **En consola:**
 
@@ -280,15 +430,35 @@ paso 4 en todas las demás pantallas.
 **Se explica:** en el Lab 04 el nombre del método era la consulta. Eso sigue valiendo, **y
 atraviesa relaciones**: un trámite no tiene RUT, pero su contribuyente sí, y se puede decir así.
 
-**Se escribe:** en `repositories/TramiteRepository.java`:
+**Se pega (1 de 3):** en `repositories/TramiteRepository.java`, **arriba**, con los imports.
 
 ```java
-List<Tramite> findByContribuyenteRut(String rut);
+import java.util.List;
 ```
 
-y la demo 6, que lo llama e imprime el resultado.
+**Se pega (2 de 3):** en el mismo archivo, **dentro de la interfaz**.
 
-**Se descomenta:** `demos.consultaQueCruzaLaRelacion();`
+```java
+    List<Tramite> findByContribuyenteRut(String rut);
+```
+
+**Se pega (3 de 3):** en `practica/src/main/java/cl/dgt/relaciones/demos/DemosRelaciones.java`, **reemplazando el método `consultaQueCruzaLaRelacion()` entero**.
+
+```java
+    public void consultaQueCruzaLaRelacion() {
+        seccion(6, "CONSULTA DERIVADA QUE NAVEGA · findByContribuyenteRut()");
+
+        List<Tramite> deAndes = tramites.findByContribuyenteRut("76.543.210-K");
+        System.out.println("  trámites del RUT 76.543.210-K -> " + deAndes.size());
+        deAndes.forEach(t -> System.out.println("    " + t));
+    }
+```
+
+**Se agrega al runner:** en `Lab05Application.java`, dentro de `return args -> {`:
+
+```java
+            demos.consultaQueCruzaLaRelacion();
+```
 
 **En consola:**
 

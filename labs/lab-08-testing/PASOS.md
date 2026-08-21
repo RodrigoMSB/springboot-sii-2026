@@ -90,7 +90,7 @@ Tres tiempos, siempre los mismos:
 Y el nombre del método **no es un identificador, es una frase**. Se va a leer en un informe de
 fallos a las tres de la mañana: `test1` no sirve de nada.
 
-**Se escribe:** `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`
+**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java` — el archivo entero.
 
 ```java
 package cl.dgt.testing;
@@ -111,6 +111,7 @@ class ProductoServiceTest {
 
         assertEquals(5938, conIva);
     }
+
 }
 ```
 
@@ -129,7 +130,9 @@ servicio se construye con `new`, como cualquier objeto.
 
 **Cinco milésimas de segundo.** Ese número va a importar en el paso 6.
 
-Y ahora dos más, del mismo tamaño, para tener con qué trabajar:
+Y ahora dos más, del mismo tamaño, para tener con qué trabajar.
+
+**Se pega:** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **antes de la llave que cierra la clase**.
 
 ```java
     @Test
@@ -158,8 +161,10 @@ estos.
 rojo podría estar comprobando el aire. Así que se rompe el código de producción **a propósito**,
 y se mira qué pasa.
 
-**Se escribe:** en `practica/src/main/java/cl/dgt/testing/services/ProductoService.java`, cambiar
-una sola cifra:
+**Se pega:** en `practica/src/main/java/cl/dgt/testing/services/ProductoService.java`,
+**reemplazando la línea de `TASA_IVA`**. Una sola cifra.
+
+<!-- pasos:intermedio · se deshace en cuanto se ve el rojo: la solución lleva 0.19 -->
 
 ```java
     private static final double TASA_IVA = 0.10;   // era 0.19
@@ -212,13 +217,15 @@ normal no puede comprobar eso —la excepción lo tumbaría a él también—, a
 `assertThrows`: recibe el tipo de excepción esperado y un trozo de código, lo ejecuta, y falla si
 **no** explota.
 
-**Se escribe:** en `ProductoServiceTest`, añadir el import y el test:
+**Se pega (1 de 2):** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **arriba**, con los imports.
 
 ```java
 import cl.dgt.testing.services.ProductoNoEncontradoException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 ```
+
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
 
 ```java
     @Test
@@ -275,7 +282,7 @@ Tres verbos:
 
 El tercero es distinto de los otros dos: no mira el resultado, mira **la conversación**.
 
-**Se escribe:** `practica/src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java`
+**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java` — el archivo entero.
 
 ```java
 package cl.dgt.testing;
@@ -327,14 +334,6 @@ class ProductoServiceConDobleTest {
 }
 ```
 
-Mírese el primer test: el catálogo real tiene **cuatro** productos y el doble devuelve **dos**,
-de mil y dos mil pesos. Números elegidos para que la suma se pueda hacer de cabeza —1190 + 2380 =
-3570— en vez de copiar el resultado de la pantalla, que es como se escriben los tests que no
-prueban nada.
-
-Y el segundo: se le pide al doble que devuelva `Optional.empty()`. **No existe ningún producto
-7**, y no hizo falta borrar nada ni preparar ninguna base: se le dijo al doble qué contestar.
-
 **Se corre:** `./mvnw test`
 
 **En consola:**
@@ -372,7 +371,7 @@ da un `ProductoService`, el controller no se puede construir.
 > dependencia `spring-boot-webmvc-test`, y en `practica/` ya viene en el `pom.xml`.
 > `@MockitoBean` reemplazó al viejo `@MockBean`.
 
-**Se escribe:** `practica/src/test/java/cl/dgt/testing/ProductoControllerTest.java`
+**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoControllerTest.java` — el archivo entero.
 
 ```java
 package cl.dgt.testing;
@@ -423,14 +422,6 @@ class ProductoControllerTest {
 }
 ```
 
-`jsonPath("$.nombre")` es una consulta sobre el JSON de la respuesta: `$` es la raíz. Se está
-comprobando el **contrato de la API**, campo por campo — exactamente lo que se miró con `curl` en
-el paso 0, pero ahora lo mira la máquina.
-
-Y el segundo test es el que vale doble: comprueba que la excepción del servicio **se traduce** a
-un 404 con cuerpo. Ese cableado no está en el controller ni en el servicio, está en
-`ManejadorDeErrores`, y sin este test nadie se entera el día que alguien lo borre.
-
 **Se corre:** `./mvnw test`
 
 **En consola:**
@@ -455,7 +446,7 @@ ProductoControllerTest in 0.245 seconds`. Spring arrancó. Esos 245 ms no estaba
 todo lo que arrancaría la aplicación de verdad. Sirve para probar exactamente una cosa: **que el
 cableado funciona**.
 
-**Se escribe:** `practica/src/test/java/cl/dgt/testing/ContextoDeSpringTest.java`
+**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ContextoDeSpringTest.java` — el archivo entero.
 
 ```java
 package cl.dgt.testing;

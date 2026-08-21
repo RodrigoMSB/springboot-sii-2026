@@ -48,7 +48,8 @@ Guárdese esa línea del hilo: en el paso 4 va a cambiar.
 que no: el cierre nocturno, la limpieza de temporales, el reintento de los avisos que fallaron.
 Nadie los pide; ocurren.
 
-**Se escribe:** en `Lab12Application.java`, la anotación que lo enciende:
+**Se pega:** en `practica/src/main/java/cl/dgt/tareas/Lab12Application.java` — el import
+**arriba** y la anotación **sobre la clase**, junto a `@SpringBootApplication`.
 
 ```java
 @EnableScheduling
@@ -118,7 +119,8 @@ todavía está levantándose.
 **Se explica:** `fixedDelay` sirve para «cada tanto». Para «todos los días a las 3 de la mañana»
 hace falta un cron.
 
-**Se escribe:** `tareas/Recordatorio.java`
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/tareas/Recordatorio.java`
+— el archivo entero.
 
 ```java
 @Component
@@ -191,7 +193,8 @@ curl -X POST -w "  (%{time_total}s)\n" http://localhost:8103/tramites/sincrono
 
 **Tres segundos** por algo que el usuario no necesita ver.
 
-**Se escribe:** en `Lab12Application.java`, la segunda anotación:
+**Se pega:** en `practica/src/main/java/cl/dgt/tareas/Lab12Application.java` — el import
+**arriba** y la anotación **sobre la clase**.
 
 ```java
 @EnableScheduling
@@ -270,7 +273,7 @@ Un **hilo virtual** lo gestiona la JVM, no el sistema operativo. Pesa unos pocos
 y cuando se bloquea esperando entrada/salida, la JVM lo **aparta** y usa el hilo real para otra
 cosa.
 
-**Se escribe:** una línea en `application.yml`.
+**Se pega:** en `practica/src/main/resources/application.yml` — una línea.
 
 ```yaml
 spring:

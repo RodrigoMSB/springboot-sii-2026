@@ -27,7 +27,8 @@ models/         →  repositories/  →  controllers/  →  services/
 productos. La interfaz es la pieza clave del día: dice **qué** se puede pedir, nunca **cómo** se
 hace.
 
-**Se escribe:** `practica/src/main/java/cl/dgt/di/models/Producto.java`
+**Se pega (1 de 2):** archivo **nuevo** `practica/src/main/java/cl/dgt/di/models/Producto.java`
+— el archivo entero.
 
 ```java
 package cl.dgt.di.models;
@@ -36,17 +37,21 @@ public record Producto(Long id, String nombre, int precio) {
 }
 ```
 
-y `practica/src/main/java/cl/dgt/di/repositories/ProductoRepository.java`
+**Se pega (2 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/di/repositories/ProductoRepository.java` — el archivo entero.
 
 ```java
 package cl.dgt.di.repositories;
 
 import cl.dgt.di.models.Producto;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductoRepository {
+
     List<Producto> todos();
+
     Optional<Producto> porId(Long id);
 }
 ```
@@ -63,9 +68,20 @@ una vez, y se la guarda.
 
 Y luego el controller. Mírese bien su constructor, porque ahí está todo el laboratorio.
 
-**Se escribe:** `repositories/ProductoRepositoryLista.java`
+**Se pega (1 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/di/repositories/ProductoRepositoryLista.java` — el archivo entero.
+
+<!-- pasos:intermedio · el paso 5a le añade @Primary -->
 
 ```java
+package cl.dgt.di.repositories;
+
+import cl.dgt.di.models.Producto;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public class ProductoRepositoryLista implements ProductoRepository {
 
@@ -75,24 +91,42 @@ public class ProductoRepositoryLista implements ProductoRepository {
             new Producto(3L, "Silla ergonómica", 129900),
             new Producto(4L, "Monitor 24 pulgadas", 149900));
 
-    @Override public List<Producto> todos() { return DATOS; }
+    @Override
+    public List<Producto> todos() {
+        return DATOS;
+    }
 
-    @Override public Optional<Producto> porId(Long id) {
+    @Override
+    public Optional<Producto> porId(Long id) {
         return DATOS.stream().filter(p -> p.id().equals(id)).findFirst();
     }
 }
 ```
 
-y `controllers/ProductoController.java`
+**Se pega (2 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/di/controllers/ProductoController.java` — el archivo entero.
+Mírese bien su constructor, porque ahí está todo el laboratorio.
+
+<!-- pasos:intermedio · el paso 6 lo reescribe para pedir el servicio en vez del repositorio -->
 
 ```java
+package cl.dgt.di.controllers;
+
+import cl.dgt.di.models.Producto;
+import cl.dgt.di.repositories.ProductoRepository;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
 @RestController
 @RequestMapping("/productos")
 public class ProductoController {
 
     private final ProductoRepository repositorio;
 
-    public ProductoController(ProductoRepository repositorio) {   // ← el constructor
+    public ProductoController(ProductoRepository repositorio) {
         this.repositorio = repositorio;
     }
 
@@ -155,10 +189,20 @@ controller nunca menciona**. Solo menciona la interfaz.
 **Se explica:** hasta aquí sonaba a magia cómoda. Ahora se rompe a propósito, porque el momento
 en que falla enseña más que el momento en que funciona.
 
-**Se escribe:** una segunda clase que cumple el mismo contrato, con datos que se reconocen a
-simple vista: `repositories/ProductoRepositoryFalso.java`
+Una segunda clase que cumple el mismo contrato, con datos que se reconocen a simple vista.
+
+**Se pega:** archivo **nuevo**
+`practica/src/main/java/cl/dgt/di/repositories/ProductoRepositoryFalso.java` — el archivo entero.
 
 ```java
+package cl.dgt.di.repositories;
+
+import cl.dgt.di.models.Producto;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public class ProductoRepositoryFalso implements ProductoRepository {
 
@@ -166,9 +210,13 @@ public class ProductoRepositoryFalso implements ProductoRepository {
             new Producto(1L, "PRODUCTO DE PRUEBA UNO", 1),
             new Producto(2L, "PRODUCTO DE PRUEBA DOS", 2));
 
-    @Override public List<Producto> todos() { return DATOS; }
+    @Override
+    public List<Producto> todos() {
+        return DATOS;
+    }
 
-    @Override public Optional<Producto> porId(Long id) {
+    @Override
+    public Optional<Producto> porId(Long id) {
         return DATOS.stream().filter(p -> p.id().equals(id)).findFirst();
     }
 }
@@ -216,12 +264,42 @@ aplicación haga otra cosa.
 
 ### 5a · `@Primary` — «cuando dudes, esta»
 
-**Se escribe:** una línea sobre `ProductoRepositoryLista`:
+Se le añade `@Primary` a `ProductoRepositoryLista` — una anotación y su import. Como el archivo
+es corto, se reemplaza entero: así no hay que acertar dónde va cada línea.
+
+**Se pega:** `practica/src/main/java/cl/dgt/di/repositories/ProductoRepositoryLista.java` — el
+archivo entero, **borrando lo que había**.
 
 ```java
+package cl.dgt.di.repositories;
+
+import cl.dgt.di.models.Producto;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
 @Repository
-@Primary                       // ← import org.springframework.context.annotation.Primary;
+@Primary
 public class ProductoRepositoryLista implements ProductoRepository {
+
+    private static final List<Producto> DATOS = List.of(
+            new Producto(1L, "Resma de papel carta", 4990),
+            new Producto(2L, "Tóner negro", 68900),
+            new Producto(3L, "Silla ergonómica", 129900),
+            new Producto(4L, "Monitor 24 pulgadas", 149900));
+
+    @Override
+    public List<Producto> todos() {
+        return DATOS;
+    }
+
+    @Override
+    public Optional<Producto> porId(Long id) {
+        return DATOS.stream().filter(p -> p.id().equals(id)).findFirst();
+    }
+}
 ```
 
 **En navegador:** arranca. `http://localhost:8083/productos/quien`
@@ -232,12 +310,23 @@ ProductoRepositoryLista
 
 ### 5b · `@Qualifier` — «esta, y da igual quién sea la primaria»
 
-**Se escribe:** en el **constructor del controller**, sin quitar el `@Primary` de antes:
+**Se pega (1 de 2):** en `controllers/ProductoController.java`, **arriba**, con los imports.
+
+<!-- pasos:intermedio · este import se va con el archivo que reescribe el paso 6 -->
 
 ```java
-public ProductoController(@Qualifier("productoRepositoryFalso") ProductoRepository repositorio) {
-    this.repositorio = repositorio;
-}
+import org.springframework.beans.factory.annotation.Qualifier;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **reemplazando el constructor entero**, sin quitar el
+`@Primary` de antes.
+
+<!-- pasos:intermedio · el paso 5c lo deja como estaba -->
+
+```java
+    public ProductoController(@Qualifier("productoRepositoryFalso") ProductoRepository repositorio) {
+        this.repositorio = repositorio;
+    }
 ```
 
 (El nombre entre comillas es el de la clase con la primera letra en minúscula: así llama Spring a
@@ -256,8 +345,18 @@ interfaz, ni el modelo, ni el `pom.xml`, ni un archivo de configuración.
 
 ### 5c · Volver atrás
 
-**Se escribe:** quitar el `@Qualifier` del constructor y dejarlo como estaba. El `@Primary` se
-queda.
+**Se pega:** en `controllers/ProductoController.java`, **reemplazando el constructor entero**
+otra vez, para dejarlo como estaba. El `@Primary` se queda.
+
+<!-- pasos:intermedio · el paso 6 lo reescribe para pedir el servicio -->
+
+```java
+    public ProductoController(ProductoRepository repositorio) {
+        this.repositorio = repositorio;
+    }
+```
+
+(El `import` del `@Qualifier` puede quedarse: no molesta, y el paso 6 reescribe el archivo entero.)
 
 **En navegador:** `/productos/quien` vuelve a decir `ProductoRepositoryLista`.
 
@@ -272,9 +371,19 @@ HTTP; en el repositorio, con lo de los datos.
 
 Por eso se reserva el sitio **antes** de necesitarlo: `controller → service → repository`.
 
-**Se escribe:** `services/ProductoService.java`
+**Se pega (1 de 2):** archivo **nuevo**
+`practica/src/main/java/cl/dgt/di/services/ProductoService.java` — el archivo entero.
 
 ```java
+package cl.dgt.di.services;
+
+import cl.dgt.di.models.Producto;
+import cl.dgt.di.repositories.ProductoRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ProductoService {
 
@@ -284,34 +393,64 @@ public class ProductoService {
         this.repositorio = repositorio;
     }
 
-    public List<Producto> catalogo() { return repositorio.todos(); }
+    public List<Producto> catalogo() {
+        return repositorio.todos();
+    }
 
-    public Optional<Producto> porId(Long id) { return repositorio.porId(id); }
+    public Optional<Producto> porId(Long id) {
+        return repositorio.porId(id);
+    }
 
-    public String quienMeAtiende() { return repositorio.getClass().getSimpleName(); }
+    public String quienMeAtiende() {
+        return repositorio.getClass().getSimpleName();
+    }
 }
 ```
 
-y el controller pasa a pedir un **servicio** en vez de un repositorio:
+**Se pega (2 de 2):** `practica/src/main/java/cl/dgt/di/controllers/ProductoController.java` — el
+archivo entero, **borrando lo que había**. Cambian el campo, el constructor y los tres métodos, así
+que rehacerlo es más rápido y no deja restos. Y de paso entra el endpoint `/{id}`, que hasta ahora
+no estaba.
 
 ```java
-private final ProductoService servicio;
+package cl.dgt.di.controllers;
 
-public ProductoController(ProductoService servicio) {
-    this.servicio = servicio;
-}
+import cl.dgt.di.models.Producto;
+import cl.dgt.di.services.ProductoService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@GetMapping
-public List<Producto> listar() { return servicio.catalogo(); }
+import java.util.List;
 
-@GetMapping("/quien")
-public String quien() { return servicio.quienMeAtiende(); }
+@RestController
+@RequestMapping("/productos")
+public class ProductoController {
 
-@GetMapping("/{id}")
-public ResponseEntity<Producto> porId(@PathVariable Long id) {
-    return servicio.porId(id)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+    private final ProductoService servicio;
+
+    public ProductoController(ProductoService servicio) {
+        this.servicio = servicio;
+    }
+
+    @GetMapping
+    public List<Producto> listar() {
+        return servicio.catalogo();
+    }
+
+    @GetMapping("/quien")
+    public String quien() {
+        return servicio.quienMeAtiende();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Producto> porId(@PathVariable Long id) {
+        return servicio.porId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
 ```
 

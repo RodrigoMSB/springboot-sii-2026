@@ -96,7 +96,8 @@ está dispuesto a esperar**. Dos timeouts, que son cosas distintas:
 
 El paso 1 murió en el segundo: la conexión se aceptó al instante y la respuesta no llegaba.
 
-**Se escribe:** en `tesoreria/ClienteTesoreria.java`, el constructor:
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/tesoreria/ClienteTesoreria.java`,
+**reemplazando el constructor entero**, y sus imports **arriba** si te faltan.
 
 ```java
     private static final Duration TIMEOUT_CONEXION = Duration.ofSeconds(2);
@@ -148,7 +149,8 @@ Un timeout es la primera medida, no la última. Los tres pasos que quedan son so
 segundo, el momento exacto en que el otro lado cerró la conexión. Reintentar cuesta poco y salva
 esos casos.
 
-**Se escribe:** en `PagoService`, el reintento y su uso:
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`, el
+reintento y su uso. Los imports van **arriba**; lo demás, **dentro de la clase**.
 
 ```java
         this.reintento = Retry.of("tesoreria", RetryConfig.custom()
@@ -159,6 +161,8 @@ esos casos.
         reintento.getEventPublisher().onRetry(e ->
                 log.info(">>> REINTENTO n.º {}", e.getNumberOfRetryAttempts()));
 ```
+
+<!-- pasos:intermedio · el paso 4 envuelve esta llamada en el circuito -->
 
 ```java
     public Map<String, Object> consultar(String id) {
@@ -213,7 +217,8 @@ Un circuit breaker de software hace lo mismo con las llamadas. Tres estados:
 | **OPEN** | demasiados fallos: **corta**. Las llamadas fallan al instante, sin tocar la red |
 | **HALF_OPEN** | pasado un rato, deja pasar unas pocas de prueba. Si van bien, cierra; si no, vuelve a abrir |
 
-**Se escribe:** en `PagoService`:
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java` — el
+circuito y sus umbrales. Los imports **arriba**, el campo y el constructor **dentro de la clase**.
 
 ```java
         CircuitBreakerConfig configuracion = CircuitBreakerConfig.custom()
@@ -325,7 +330,8 @@ Y tiene tres respuestas posibles, según el caso:
 Aquí se elige la tercera, porque el trámite **no depende** de la confirmación del pago para
 seguir su curso.
 
-**Se escribe:** en `PagoService`:
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`,
+**reemplazando el método entero**: aquí es donde se decide qué responder cuando no hay respuesta.
 
 ```java
     public Map<String, Object> consultar(String id) {
