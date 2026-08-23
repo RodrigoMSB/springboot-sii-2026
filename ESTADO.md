@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-040 — los quince labs llaman igual a las mismas cosas.*
+*Última actualización: SPEC-FIX-10 — el guion también responde por el punto de partida.*
 
 ---
 
@@ -53,7 +53,10 @@
   una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
   explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
   `.gitignore`): es la chuleta de quien dicta, y versionarla anularía el motivo de haber vaciado
-  `practica/`. La genera quien prepara la sesión, a partir de `solucion/`.
+  `practica/`. La genera quien prepara la sesión, a partir de `solucion/` — y al terminar
+  corre `python3 tools/verificar-instructor.py`, que comprueba que quedó al día con
+  `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
+  la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
 
 - **Los quince labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
   en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
@@ -82,13 +85,15 @@
 - **El manifiesto pedagógico**: `MANIFIESTO.md`. Por qué el curso se enseña así. Quien vaya a
   dictar lo lee **antes** que nada.
 
-- **Un CI de cinco jobs** (`.github/workflows/material-ci.yml`):
+- **Un CI de seis jobs** (`.github/workflows/material-ci.yml`):
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
   siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
   necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
   `proyecto-final/base`) · **`pasos`** (los **quince** guiones traen el código para pegar y ninguno
   promete un código que `solucion/` ya no tenga: 146 bloques y 87 métodos comprobados contra la
-  solución) · `labs-sh` (los scripts, en Linux y en Git Bash).
+  solución) · **`guion-practica`** (lo que los quince guiones prometen de `practica/` —carpetas
+  vacías, archivos que ya están, archivos por crear— es lo que `practica/` trae: **88 promesas**
+  comprobadas) · `labs-sh` (los scripts, en Linux y en Git Bash).
 
 ## 1.a · Lo que se retiró, y dónde está
 

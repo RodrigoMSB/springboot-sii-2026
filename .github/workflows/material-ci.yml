@@ -17,6 +17,15 @@
 #      prometen un código que `solucion/` ya no tiene. Sin esto, los bloques
 #      cuadran solo mientras nadie toque la solución.
 #
+#   5. `guion-practica` — el guion tampoco miente sobre el PUNTO DE PARTIDA:
+#      lo que promete de `practica/` —carpetas vacías, archivos que ya están,
+#      archivos por crear— es lo que `practica/` trae (SPEC-FIX-10).
+#
+#  Lo que este CI NO puede proteger: `labs/*/instructor/`, que no viaja en el
+#  repositorio (D-031-2) y por tanto no existe en el runner. Un job suyo pasaría
+#  siempre, que es el gate decorativo que el propio ADN castiga (P-05). Se
+#  verifica a mano, donde la carpeta sí está, con `tools/verificar-instructor.py`.
+#
 #  SPEC-033: se retiraron los jobs `app`, `lab14`, `grpc` y `deriva`. Los cuatro
 #  verificaban el arco antiguo (el tronco `dgt-tramites-api`, el sistema de
 #  microservicios, la demo gRPC y la cadena de derivación), que salió del
@@ -205,6 +214,40 @@ jobs:
 
       - name: Verificar los guiones con código para pegar
         run: python3 tools/verificar-pasos-copiables.py
+
+  # ---------------------------------------------------------------------------
+  #  guion-practica · el guion no miente sobre el PUNTO DE PARTIDA.
+  #
+  #  Hermano del job `pasos`. Aquel vigila que el CODIGO que el guion promete
+  #  siga estando en `solucion/`; este vigila lo otro, que nadie miraba: que el
+  #  estado inicial que el guion describe sea el que `practica/` trae.
+  #
+  #  Nace de la SPEC-040. Al renombrar paquetes se descubrió que el guion del
+  #  Lab 11 decía «observabilidad/ -> pasos 2 y 4 (llega vacía)» sobre una
+  #  carpeta que llegaba con tres clases dentro. El instructor la abre en clase
+  #  esperando el vacío y se encuentra `MotorDePostgres`. Es un defecto que solo
+  #  aparece cuando alguien sigue el guion literalmente — por eso nadie lo vio.
+  #
+  #  Corre en el CI, y aquí sí puede: las dos partes que compara —`PASOS.md` y
+  #  `practica/`— están versionadas. (La comprobación de `instructor/` NO puede
+  #  estar aquí: esa carpeta no viaja, y un job que corre donde los archivos no
+  #  existen siempre pasa. Se corre a mano con `tools/verificar-instructor.py`.)
+  #
+  #  Lee `practica/` de `git ls-tree HEAD`, no del disco, porque quien trabaja
+  #  en el repositorio suele tener labs a medio hacer en su copia de trabajo.
+  # ---------------------------------------------------------------------------
+  guion-practica:
+    name: guion-practica · el guion dice la verdad sobre practica/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verificar lo que los guiones prometen de practica/
+        run: python3 tools/verificar-guion-vs-practica.py
 
   # ---------------------------------------------------------------------------
   #  labs · los catorce proyectos del arco compilan, offline y con la maleta.
