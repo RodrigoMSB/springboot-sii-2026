@@ -34,6 +34,12 @@ Este laboratorio estrena la estructura que rige de aquí en adelante:
 proyecto**: no tiene `mvnw` ni se compila. Son los archivos para leer mientras se enseña, y por
 eso no está versionada — la genera quien dicta la sesión.
 
+> **`models/` y `entities/` no son lo mismo, y por eso no se llaman igual.** Lo que hay en
+> `models/` es un objeto que vive **en memoria**: nace, se usa y se muere con el proceso. No hay
+> tabla detrás ni JPA de por medio. Desde el Lab 04, cuando aparezca una base de datos de verdad,
+> el paquete se llamará `entities/` — y ese cambio de nombre es la señal de que la clase ya no es
+> un objeto suelto, sino **una fila**.
+
 ## Cómo se corre
 
 ```bash

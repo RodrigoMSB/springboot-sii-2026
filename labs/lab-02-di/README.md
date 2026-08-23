@@ -26,6 +26,12 @@ sola idea del curso, es esta.
 
 Los dos son proyectos completos y arrancan solos.
 
+> **`models/` y `entities/` no son lo mismo, y por eso no se llaman igual.** Lo que hay en
+> `models/` es un objeto que vive **en memoria**: nace, se usa y se muere con el proceso. No hay
+> tabla detrás ni JPA de por medio. Desde el Lab 04, cuando aparezca una base de datos de verdad,
+> el paquete se llamará `entities/` — y ese cambio de nombre es la señal de que la clase ya no es
+> un objeto suelto, sino **una fila**.
+
 ## Cómo se corre
 
 ```bash

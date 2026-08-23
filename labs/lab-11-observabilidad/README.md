@@ -45,6 +45,11 @@ base vuelva — y eso es readiness.
 | **`solucion/`** | Todo puesto y funcionando |
 | **`instructor/`** | Los mismos archivos explicados línea por línea. **No viaja en el repositorio** |
 
+> **`entities/` y `models/` no son lo mismo, y por eso no se llaman igual.** Cada clase de
+> `entities/` está **mapeada a una tabla**: lo que se le hace al objeto termina en la base. Los
+> `models/` de los labs 02, 03 y 08 son lo contrario — objetos que viven en memoria, sin tabla
+> detrás. El nombre distinto es deliberado: dice de un vistazo si hay una fila al otro lado.
+
 ## Cómo se corre
 
 ```bash
