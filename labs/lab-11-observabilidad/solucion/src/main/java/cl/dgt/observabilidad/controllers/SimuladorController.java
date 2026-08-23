@@ -1,6 +1,6 @@
 package cl.dgt.observabilidad.controllers;
 
-import cl.dgt.observabilidad.observabilidad.MotorDePostgres;
+import cl.dgt.observabilidad.infra.MotorDePostgres;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

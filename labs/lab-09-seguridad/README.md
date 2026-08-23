@@ -21,9 +21,13 @@ dentro. Al terminar, las mismas rutas de siempre responden **401** al que no se 
 
 | | |
 |---|---|
-| **`practica/`** | Donde trabajas. La API llega **abierta**; `seguridad/` y `services/` llegan vacías |
+| **`practica/`** | Donde trabajas. La API llega **abierta**; `config/`, `services/` y `soporte/` llegan vacías |
 | **`solucion/`** | El mismo proyecto cerrado, con login, token, filtro y roles |
 | **`instructor/`** | Los mismos archivos explicados línea por línea. **No viaja en el repositorio** |
+
+> **Este lab tiene los dos paquetes, y no es un descuido.** `entities/Usuario` está **mapeada a
+> una tabla**: es una fila de la base. `models/Producto` vive **en memoria** y muere con el
+> proceso. Misma aplicación, dos clases de objeto distintas, y por eso dos nombres distintos.
 
 ## Cómo se corre
 

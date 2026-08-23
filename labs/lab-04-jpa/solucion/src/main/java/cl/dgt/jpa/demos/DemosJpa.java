@@ -2,14 +2,14 @@ package cl.dgt.jpa.demos;
 
 import cl.dgt.jpa.entities.Observacion;
 import cl.dgt.jpa.repositories.ObservacionRepository;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Service
 public class DemosJpa {
 
     // El repositorio llega por constructor, igual que en el Lab 02. Nadie hace

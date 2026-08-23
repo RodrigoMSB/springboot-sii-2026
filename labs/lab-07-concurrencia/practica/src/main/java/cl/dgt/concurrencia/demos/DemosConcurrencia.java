@@ -2,8 +2,8 @@ package cl.dgt.concurrencia.demos;
 
 import cl.dgt.concurrencia.entities.Folio;
 import cl.dgt.concurrencia.repositories.FolioRepository;
-import cl.dgt.concurrencia.servicios.EmisorDeFolios;
-import org.springframework.stereotype.Component;
+import cl.dgt.concurrencia.services.EmisorDeFolios;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
-@Component
+@Service
 public class DemosConcurrencia {
 
     private static final int ANIO = 2026;

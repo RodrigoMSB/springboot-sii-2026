@@ -220,7 +220,7 @@ normal no puede comprobar eso —la excepción lo tumbaría a él también—, a
 **Se pega (1 de 2):** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **arriba**, con los imports.
 
 ```java
-import cl.dgt.testing.services.ProductoNoEncontradoException;
+import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 ```
@@ -289,7 +289,7 @@ package cl.dgt.testing;
 
 import cl.dgt.testing.models.Producto;
 import cl.dgt.testing.repositories.ProductoRepository;
-import cl.dgt.testing.services.ProductoNoEncontradoException;
+import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -378,7 +378,7 @@ package cl.dgt.testing;
 
 import cl.dgt.testing.controllers.ProductoController;
 import cl.dgt.testing.models.Producto;
-import cl.dgt.testing.services.ProductoNoEncontradoException;
+import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

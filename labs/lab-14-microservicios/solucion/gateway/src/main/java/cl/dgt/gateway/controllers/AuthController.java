@@ -1,6 +1,6 @@
 package cl.dgt.gateway.controllers;
 
-import cl.dgt.gateway.seguridad.ServicioDeTokens;
+import cl.dgt.gateway.services.ServicioDeTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

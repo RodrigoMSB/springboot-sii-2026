@@ -14,7 +14,8 @@ Lo que llega hecho: los trámites, la base y el mando a distancia. Lo que se esc
 ```
 pom.xml                        →  paso 1 (una dependencia)
 application.yml                →  pasos 1, 2, 4 y 5
-observabilidad/                →  pasos 2 y 4 (llega vacía)
+infra/                         →  pasos 2 y 4 (FiltroDeCorrelacion y SaludDeLaBase;
+                                   el resto de `infra/` llega dado)
 controllers/TramiteController  →  paso 3
 ```
 
@@ -131,7 +132,7 @@ Lo bueno: se pone **una vez**, en un filtro, y a partir de ahí no hay que pasar
 ningún sitio.
 
 **Se pega:** archivo **nuevo**
-`practica/src/main/java/cl/dgt/observabilidad/observabilidad/FiltroDeCorrelacion.java` — el
+`practica/src/main/java/cl/dgt/observabilidad/infra/FiltroDeCorrelacion.java` — el
 archivo entero.
 
 ```java
@@ -286,7 +287,7 @@ management:
       show-details: always
 ```
 
-y `observabilidad/SaludDeLaBase.java`:
+y `infra/SaludDeLaBase.java`:
 
 ```java
 @Component("baseDeDatos")

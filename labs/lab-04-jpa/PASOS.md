@@ -616,11 +616,11 @@ estaban así para que el proyecto compilara antes de que la entidad existiera. C
 tres métodos, el constructor y los imports, **se reemplaza el archivo entero**: es más rápido y no
 deja restos.
 
-**Se pega:** `practica/src/main/java/cl/dgt/jpa/web/ObservacionController.java` — el archivo
+**Se pega:** `practica/src/main/java/cl/dgt/jpa/controllers/ObservacionController.java` — el archivo
 entero, **borrando lo que había**.
 
 ```java
-package cl.dgt.jpa.web;
+package cl.dgt.jpa.controllers;
 
 import cl.dgt.jpa.entities.Observacion;
 import cl.dgt.jpa.repositories.ObservacionRepository;

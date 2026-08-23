@@ -2,10 +2,10 @@ package cl.dgt.rendimiento.demos;
 
 import cl.dgt.rendimiento.repositories.ContribuyenteRepository;
 import cl.dgt.rendimiento.soporte.ContadorDeConsultas;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@Service
 public class DemosRendimiento {
 
     private final ContribuyenteRepository contribuyentes;

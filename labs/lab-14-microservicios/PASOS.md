@@ -24,7 +24,7 @@ tramites/clientes/ClienteAuditoria.java       →  paso 8
 tramites/services/TramiteService.java         →  pasos 3, 5 y 8
 tramites/controllers/TramiteController.java   →  paso 5
 gateway/enrutado/TablaDeRutas.java            →  paso 6
-gateway/seguridad/SeguridadConfig.java        →  paso 6
+gateway/config/SeguridadConfig.java        →  paso 6
 gateway/enrutado/Enrutador.java               →  paso 7
 ```
 
@@ -588,7 +588,7 @@ cambiar un puerto es editar texto, no recompilar.
 > la dirección que le dieron no conteste. El circuit breaker del paso 5 no está por si acaso: está
 > porque la lista es falible por diseño.
 
-**Se pega:** en `practica/gateway/src/main/java/cl/dgt/gateway/seguridad/SeguridadConfig.java`,
+**Se pega:** en `practica/gateway/src/main/java/cl/dgt/gateway/config/SeguridadConfig.java`,
 **sustituyendo las dos líneas del otro `TODO`**:
 
 ```java
