@@ -1,8 +1,8 @@
 package cl.dgt.tareas.controllers;
 
-import cl.dgt.tareas.services.Instancia;
+import cl.dgt.tareas.soporte.Instancia;
 import cl.dgt.tareas.services.NotificadorService;
-import cl.dgt.tareas.tareas.CierreNocturno;
+import cl.dgt.tareas.programadas.CierreNocturno;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

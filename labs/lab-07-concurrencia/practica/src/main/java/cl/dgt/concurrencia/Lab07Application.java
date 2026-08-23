@@ -1,6 +1,8 @@
 package cl.dgt.concurrencia;
 
 import cl.dgt.concurrencia.demos.DemosConcurrencia;
+import cl.dgt.concurrencia.infra.CandadoLibre;
+import cl.dgt.concurrencia.infra.PuertoLibre;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

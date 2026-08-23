@@ -2,10 +2,10 @@ package cl.dgt.relaciones.demos;
 
 import cl.dgt.relaciones.repositories.ContribuyenteRepository;
 import cl.dgt.relaciones.repositories.TramiteRepository;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+@Service
 public class DemosRelaciones {
 
     private final ContribuyenteRepository contribuyentes;

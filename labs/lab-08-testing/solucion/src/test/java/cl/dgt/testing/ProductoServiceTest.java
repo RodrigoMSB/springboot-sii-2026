@@ -1,7 +1,7 @@
 package cl.dgt.testing;
 
 import cl.dgt.testing.repositories.ProductoRepositoryLista;
-import cl.dgt.testing.services.ProductoNoEncontradoException;
+import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package cl.dgt.observabilidad;
 
-import cl.dgt.observabilidad.observabilidad.MotorDePostgres;
+import cl.dgt.observabilidad.infra.MotorDePostgres;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-039 — los quince guiones traen ya el código listo para pegar.*
+*Última actualización: SPEC-040 — los quince labs llaman igual a las mismas cosas.*
 
 ---
 
@@ -54,6 +54,19 @@
   explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
   `.gitignore`): es la chuleta de quien dicta, y versionarla anularía el motivo de haber vaciado
   `practica/`. La genera quien prepara la sesión, a partir de `solucion/`.
+
+- **Los quince labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
+  en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
+  hacía de servicio anotada `@Component`, y paquetes que tartamudeaban —`seguridad/seguridad`—.
+  Aprendía que da igual, y no da igual. Hoy **un rol, un nombre, una anotación**: `controllers/`
+  con `@RestController`, `services/` con `@Service`, `repositories/`, `entities/` con `@Entity`,
+  `dto/`, `exceptions/`, `config/` con `@Configuration`, `infra/` para la fontanería del arranque
+  y `soporte/` para el andamiaje del lab. **Cero divergencias medidas**, y las que se dejaron a
+  propósito están justificadas una a una en el informe.
+  - **`models/` y `entities/` siguen llamándose distinto, y ahora el README dice por qué**: uno es
+    un `record` que vive en memoria, el otro una fila de una tabla. Es una diferencia que enseña.
+  - No cambió **ninguna ruta HTTP** (las 99 declaraciones del arco son idénticas), ni un número, ni
+    un paso. Es un renombre, y se verificó como tal.
 
 - **La maleta**: el alumno solo necesita Git. Dentro del repositorio viajan
   - `tools/jdk/` — el JDK 25, partido en trozos y ensamblado al vuelo por el shim `mvnw`

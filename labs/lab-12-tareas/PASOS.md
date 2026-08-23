@@ -15,7 +15,7 @@ lo que ya hay. Lo que se escribe:
 
 ```
 Lab12Application.java        →  pasos 1 y 3 (las dos anotaciones que lo encienden)
-tareas/                      →  pasos 1 y 2 (llega vacía)
+programadas/                 →  pasos 1 y 2 (llega vacía)
 services/NotificadorService  →  paso 3
 application.yml              →  paso 4 (una línea)
 ```
@@ -57,7 +57,7 @@ Nadie los pide; ocurren.
 public class Lab12Application {
 ```
 
-y `tareas/CierreNocturno.java`:
+y `programadas/CierreNocturno.java`:
 
 ```java
 @Component
@@ -119,7 +119,7 @@ todavía está levantándose.
 **Se explica:** `fixedDelay` sirve para «cada tanto». Para «todos los días a las 3 de la mañana»
 hace falta un cron.
 
-**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/tareas/Recordatorio.java`
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/Recordatorio.java`
 — el archivo entero.
 
 ```java

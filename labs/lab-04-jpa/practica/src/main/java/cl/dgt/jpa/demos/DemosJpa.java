@@ -1,8 +1,8 @@
 package cl.dgt.jpa.demos;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class DemosJpa {
 
     public void guardar() {

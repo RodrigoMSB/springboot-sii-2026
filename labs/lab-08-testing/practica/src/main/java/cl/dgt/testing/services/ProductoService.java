@@ -1,5 +1,6 @@
 package cl.dgt.testing.services;
 
+import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.models.Producto;
 import cl.dgt.testing.repositories.ProductoRepository;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,8 @@
 package cl.dgt.relaciones;
 
 import cl.dgt.relaciones.demos.DemosRelaciones;
+import cl.dgt.relaciones.infra.CandadoLibre;
+import cl.dgt.relaciones.infra.PuertoLibre;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

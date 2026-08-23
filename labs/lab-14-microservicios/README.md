@@ -198,6 +198,11 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8200/tramites/1
 
 ---
 
+> **`entities/` y `models/` no son lo mismo, y por eso no se llaman igual.** Cada clase de
+> `entities/` está **mapeada a una tabla**: lo que se le hace al objeto termina en la base. Los
+> `models/` de los labs 02, 03 y 08 son lo contrario — objetos que viven en memoria, sin tabla
+> detrás. El nombre distinto es deliberado: dice de un vistazo si hay una fila al otro lado.
+
 ## Lo que este laboratorio NO trae, y por qué
 
 Esta sección importa tanto como el código: si te vas creyendo que ya viste microservicios, el

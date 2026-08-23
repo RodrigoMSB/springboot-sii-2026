@@ -69,7 +69,7 @@ hilos llaman a ese método a la vez, hay veinte transacciones abiertas al mismo 
 **Se explica:** la regla es «dentro de un año, no puede haber dos folios con el mismo número». Se
 implementa de la forma más natural: mirar cuál fue el último, sumar uno, guardar.
 
-Abrir `servicios/EmisorDeFolios.java` y **leer el método `emitirIngenuo`**, que viene dado:
+Abrir `services/EmisorDeFolios.java` y **leer el método `emitirIngenuo`**, que viene dado:
 
 ```java
 @Transactional
@@ -229,7 +229,7 @@ import org.springframework.data.jpa.repository.Lock;
     Optional<Folio> bloquearLaApertura(@Param("anio") int anio);
 ```
 
-**Se pega (3 de 4):** en `servicios/EmisorDeFolios.java`, **antes de la llave que cierra la clase**
+**Se pega (3 de 4):** en `services/EmisorDeFolios.java`, **antes de la llave que cierra la clase**
 — es un método nuevo, no reemplaza a ninguno.
 
 ```java

@@ -4,12 +4,12 @@ import cl.dgt.rendimiento.dto.ResumenContribuyente;
 import cl.dgt.rendimiento.entities.Contribuyente;
 import cl.dgt.rendimiento.repositories.ContribuyenteRepository;
 import cl.dgt.rendimiento.soporte.ContadorDeConsultas;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Component
+@Service
 public class DemosRendimiento {
 
     private final ContribuyenteRepository contribuyentes;

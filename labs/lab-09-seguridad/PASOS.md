@@ -11,11 +11,12 @@ cd practica
 Escucha en el **8095** (`solucion/`, en el 8096). La base va en el **55440**.
 
 Lo que llega hecho: la API de productos, la entidad `Usuario`, su repositorio y la tabla. Lo que
-se escribe hoy vive en dos carpetas que llegan vacías:
+se escribe hoy vive en tres carpetas que llegan vacías:
 
 ```
-seguridad/   →  SeguridadConfig, UsuarioDetailsService, ServicioDeTokens
-services/    →  SembradorDeUsuarios
+config/      →  SeguridadConfig
+services/    →  UsuarioDetailsService, ServicioDeTokens
+soporte/     →  SembradorDeUsuarios
 controllers/ →  AuthController, y dos endpoints en ProductoController
 ```
 
@@ -95,12 +96,12 @@ configuración, y lo primero que se dice es qué es público y qué no.
 Se empieza con un usuario **en memoria**, escrito a mano, porque el asunto de este paso son las
 rutas, no de dónde salen los usuarios. Eso es el paso 3.
 
-**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/SeguridadConfig.java` — el archivo entero.
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java` — el archivo entero.
 
 <!-- pasos:intermedio · los pasos 3, 4, 5 y 6 lo van cambiando -->
 
 ```java
-package cl.dgt.seguridad.seguridad;
+package cl.dgt.seguridad.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -175,11 +176,11 @@ BCrypt añade dos cosas sobre un hash normal:
 - **Costo**: es **lento a propósito**. El `10` del hash significa 2¹⁰ vueltas. Al que hace login
   le cuesta unos milisegundos; al que prueba millones de claves por segundo le arruina el negocio.
 
-**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/UsuarioDetailsService.java` — el archivo entero.
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/services/UsuarioDetailsService.java` — el archivo entero.
 Es el puente entre la tabla y Spring Security.
 
 ```java
-package cl.dgt.seguridad.seguridad;
+package cl.dgt.seguridad.services;
 
 import cl.dgt.seguridad.repositories.UsuarioRepository;
 import org.springframework.security.core.userdetails.User;
@@ -209,7 +210,7 @@ public class UsuarioDetailsService implements UserDetailsService {
 }
 ```
 
-y `services/SembradorDeUsuarios.java`, que crea los dos usuarios la primera vez:
+y `soporte/SembradorDeUsuarios.java`, que crea los dos usuarios la primera vez:
 
 ```java
 package cl.dgt.seguridad.services;
@@ -291,10 +292,10 @@ base y calcula BCrypt **cada vez**. Es lento y obliga a que la clave viaje una y
 La alternativa: se hace login **una vez** y se recibe un **JWT** — un papel firmado que dice quién
 eres y hasta cuándo vale. En las siguientes peticiones se manda el papel.
 
-**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/seguridad/ServicioDeTokens.java` — el archivo entero.
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/services/ServicioDeTokens.java` — el archivo entero.
 
 ```java
-package cl.dgt.seguridad.seguridad;
+package cl.dgt.seguridad.services;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -343,7 +344,7 @@ y `controllers/AuthController.java`:
 ```java
 package cl.dgt.seguridad.controllers;
 
-import cl.dgt.seguridad.seguridad.ServicioDeTokens;
+import cl.dgt.seguridad.services.ServicioDeTokens;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -555,7 +556,7 @@ clase** — es un endpoint nuevo, no reemplaza a ninguno.
     }
 ```
 
-**Se pega:** en `seguridad/SeguridadConfig.java`, **reemplazando la línea de `anyRequest()`** por
+**Se pega:** en `config/SeguridadConfig.java`, **reemplazando la línea de `anyRequest()`** por
 estas dos. El orden importa: la regla del ADMIN va **antes**, que si no nunca se llega a ella.
 
 ```java

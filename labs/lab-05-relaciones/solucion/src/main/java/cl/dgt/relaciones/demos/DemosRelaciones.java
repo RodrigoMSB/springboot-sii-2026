@@ -5,13 +5,13 @@ import cl.dgt.relaciones.entities.Tramite;
 import cl.dgt.relaciones.repositories.ContribuyenteRepository;
 import cl.dgt.relaciones.repositories.TramiteRepository;
 import org.hibernate.LazyInitializationException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Component
+@Service
 public class DemosRelaciones {
 
     private final ContribuyenteRepository contribuyentes;
