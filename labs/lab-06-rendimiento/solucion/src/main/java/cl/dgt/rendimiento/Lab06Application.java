@@ -1,6 +1,8 @@
 package cl.dgt.rendimiento;
 
 import cl.dgt.rendimiento.demos.DemosRendimiento;
+import cl.dgt.rendimiento.infra.CandadoLibre;
+import cl.dgt.rendimiento.infra.PuertoLibre;
 import cl.dgt.rendimiento.soporte.CargadorDeDatos;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.CommandLineRunner;

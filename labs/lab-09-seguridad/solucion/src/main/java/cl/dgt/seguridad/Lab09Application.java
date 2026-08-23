@@ -1,5 +1,7 @@
 package cl.dgt.seguridad;
 
+import cl.dgt.seguridad.infra.CandadoLibre;
+import cl.dgt.seguridad.infra.PuertoLibre;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

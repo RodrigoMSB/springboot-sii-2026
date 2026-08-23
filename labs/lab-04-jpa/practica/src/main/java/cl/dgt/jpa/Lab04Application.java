@@ -1,6 +1,8 @@
 package cl.dgt.jpa;
 
 import cl.dgt.jpa.demos.DemosJpa;
+import cl.dgt.jpa.infra.CandadoLibre;
+import cl.dgt.jpa.infra.PuertoLibre;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

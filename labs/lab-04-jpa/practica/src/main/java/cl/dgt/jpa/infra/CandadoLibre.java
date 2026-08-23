@@ -1,4 +1,4 @@
-package cl.dgt.jpa;
+package cl.dgt.jpa.infra;
 
 import java.io.File;
 import java.io.IOException;

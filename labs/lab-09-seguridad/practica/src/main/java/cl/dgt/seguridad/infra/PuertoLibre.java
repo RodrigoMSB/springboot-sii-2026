@@ -1,4 +1,4 @@
-package cl.dgt.concurrencia;
+package cl.dgt.seguridad.infra;
 
 import java.io.IOException;
 import java.net.InetAddress;

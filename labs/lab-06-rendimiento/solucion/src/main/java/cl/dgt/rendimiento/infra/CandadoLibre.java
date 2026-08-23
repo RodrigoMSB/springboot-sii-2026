@@ -1,4 +1,4 @@
-package cl.dgt.concurrencia;
+package cl.dgt.rendimiento.infra;
 
 import java.io.File;
 import java.io.IOException;

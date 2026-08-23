@@ -1,4 +1,4 @@
-package cl.dgt.seguridad;
+package cl.dgt.relaciones.infra;
 
 import java.io.File;
 import java.io.IOException;

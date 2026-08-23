@@ -1,4 +1,4 @@
-package cl.dgt.rendimiento;
+package cl.dgt.concurrencia.infra;
 
 import java.io.IOException;
 import java.net.InetAddress;

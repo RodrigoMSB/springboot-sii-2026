@@ -1,4 +1,4 @@
-package cl.dgt.relaciones;
+package cl.dgt.rendimiento.infra;
 
 import java.io.IOException;
 import java.net.InetAddress;
