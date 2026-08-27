@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-FIX-10 — el guion también responde por el punto de partida.*
+*Última actualización: SPEC-041 — `instructor/` explica por qué esa opción y no otra (labs 04 a 07).*
 
 ---
 
@@ -57,6 +57,21 @@
   corre `python3 tools/verificar-instructor.py`, que comprueba que quedó al día con
   `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
   la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
+
+- **En los labs 04 a 07, `instructor/` responde «¿y por qué ésa?»** (SPEC-041). La documentación
+  explicaba qué hace cada anotación, pero no por qué esa y no otra — que es lo que pregunta el
+  alumno y lo que el instructor tiene que responder sin pensar. Lo destapó el PO dictando el lab
+  04: ante «¿y por qué `IDENTITY`?» no había respuesta a mano.
+  Ahora **cada decisión técnica lleva un recuadro `POR QUÉ ·` con cuatro partes** —qué hace, qué
+  alternativas existen, por qué se eligió ésta aquí, en qué caso elegirías otra—, y donde no hay
+  alternativa real lo dice y se pasa. Son **102 decisiones**: 34 en el 04, 22 en el 05, 23 en el
+  06 y 23 en el 07, en los `.java`, el `application.yml`, el `pom.xml` y las migraciones SQL.
+  - **Cero código tocado, medido**: el código desnudo —sin comentarios— de los 37 `.java` de
+    `instructor/` es idéntico al de `solucion/`, antes y después. Y los cuatro compilan offline.
+  - **No viaja al repositorio, y es lo previsto** (D-031-2): lo que se commitea es el informe.
+    Un clon fresco no trae estos bloques. Está dicho en `INFORME-SPEC-041` §6, con las tres
+    salidas posibles, porque la decisión es del PO.
+  - **Los otros once labs siguen sin este tratamiento.** El criterio vale igual para ellos.
 
 - **Los quince labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
   en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
