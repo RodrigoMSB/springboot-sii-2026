@@ -262,3 +262,13 @@ repositorio; o versionar `instructor/` en una rama huérfana que el alumno no cl
 2. **Vigilar el formato desde `tools/verificar-instructor.py`.** Hoy nada comprueba que un bloque
    `POR QUÉ ·` traiga sus cuatro partes. Es barato de añadir y corre donde los archivos existen.
 3. **El respaldo de `instructor/`**, si el PO decide que hace falta (§6).
+4. **Los catorce `instructor/` tienen dentro un `target/` que no les corresponde.** Hallazgo de
+   paso, **preexistente y ajeno a esta SPEC**: `instructor/` «no es un proyecto y no se compila»
+   —lo dice el README y lo dice su propio `LEEME.md`—, pero los catorce arrastran un `target/`
+   con entre 4 y 18 archivos, heredado de cuando la carpeta se generó copiando `solucion/` entera.
+   Dentro hay copias **rancias** de los recursos: el `target/classes/application.yml` del lab 04
+   es la versión de antes de esta SPEC, sin los bloques. Quien prepare la clase puede abrir el
+   equivocado.
+   **No se tocó**: borrarlos queda fuera del alcance de la SPEC-041 —que era documentar los labs
+   04 a 07— y afecta a los catorce, no a cuatro. Es de una línea (`rm -rf labs/*/instructor/target`)
+   y el sitio natural para vigilarlo es `tools/verificar-instructor.py`, junto con el punto 2.
