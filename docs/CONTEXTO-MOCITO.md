@@ -3,7 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026, sobre `main` en `material-v1.3.2`.*
+*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026, sobre `main` en
+`material-v1.5.0`, con el PO dictando el lab 05 mientras se revisaba.*
 
 ---
 
@@ -42,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — cien decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **102** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -60,6 +61,12 @@ Están escritas en tres sitios, y los tres mandan:
   Es la razón de que `instructor/` se verifique a mano y no en el CI (`D-FIX10-2`).
 - **`A-01` · Verificar código fuente con `grep` es frágil por construcción.** Cuando se pueda,
   se parsea.
+- **`D-041-1` · En `instructor/`, toda decisión técnica documenta cuatro cosas y en este orden:**
+  qué hace, qué alternativas existen, por qué se eligió ésta aquí, en qué caso elegirías otra.
+  El recuadro se encabeza `POR QUÉ ·` para poder listarlo con un `grep`. Donde no hay
+  alternativa real, se dice y se pasa: no se inventan opciones para rellenar el formato.
+- **`D-042-1` · `instructor/` se respalda en un repositorio PRIVADO aparte.** `D-031-2` no
+  cambia: el repositorio público sigue sin llevarla.
 - **`D-022-3` · Offline por defecto.** `--offline` es el contrato, no una limitación.
 - **`D-022-4` · Git LFS prohibido, sin excepciones.**
 - **`D-022-5` · Techo de 95 MB por archivo.** GitHub rechaza los de más de 100.
@@ -90,7 +97,7 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 100 decisiones con fecha y razón
+│   ├── decisiones.md          ← 102 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
@@ -113,6 +120,7 @@ springboot-sii-2026/
 │   ├── maven/                 ← la distribución de Maven
 │   ├── jib-base/              ← capas de eclipse-temurin:25-jre (lab 13)
 │   ├── settings-sii.xml       ← el Nexus del SII, plan B, sin credenciales
+│   ├── instructor-respaldo.sh ← el puente con el repositorio privado (D-042-1)
 │   ├── verificar-temario.py
 │   ├── verificar-instructor.py
 │   ├── verificar-pasos-copiables.py
@@ -136,17 +144,23 @@ lab-NN-nombre/
 
 - **`practica/`** — la firma, una línea imperativa y `// escribe aquí`. Nada más.
 - **`solucion/`** — completa, con uno o dos comentarios donde algo no es evidente.
-- **`instructor/`** — **NO VIAJA AL REPOSITORIO** (`labs/*/instructor/` en el `.gitignore`,
+- **`instructor/`** — **NO VIAJA A ESTE REPOSITORIO** (`labs/*/instructor/` en el `.gitignore`,
   decisión `D-031-2`). No es un proyecto: no tiene `mvnw` ni `.mvn` y no se compila. Es la
   chuleta de quien dicta. La genera quien prepara la sesión, a partir de `solucion/`.
   Lo mismo con `proyecto-final/instructor/`, que lleva la solución de referencia.
+  **Desde la SPEC-042 sí tiene respaldo**, en un repositorio privado aparte
+  (`springboot-sii-2026-instructor`): dieciséis carpetas, **245 archivos**, las mismas rutas.
+  **En los labs 04 a 07** cada decisión técnica lleva además su recuadro `POR QUÉ ·` — son
+  **102** (SPEC-041). Los otros once labs y el proyecto final aún no.
 - **`PASOS.md`** — el guion de la sesión. Cada paso trae un bloque **«Se pega»** con el código
   exacto, el archivo y el sitio. Está extraído de `solucion/` y **el CI vigila que no le
   prometa al instructor un código que la solución ya no tiene.**
 
 **Consecuencia práctica que se olvida cada vez:** si trabajo en `instructor/`, **el CI no lo ve
 y el commit no lo lleva**. Lo que viaja de ese trabajo es el informe. La verificación se corre a
-mano con `python3 tools/verificar-instructor.py`.
+mano con `python3 tools/verificar-instructor.py`, y **el respaldo también: nada lo dispara.**
+Si toco `instructor/`, al terminar corro `tools/instructor-respaldo.sh respaldar` o el respaldo
+se queda atrás sin avisar (INFORME-SPEC-042 §9).
 
 ### Los quince labs y su puerto
 
@@ -227,6 +241,17 @@ python3 tools/verificar-guion-vs-practica.py  # lo que PASOS.md promete de pract
 bash   tools/verificar-tamanos.sh             # ningún archivo pasa de 95 MB
 ```
 
+### El respaldo de `instructor/` (SPEC-042)
+
+```bash
+tools/instructor-respaldo.sh estado      # compara por sha256 los dos árboles. NO escribe nada
+tools/instructor-respaldo.sh respaldar   # disco -> repositorio privado
+tools/instructor-respaldo.sh restaurar   # repositorio privado -> disco
+```
+
+Por defecto espera el clon privado **al lado**, en `../springboot-sii-2026-instructor`; si no,
+`--destino RUTA`. Las dos copias terminan comparando huellas y diciendo cuántas cuadran.
+
 **`verificar-instructor.py` es el único que el CI no puede correr** — la carpeta no existe en el
 runner. Se corre a mano, aquí, donde los archivos sí están.
 
@@ -294,7 +319,7 @@ git tag material-vX.Y.Z && git push origin material-vX.Y.Z
 - **El informe va en su propio commit**, al final, en `docs/specs/informes/INFORME-SPEC-NNN.md`.
 - **`ESTADO.md` se actualiza al cerrar.** Va en el commit del informe.
 - **Tag al cerrar**: `material-vX.Y.Z`. Patch bump para un `SPEC-FIX`, minor para una SPEC que
-  agrega material. Hoy vamos en `material-v1.3.2`.
+  agrega material. Hoy vamos en `material-v1.5.0`.
 
 > ⚠️ `main` **no** tiene protección en el servidor: GitHub no la permite en repos privados del
 > plan Free. La regla es convencional. El candado está especificado y congelado
@@ -321,9 +346,21 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 27 de agosto de 2026
+## 8 · Estado al 28 de agosto de 2026
 
-- `main` en **`material-v1.3.2`**, CI en verde.
+- `main` en **`material-v1.5.0`**, CI en verde (último run sobre `main`: `success`, 2 m 07 s).
+- **Desde el 27 cerraron dos SPEC**, y son las dos sobre `instructor/`:
+  - **SPEC-041** (`material-v1.4.0`) — **102 recuadros `POR QUÉ ·`** en los labs 04 a 07: 34 en el
+    04, 22 en el 05, 23 en el 06, 23 en el 07. Cero código tocado, y medido: el código desnudo de
+    los 37 `.java` es idéntico al de `solucion/`. La pidió el PO después de dictar el lab 04 y
+    quedarse sin respuesta ante «¿y por qué `IDENTITY`?».
+  - **SPEC-042** (`material-v1.5.0`) — el respaldo privado de las dieciséis `instructor/`, y de
+    paso el borrado de **258 archivos** de `target/` heredados que no pintaban nada ahí.
+- **El respaldo está al día**, comprobado hoy: `estado` da 245 archivos a cada lado y **245
+  huellas que cuadran**.
+- **El PO está dictando ahora mismo.** El árbol trae trabajo suyo en `practica/` de hoy: cinco
+  archivos del lab 04 (dos de ellos nuevos, sin seguimiento) y tres del lab 05, el último tocado
+  a las 12:22. **No se tocan ni se commitean** (§9).
 - **El material está terminado**: quince labs, las tres carpetas en todos, la maleta completa.
   No queda laboratorio por escribir.
 - **Lo que falta es del PO, no del material:**
@@ -335,6 +372,11 @@ quedó fuera, dicho.
      proyecto final cubre el otro 50 %.
   4. La **aritmética del contrato**: el material va nueve horas y tres sesiones por encima de lo
      contratado, y el lab 14 no tiene módulo titular.
+- **Anotado para después, del lado del material** (INFORME-SPEC-041 §7 e INFORME-SPEC-042 §9):
+  los recuadros `POR QUÉ ·` en los **once labs restantes y el proyecto final** —los que más lo
+  piden son el 09 y el 10—; que `verificar-instructor.py` vigile que un bloque traiga sus cuatro
+  partes; y que ese mismo verificador llame a `instructor-respaldo.sh estado`, para que el
+  respaldo desactualizado avise solo.
 - Cobertura del temario, medida en `docs/temario/MAPA-LAB-MODULO.md`: **20 de 35 temas
   cubiertos**, 7 parciales, 8 sin cubrir. Las ocho brechas: gRPC, AOP, manejo de archivos,
   eventos de aplicación, mensajería, caché, Liquibase y OpenAPI/versionado. Tres de ellas son
@@ -345,7 +387,9 @@ quedó fuera, dicho.
 ## 9 · Trampas conocidas
 
 - **`instructor/` no viaja.** Si trabajo ahí, `git status` no lo muestra y el CI no lo ve. Lo que
-  se commitea es el informe.
+  se commitea es el informe. **Y el respaldo no es automático:** al terminar,
+  `tools/instructor-respaldo.sh respaldar`. Un `git clean -xdf` sigue llevándose la carpeta del
+  disco; lo que cambió con la SPEC-042 es que ahora se puede recuperar.
 - **`git status` puede traer trabajo del PO en clase.** El PO dicta con `practica/` abierta y deja
   archivos a medio hacer ahí. **Nunca commitear `labs/*/practica/**` sin que lo pidan
   explícitamente**: es el punto de partida del alumno y tiene un job de CI que lo vigila
