@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-041 — `instructor/` explica por qué esa opción y no otra (labs 04 a 07).*
+*Última actualización: SPEC-042 — `instructor/` deja de vivir en una sola máquina.*
 
 ---
 
@@ -57,6 +57,22 @@
   corre `python3 tools/verificar-instructor.py`, que comprueba que quedó al día con
   `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
   la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
+
+- **`instructor/` tiene respaldo, y sigue sin viajar al repositorio público** (SPEC-042). Las
+  dieciséis carpetas —los quince labs y el proyecto final, **245 archivos**— están en un
+  repositorio **privado** aparte, `springboot-sii-2026-instructor`, con las mismas rutas para que
+  restaurar sea copiar. **D-031-2 no cambia** (D-042-1): el clon del alumno sigue sin traerlas.
+  - **El puente es `tools/instructor-respaldo.sh`**, con tres verbos: `estado` compara los dos
+    árboles por huella `sha256` y no escribe nada · `respaldar` copia disco → privado ·
+    `restaurar` copia privado → disco. Las dos copias terminan comparando y diciendo cuántas
+    huellas cuadran.
+  - **Probado sobre clones frescos en `/tmp`**: el clon público llega con **0** carpetas
+    `instructor/`, y tras `restaurar` tiene las **16** con las **245 huellas idénticas** a las de
+    la máquina del PO. El repositorio privado da **401** a un `git clone` sin credenciales; el
+    público, 200.
+  - **Se borraron los `target/` heredados** del hallazgo de la SPEC-041 §7: **258 archivos** de
+    salida de compilación en una carpeta que no es un proyecto, con copias rancias de los recursos
+    dentro. El `.gitignore` del repositorio privado los deja fuera para siempre.
 
 - **En los labs 04 a 07, `instructor/` responde «¿y por qué ésa?»** (SPEC-041). La documentación
   explicaba qué hace cada anotación, pero no por qué esa y no otra — que es lo que pregunta el
