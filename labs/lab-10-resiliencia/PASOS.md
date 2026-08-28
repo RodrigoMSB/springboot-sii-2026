@@ -97,7 +97,17 @@ está dispuesto a esperar**. Dos timeouts, que son cosas distintas:
 El paso 1 murió en el segundo: la conexión se aceptó al instante y la respuesta no llegaba.
 
 **Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/tesoreria/ClienteTesoreria.java`,
-**reemplazando el constructor entero**, y sus imports **arriba** si te faltan.
+**arriba, con los demás `import`**:
+
+```java
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
+```
+
+**Se pega:** en el mismo archivo, **reemplazando el constructor entero**. Las dos constantes van
+**arriba del todo de la clase**, encima de `private final RestClient http;`.
 
 ```java
     private static final Duration TIMEOUT_CONEXION = Duration.ofSeconds(2);
@@ -149,8 +159,31 @@ Un timeout es la primera medida, no la última. Los tres pasos que quedan son so
 segundo, el momento exacto en que el otro lado cerró la conexión. Reintentar cuesta poco y salva
 esos casos.
 
-**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`, el
-reintento y su uso. Los imports van **arriba**; lo demás, **dentro de la clase**.
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`,
+**arriba, con los demás `import`**:
+
+```java
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+```
+
+**Se pega:** en el mismo archivo, **entre los campos**: el `log` **encima** de
+`private final ClienteTesoreria cliente;`, y el reintento **debajo**.
+
+```java
+    private static final Logger log = LoggerFactory.getLogger(PagoService.class);
+```
+
+```java
+    private final Retry reintento;
+```
+
+**Se pega:** en el mismo archivo, **dentro del constructor**, después de `this.cliente = cliente;`.
+Ojo con esto: son sentencias, y van **dentro** del constructor — no sueltas en la clase.
 
 ```java
         this.reintento = Retry.of("tesoreria", RetryConfig.custom()
@@ -217,8 +250,25 @@ Un circuit breaker de software hace lo mismo con las llamadas. Tres estados:
 | **OPEN** | demasiados fallos: **corta**. Las llamadas fallan al instante, sin tocar la red |
 | **HALF_OPEN** | pasado un rato, deja pasar unas pocas de prueba. Si van bien, cierra; si no, vuelve a abrir |
 
-**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java` — el
-circuito y sus umbrales. Los imports **arriba**, el campo y el constructor **dentro de la clase**.
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`,
+**arriba, con los demás `import`**:
+
+```java
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+
+import java.util.function.Supplier;
+```
+
+**Se pega:** en el mismo archivo, **entre los campos**, **encima** del reintento:
+
+```java
+    private final CircuitBreaker circuito;
+```
+
+**Se pega:** en el mismo archivo, **dentro del constructor**, delante del reintento — el circuito
+se declara primero porque el reintento lo va a mencionar.
 
 ```java
         CircuitBreakerConfig configuracion = CircuitBreakerConfig.custom()
@@ -231,7 +281,12 @@ circuito y sus umbrales. Los imports **arriba**, el campo y el constructor **den
                 .build();
 
         this.circuito = CircuitBreaker.of("tesoreria", configuracion);
+```
 
+**Se pega:** y esto **al final del constructor**, justo **encima** del
+`reintento.getEventPublisher(...)` que pegaste en el paso 3. Los dos publicadores quedan juntos.
+
+```java
         circuito.getEventPublisher().onStateTransition(e ->
                 log.info(">>> CIRCUITO {} -> {}",
                         e.getStateTransition().getFromState(), e.getStateTransition().getToState()));
@@ -258,6 +313,38 @@ Y una línea en la configuración del reintento que importa más de lo que parec
 **Los valores no son los de por defecto, y hay que decirlo:** de fábrica, el circuito pide **100
 llamadas** antes de opinar. En una sesión de tres horas no abriría nunca. Aquí se le pide una
 ventana de 5 llamadas y un 50 % de fallos.
+
+**Y hace falta poder mirarlo desde fuera**, porque el paso se demuestra con un `curl` contra el
+estado del circuito. Son dos métodos en el servicio y un endpoint en el controlador.
+
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`, **dentro de
+la clase**, debajo de `consultar`:
+
+```java
+    public String estadoDelCircuito() {
+        return circuito.getState().name();
+    }
+
+    public Map<String, Object> metricas() {
+        CircuitBreaker.Metrics m = circuito.getMetrics();
+        return Map.of(
+                "estado", circuito.getState().name(),
+                "llamadasFallidas", m.getNumberOfFailedCalls(),
+                "llamadasExitosas", m.getNumberOfSuccessfulCalls(),
+                "tasaDeFallo", m.getFailureRate(),
+                "llamadasHTTPReales", cliente.llamadasHechas());
+    }
+```
+
+**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/controllers/PagoController.java`,
+**dentro de la clase**, debajo de `consultar`:
+
+```java
+    @GetMapping("/estado-circuito")
+    public Map<String, Object> estadoCircuito() {
+        return servicio.metricas();
+    }
+```
 
 **Se corre:** Tesorería caída, y se pide varias veces mirando el contador.
 

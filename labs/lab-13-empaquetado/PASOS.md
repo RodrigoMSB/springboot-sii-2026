@@ -211,13 +211,14 @@ sitio: en las máquinas del SII no hay Docker y no se puede instalar.
 **Se explica:** Jib es un plugin de Maven que escribe una imagen OCI directamente. No necesita
 demonio de Docker, ni permisos de administrador, ni un `Dockerfile`.
 
-**Se pega:** en `practica/pom.xml`, **dentro de `<plugins>`**.
+**Se pega:** en `practica/pom.xml`, **dentro de `<plugins>`**. La versión sale de la propiedad
+`jib.version`, que el `pom.xml` ya trae declarada arriba: el número se escribe en un solo sitio.
 
 ```xml
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>${jib.version}</version>
         <configuration>
           <from>
             <image>eclipse-temurin:25-jre</image>
