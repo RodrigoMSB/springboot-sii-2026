@@ -1,0 +1,37 @@
+server:
+  port: 8109
+
+spring:
+  application:
+    name: examen-huecos
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration
+
+dgt:
+  jwt:
+    secreto: ${DGT_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+  examen:
+    # HUECO 08 · el tope del listado. En `base/` esta linea no existe.
+    tope-de-listado: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO

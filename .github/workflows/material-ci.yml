@@ -330,7 +330,10 @@ jobs:
           # Incluye `proyecto-final/base`: es material que el alumno usa y sin esto
           # sería lo único del repositorio que nadie compila.
           # (`proyecto-final/instructor/` está en el .gitignore: en el runner no existe.)
-          for POM in $(find labs proyecto-final -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
+          # Incluye también `examen-huecos/`, por la misma razón: sus dos proyectos son
+          # material que el alumno usa. Se COMPILAN, no se testean — los doce tests de
+          # `examen-huecos/base` están rojos a propósito, que es de lo que va el examen.
+          for POM in $(find labs proyecto-final examen-huecos -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
               PROY="$(dirname "$POM")"
               TOTAL=$((TOTAL + 1))
               printf '[..] %s\n' "$PROY"

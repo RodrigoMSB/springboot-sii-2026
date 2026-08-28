@@ -68,7 +68,8 @@ def paquete_esperado(java):
 
 def main():
     raices = sorted([p for p in RAIZ.glob('labs/*/instructor') if p.is_dir()] +
-                    [p for p in RAIZ.glob('proyecto-final/instructor') if p.is_dir()])
+                    [p for p in RAIZ.glob('proyecto-final/instructor') if p.is_dir()] +
+                    [p for p in RAIZ.glob('examen-huecos/instructor') if p.is_dir()])
 
     if not raices:
         print('No hay ninguna carpeta `instructor/` en este clon.')
@@ -117,7 +118,7 @@ def main():
         # --- 3 · al día con solucion/ ---------------------------------------
         # El lab 14 reparte sus fuentes en cuatro servicios; el glob los cubre.
         sol = lab / 'solucion'
-        if es_lab and sol.is_dir():
+        if sol.is_dir():
             def javas(base):
                 return {p.relative_to(base).as_posix()
                         for p in base.rglob('*.java') if 'target' not in p.parts}

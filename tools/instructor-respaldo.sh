@@ -85,6 +85,7 @@ carpetas_de() {
   ( cd "$1" 2>/dev/null || return 0
     find labs -maxdepth 2 -type d -name instructor 2>/dev/null
     find proyecto-final -maxdepth 1 -type d -name instructor 2>/dev/null
+    find examen-huecos -maxdepth 1 -type d -name instructor 2>/dev/null
   ) | LC_ALL=C sort
 }
 

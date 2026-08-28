@@ -62,3 +62,12 @@ labs/*/instructor/
 # guía de defensa con las respuestas calibradas. Si viajara en el clon, el examen
 # vendría con las respuestas.
 proyecto-final/instructor/
+
+# Y la del examen de completar huecos, por lo mismo (SPEC-043). Dentro va la guía de
+# corrección con las doce respuestas. `examen-huecos/solucion/` SÍ viaja: el examen no
+# se defiende escondiendo la solución de un ejercicio que se corrige solo, y el
+# instructor necesita poder abrirla en clase. Lo que no viaja es la chuleta.
+examen-huecos/instructor/
+
+# Los bancos del arnés de independencia del examen. Efímeros.
+examen-huecos/.independencia/
