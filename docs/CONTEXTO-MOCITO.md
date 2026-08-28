@@ -3,8 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026, sobre `main` en
-`material-v1.5.0`, con el PO dictando el lab 05 mientras se revisaba.*
+*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026 al cerrar la SPEC-043, sobre
+`main` en `material-v1.6.0`.*
 
 ---
 
@@ -43,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — **102** decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **105** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -61,6 +61,10 @@ Están escritas en tres sitios, y los tres mandan:
   Es la razón de que `instructor/` se verifique a mano y no en el CI (`D-FIX10-2`).
 - **`A-01` · Verificar código fuente con `grep` es frágil por construcción.** Cuando se pueda,
   se parsea.
+- **`D-043-1` · Los tests de `examen-huecos` entran por HTTP y sus doce huecos son
+  independientes.** Si un test llamara al método que el alumno tiene que escribir, la suite no
+  compilaría y no correría ninguno. Y sin independencia, quien resuelve once podría sacar cinco.
+- **`D-043-3` · Un bloque «Se pega» trae sus `import`, o no es copiable.**
 - **`D-041-1` · En `instructor/`, toda decisión técnica documenta cuatro cosas y en este orden:**
   qué hace, qué alternativas existen, por qué se eligió ésta aquí, en qué caso elegirías otra.
   El recuadro se encabeza `POR QUÉ ·` para poder listarlo con un `grep`. Donde no hay
@@ -97,7 +101,7 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 102 decisiones con fecha y razón
+│   ├── decisiones.md          ← 105 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
@@ -112,8 +116,10 @@ springboot-sii-2026/
 │       └── README.md
 ├── labs/
 │   ├── lab-00-hola-mundo ... lab-14-microservicios   ← quince, del 00 al 14
-├── proyecto-final/            ← el instrumento de evaluación (50 % de la nota)
+├── proyecto-final/            ← el instrumento de evaluación largo: tres horas
 │   ├── base/ brief/ rubrica/ plantillas/ instructor/
+├── examen-huecos/             ← el corto: doce huecos, hora y media, se corrige solo
+│   ├── README.md base/ solucion/ instructor/
 ├── repo-maven/                ← TODAS las dependencias, ~230 MB
 ├── tools/
 │   ├── jdk/                   ← JDK 25 Temurin, partido en trozos de 80 MB
@@ -152,8 +158,12 @@ lab-NN-nombre/
   (`springboot-sii-2026-instructor`): dieciséis carpetas, **245 archivos**, las mismas rutas.
   **En los labs 04 a 07** cada decisión técnica lleva además su recuadro `POR QUÉ ·` — son
   **102** (SPEC-041). Los otros once labs y el proyecto final aún no.
+- **`examen-huecos/` no es un lab y no tiene `PASOS.md`.** Tiene `base/` con doce huecos marcados,
+  `solucion/`, y un test por hueco. **Su `solucion/` SÍ viaja** (`D-043-2`): lo que se protege es la
+  guía de corrección, que vive en `instructor/`.
 - **`PASOS.md`** — el guion de la sesión. Cada paso trae un bloque **«Se pega»** con el código
-  exacto, el archivo y el sitio. Está extraído de `solucion/` y **el CI vigila que no le
+  exacto, el archivo y el sitio. **Y con sus `import`** (`D-043-3`): un bloque sin ellos no es
+  copiable, y eso costó una SPEC entera de descubrir. Está extraído de `solucion/` y **el CI vigila que no le
   prometa al instructor un código que la solución ya no tiene.**
 
 **Consecuencia práctica que se olvida cada vez:** si trabajo en `instructor/`, **el CI no lo ve
@@ -182,7 +192,8 @@ se queda atrás sin avisar (INFORME-SPEC-042 §9).
 | 13 | `empaquetado` | 8106 | imagen OCI de 138,9 MB sin Docker ni red |
 | 14 | `microservicios` | 8213 | cuatro procesos, tres bases. 500 → 200 degradado |
 
-`proyecto-final/base` corre en el **8107**. El puerto histórico del curso es el **8099**.
+`proyecto-final/base` corre en el **8107** y `examen-huecos` en el **8109** (su PostgreSQL, en el
+**55446**). El puerto histórico del curso es el **8099**.
 
 ---
 
@@ -258,12 +269,14 @@ runner. Se corre a mano, aquí, donde los archivos sí están.
 ### Compilar todo el arco offline (lo que hace el job `labs`)
 
 ```bash
-for p in $(find labs proyecto-final -name pom.xml -not -path '*/instructor/*' -not -path '*/target/*'); do
+for p in $(find labs proyecto-final examen-huecos -name pom.xml -not -path '*/instructor/*' -not -path '*/target/*'); do
   d=$(dirname "$p"); [ -x "$d/mvnw" ] && (cd "$d" && ./mvnw -q -o compile) || true
 done
 ```
 
-Son **37 proyectos**. El lab 14 aporta ocho (cuatro servicios × dos carpetas).
+Son **39 proyectos**: el lab 14 aporta ocho (cuatro servicios × dos carpetas) y `examen-huecos`,
+dos. **Los del examen se compilan pero NO se testean**: los doce tests de su `base/` están rojos a
+propósito, que es de lo que va el examen.
 
 ### El CI
 
@@ -273,7 +286,7 @@ Son **37 proyectos**. El lab 14 aporta ocho (cuatro servicios × dos carpetas).
 |---|---|
 | `temario` | el `.md` y el `.docx` no divergen |
 | `siembra` | toda `TEORIA.md` con sucesor siembra el módulo N+1 (`P-18`) |
-| `labs` | los **37** proyectos Maven compilan **offline**. Falla si alguien necesitó la red |
+| `labs` | los **39** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` |
 | `pasos` | los quince guiones traen el código y no prometen lo que la solución no tiene (146 bloques, 87 métodos) |
 | `guion-practica` | lo que los guiones prometen de `practica/` es lo que `practica/` trae (88 promesas) |
 | `labs-sh` | los scripts, en Linux y en Git Bash |
@@ -319,7 +332,7 @@ git tag material-vX.Y.Z && git push origin material-vX.Y.Z
 - **El informe va en su propio commit**, al final, en `docs/specs/informes/INFORME-SPEC-NNN.md`.
 - **`ESTADO.md` se actualiza al cerrar.** Va en el commit del informe.
 - **Tag al cerrar**: `material-vX.Y.Z`. Patch bump para un `SPEC-FIX`, minor para una SPEC que
-  agrega material. Hoy vamos en `material-v1.5.0`.
+  agrega material. Hoy vamos en `material-v1.6.0`.
 
 > ⚠️ `main` **no** tiene protección en el servidor: GitHub no la permite en repos privados del
 > plan Free. La regla es convencional. El candado está especificado y congelado
@@ -346,37 +359,36 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 28 de agosto de 2026
+## 8 · Estado al 28 de agosto de 2026, al cerrar la SPEC-043
 
-- `main` en **`material-v1.5.0`**, CI en verde (último run sobre `main`: `success`, 2 m 07 s).
-- **Desde el 27 cerraron dos SPEC**, y son las dos sobre `instructor/`:
-  - **SPEC-041** (`material-v1.4.0`) — **102 recuadros `POR QUÉ ·`** en los labs 04 a 07: 34 en el
-    04, 22 en el 05, 23 en el 06, 23 en el 07. Cero código tocado, y medido: el código desnudo de
-    los 37 `.java` es idéntico al de `solucion/`. La pidió el PO después de dictar el lab 04 y
-    quedarse sin respuesta ante «¿y por qué `IDENTITY`?».
-  - **SPEC-042** (`material-v1.5.0`) — el respaldo privado de las dieciséis `instructor/`, y de
-    paso el borrado de **258 archivos** de `target/` heredados que no pintaban nada ahí.
-- **El respaldo está al día**, comprobado hoy: `estado` da 245 archivos a cada lado y **245
-  huellas que cuadran**.
-- **El PO está dictando ahora mismo.** El árbol trae trabajo suyo en `practica/` de hoy: cinco
-  archivos del lab 04 (dos de ellos nuevos, sin seguimiento) y tres del lab 05, el último tocado
-  a las 12:22. **No se tocan ni se commitean** (§9).
-- **El material está terminado**: quince labs, las tres carpetas en todos, la maleta completa.
-  No queda laboratorio por escribir.
+- `main` en **`material-v1.6.0`**, CI en verde.
+- **Tres SPEC cerraron el 27 y el 28**, y las tres tocan `instructor/` o la evaluación:
+  - **SPEC-041** (`v1.4.0`) — los recuadros `POR QUÉ ·` en los labs 04 a 07.
+  - **SPEC-042** (`v1.5.0`) — el respaldo privado de `instructor/`.
+  - **SPEC-043** (`v1.6.0`) — cuatro frentes: el examen de huecos, el porqué en los labs 08 a 14,
+    la prueba de pegado en los labs 10 a 13, y el respaldo al día.
+- **Hay DOS instrumentos de evaluación, no uno.** `proyecto-final/` (tres horas, brief de negocio,
+  rúbrica a mano) y **`examen-huecos/`** (hora y media estimada, doce huecos, se corrige solo). **El
+  PO decide cuál usa.**
+- **Los quince guiones ya se han pegado.** La V1 estaba pendiente en el 10, 11, 12 y 13, y encontró
+  de todo: el guion del 10 no parseaba pegado al pie de la letra. Corregidos y comprobados.
+- **`instructor/` va en 140 recuadros `POR QUÉ ·`** repartidos en diecisiete carpetas, y respaldado:
+  279 archivos, huellas cuadradas, repositorio privado con 404 sin credenciales.
+- **El material está terminado**: quince labs, las tres carpetas en todos, la maleta completa, y dos
+  instrumentos de evaluación.
 - **Lo que falta es del PO, no del material:**
-  1. La **fila de aceptación**: sentarse con cada `PASOS.md` sobre `practica/` sin abrir
-     `solucion/`, del 00 al 14. Empezar por el 14. Es la única prueba que yo no puedo hacer:
-     quien escribió el guion no puede juzgar si se entiende.
-  2. Las **diapositivas y el material de sala**. No existen.
-  3. Dos casillas de evaluación vacías: **conocimientos (30 %)** y **ejercicios (20 %)**. El
-     proyecto final cubre el otro 50 %.
-  4. La **aritmética del contrato**: el material va nueve horas y tres sesiones por encima de lo
-     contratado, y el lab 14 no tiene módulo titular.
-- **Anotado para después, del lado del material** (INFORME-SPEC-041 §7 e INFORME-SPEC-042 §9):
-  los recuadros `POR QUÉ ·` en los **once labs restantes y el proyecto final** —los que más lo
-  piden son el 09 y el 10—; que `verificar-instructor.py` vigile que un bloque traiga sus cuatro
-  partes; y que ese mismo verificador llame a `instructor-respaldo.sh estado`, para que el
-  respaldo desactualizado avise solo.
+  1. **Elegir instrumento**, y si es el de huecos, medir cuánto tarda de verdad — es lo único que
+     `INFORME-SPEC-043` deja sin medir, y se cierra en quince minutos (§1.6).
+  2. La **fila de aceptación**: `PASOS.md` sobre `practica/` sin abrir `solucion/`, del 00 al 14.
+     Empezar por el 14. Pegar ya está comprobado; entenderse, no.
+  3. Las **diapositivas y el material de sala**. No existen.
+  4. La casilla de **conocimientos (30 %)**, que sigue vacía.
+  5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab 14 sin módulo
+     titular.
+- **Anotado para después, del lado del material** (INFORME-SPEC-043 §6): el examen probado en
+  Windows; los tests de `examen-huecos/solucion` en el CI; la paridad del frente 2 con la SPEC-041
+  —hoy va en 7 recuadros por lab contra 21—; y que `verificar-instructor.py` vigile el formato del
+  recuadro y avise si el respaldo divergió.
 - Cobertura del temario, medida en `docs/temario/MAPA-LAB-MODULO.md`: **20 de 35 temas
   cubiertos**, 7 parciales, 8 sin cubrir. Las ocho brechas: gRPC, AOP, manejo de archivos,
   eventos de aplicación, mensajería, caché, Liquibase y OpenAPI/versionado. Tres de ellas son

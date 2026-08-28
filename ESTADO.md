@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-042 — `instructor/` deja de vivir en una sola máquina.*
+*Última actualización: SPEC-043 — hay un examen que se corrige solo, y los quince guiones ya se han pegado.*
 
 ---
 
@@ -58,6 +58,22 @@
   `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
   la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
 
+- **HAY UN SEGUNDO INSTRUMENTO DE EVALUACIÓN, y es corto** (SPEC-043): `examen-huecos/`. Una
+  aplicación pequeña que compila y arranca, con **doce huecos marcados** que el alumno completa —
+  **48 líneas de código en total**. Cubre lo de los labs 01 al 09: entidad con relación, tres
+  consultas derivadas, servicio, controller con DTO, los dos errores con forma, seguridad por rol y
+  configuración externa.
+  - **No lleva `PASOS.md`**: cada hueco dice **qué** tiene que hacer, nunca cómo.
+  - **Cada hueco tiene su test**, y **el puntaje es directo**: la nota es la última línea de
+    `./mvnw test`, `RESUELTOS: n de 12`. El alumno la ve antes de entregar.
+  - **Los doce huecos son independientes, y está medido**: resolviéndolos de uno en uno la cuenta de
+    verdes va 0, 1, 2 … 12 sin saltos. Es lo que hace honesto el puntaje directo.
+  - `base/` arranca en **3,8 s** y da 0 de 12; `solucion/` da 12 de 12; una corrida de la suite
+    tarda **7 segundos**.
+  - **Estimado en 60 a 90 minutos, NO medido.** Es lo único que falta y sólo lo dice un alumno:
+    `INFORME-SPEC-043` §1.6 explica cómo se cierra en quince minutos.
+  - **El `proyecto-final/` no se tocó.** Sigue entero, y son dos instrumentos, no uno.
+
 - **`instructor/` tiene respaldo, y sigue sin viajar al repositorio público** (SPEC-042). Las
   dieciséis carpetas —los quince labs y el proyecto final, **245 archivos**— están en un
   repositorio **privado** aparte, `springboot-sii-2026-instructor`, con las mismas rutas para que
@@ -87,7 +103,13 @@
   - **No viaja al repositorio, y es lo previsto** (D-031-2): lo que se commitea es el informe.
     Un clon fresco no trae estos bloques. Está dicho en `INFORME-SPEC-041` §6, con las tres
     salidas posibles, porque la decisión es del PO.
-  - **Los otros once labs siguen sin este tratamiento.** El criterio vale igual para ellos.
+  - **Y desde la SPEC-043 lo tienen también los labs 08 al 14 y el examen nuevo**: 57 recuadros
+    más, que dejan el material en **140**. Cero código movido, medido sobre los **200 `.java`** de
+    las diecisiete carpetas `instructor/`, y las once fuentes compilan offline.
+    **Con una salvedad dicha en voz alta:** la densidad de los labs 08 a 14 es de 7 recuadros por
+    lab contra los 21 de los labs 04 a 07. Están cubiertas las decisiones que cada lab enseña; no se
+    repitió el andamiaje heredado (`pom.xml`, clase de arranque, `infra/`), que ya está documentado
+    en el 04. `INFORME-SPEC-043` §2.4 lo mide y lo acota.
 
 - **Los quince labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
   en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
@@ -384,6 +406,13 @@ quien escribió el guion no puede juzgar si se entiende.
 Los quince están verificados por el ejecutor —cada uno con sus salidas citadas en el informe de
 su SPEC— pero el PO no los ha corrido de punta a punta.
 
+**Lo que sí está cerrado desde la SPEC-043: los quince guiones se han PEGADO.** Faltaba en el 10,
+11, 12 y 13 —era la deuda declarada en `INFORME-SPEC-039` §5— y apareció de todo: el guion del lab
+10 mandaba pegar sentencias de constructor «dentro de la clase», y pegado al pie de la letra **ni
+siquiera parseaba**. Los cuatro guiones están corregidos y la prueba pasa: compilan y el resultado
+es idéntico a `solucion/`. Eso quita una clase entera de sorpresas de la fila de aceptación, pero
+**no la sustituye**: que el código encaje no dice que el guion se entienda.
+
 En el **Lab 14** esa fila importa más que en los otros catorce, por dos razones concretas: es el
 único que abre **cuatro terminales y tres PostgreSQL a la vez** (memoria y confusión medidas en
 `INFORME-SPEC-037` §6/V8), y **todo se midió en macOS**. Los tres defectos que encontró la
@@ -416,9 +445,14 @@ cobertura sube a **20 temas cubiertos de 35**.
 
 | | Peso | Instrumento |
 |---|---|---|
-| Proyecto final | **50 %** | ✅ `proyecto-final/` |
+| Proyecto final | **50 %** | ✅ `proyecto-final/` — y ahora también `examen-huecos/` |
 | Evaluación de conocimientos | **30 %** | ❌ **no existe** |
-| Ejercicios | **20 %** | ❌ **no existe** |
+| Ejercicios | **20 %** | ⚠️ **`examen-huecos/` podría serlo, y es decisión del PO** |
+
+**Sobre esa última fila:** el examen de huecos se construyó como alternativa corta al proyecto
+final, no como instrumento de la casilla de ejercicios. Pero da una nota numérica, objetiva y
+automática sobre los labs 01 a 09, que es exactamente lo que esa casilla pedía. Usarlo así, usarlo
+en lugar del proyecto final, o usar los dos, es una decisión del PO y no del material.
 
 Los quince labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
 evaluados» sin definir antes qué se puntúa. Las dos casillas vacías son una decisión del PO, no un
@@ -449,6 +483,10 @@ completa y el CI verde. No queda laboratorio por escribir.
 
 Lo que viene, en orden:
 
+0. **Elegir con qué se evalúa, antes del lunes.** Están los dos instrumentos: el `proyecto-final/`
+   de tres horas y el `examen-huecos/` de hora y media. La decisión es del PO y es la más urgente,
+   porque quedan tres o cuatro clases. Si se elige el examen de huecos, lo que falta es un número:
+   cuánto tarda de verdad (`INFORME-SPEC-043` §1.6, se cierra en quince minutos).
 1. **La fila de aceptación del PO.** Sentarse con cada `PASOS.md` sobre `practica/`, sin abrir
    `solucion/`, del 00 al 14. Es la etapa que cierra cada SPEC y la única que el ejecutor no puede
    hacer. **Empezar por el 14**: es el más grande, el más nuevo, el único con cuatro terminales, y
