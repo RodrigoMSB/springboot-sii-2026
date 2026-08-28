@@ -52,14 +52,30 @@ Nadie los pide; ocurren.
 **arriba** y la anotación **sobre la clase**, junto a `@SpringBootApplication`.
 
 ```java
+import org.springframework.scheduling.annotation.EnableScheduling;
+```
+
+```java
 @EnableScheduling
 @SpringBootApplication
 public class Lab12Application {
 ```
 
-y `programadas/CierreNocturno.java`:
+y el archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/CierreNocturno.java`
+— el archivo entero:
 
 ```java
+package cl.dgt.tareas.programadas;
+
+import cl.dgt.tareas.soporte.Instancia;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalTime;
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Component
 public class CierreNocturno {
 
@@ -84,6 +100,34 @@ public class CierreNocturno {
         return vueltas.get();
     }
 }
+```
+
+**Se pega:** y para poder contar las vueltas desde fuera, en
+`practica/src/main/java/cl/dgt/tareas/controllers/TramiteController.java`: el import **arriba**,
+
+```java
+import cl.dgt.tareas.programadas.CierreNocturno;
+```
+
+el campo **debajo** de `private final NotificadorService notificador;` y el constructor
+**reemplazando el que hay** — le entra un parámetro más:
+
+```java
+    private final CierreNocturno cierre;
+```
+
+```java
+    public TramiteController(NotificadorService notificador, CierreNocturno cierre, Instancia instancia) {
+        this.notificador = notificador;
+        this.cierre = cierre;
+        this.instancia = instancia;
+    }
+```
+
+y una línea más en lo que devuelve `/quien`:
+
+```java
+                "vueltasDelCierre", cierre.vueltas(),
 ```
 
 **En consola** — sin llamar a nada, solo esperando:
@@ -123,6 +167,15 @@ hace falta un cron.
 — el archivo entero.
 
 ```java
+package cl.dgt.tareas.programadas;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalTime;
+
 @Component
 public class Recordatorio {
 
@@ -197,12 +250,22 @@ curl -X POST -w "  (%{time_total}s)\n" http://localhost:8103/tramites/sincrono
 **arriba** y la anotación **sobre la clase**.
 
 ```java
+import org.springframework.scheduling.annotation.EnableAsync;
+```
+
+```java
 @EnableScheduling
 @EnableAsync
 @SpringBootApplication
 ```
 
-en `NotificadorService`, el método asíncrono:
+en `practica/src/main/java/cl/dgt/tareas/services/NotificadorService.java`, el import **arriba**:
+
+```java
+import org.springframework.scheduling.annotation.Async;
+```
+
+y el método asíncrono, **dentro de la clase**, debajo de `notificarSincrono`:
 
 ```java
     @Async
@@ -211,7 +274,8 @@ en `NotificadorService`, el método asíncrono:
     }
 ```
 
-y en `TramiteController`, el endpoint que lo usa:
+y en `practica/src/main/java/cl/dgt/tareas/controllers/TramiteController.java`, el endpoint que
+lo usa, donde dice `// escribe aquí`:
 
 ```java
     @PostMapping("/asincrono")

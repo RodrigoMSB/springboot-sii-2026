@@ -70,7 +70,12 @@ importante del paso es lo que se deja fuera**.
     </dependency>
 ```
 
-y en `application.yml`:
+y en `practica/src/main/resources/application.yml`, donde dice `# escribe aquí`.
+
+> **Ojo con el YAML de este lab:** los pasos 1, 4 y 5 pegan cada uno un trozo bajo `management:`.
+> **Es una sola clave**, no tres: el segundo trozo y el tercero se **funden** con lo que ya
+> escribiste, no se pegan debajo. Un `application.yml` con `management:` repetido tres veces no
+> es válido y la aplicación no arranca.
 
 ```yaml
 management:
@@ -136,6 +141,19 @@ ningún sitio.
 archivo entero.
 
 ```java
+package cl.dgt.observabilidad.infra;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.UUID;
+
 @Component
 public class FiltroDeCorrelacion extends OncePerRequestFilter {
 
@@ -218,7 +236,15 @@ pool de conexiones—. Lo que no puede traer es **cuántos trámites se emitiero
 sabe esta aplicación.
 
 **Se pega:** en `practica/src/main/java/cl/dgt/observabilidad/controllers/TramiteController.java`,
-el contador y su uso: los imports **arriba**, el campo y el constructor **dentro de la clase**.
+**arriba, con los demás `import`**:
+
+```java
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+```
+
+**Se pega:** en el mismo archivo, el campo **debajo** de `private final TramiteRepository
+repositorio;`, y el constructor **reemplazando el que hay** — le entra un parámetro más.
 
 ```java
     private final Counter emitidos;
@@ -287,9 +313,21 @@ management:
       show-details: always
 ```
 
-y `infra/SaludDeLaBase.java`:
+y el archivo **nuevo** `practica/src/main/java/cl/dgt/observabilidad/infra/SaludDeLaBase.java`
+— el archivo entero:
 
 ```java
+package cl.dgt.observabilidad.infra;
+
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 @Component("baseDeDatos")
 public class SaludDeLaBase implements HealthIndicator {
 
