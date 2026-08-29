@@ -3,8 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026 al cerrar la SPEC-043, sobre
-`main` en `material-v1.6.0`.*
+*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026 al cerrar la SPEC-044, sobre
+`main` en `material-v1.7.0`.*
 
 ---
 
@@ -43,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — **105** decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **107** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -61,6 +61,11 @@ Están escritas en tres sitios, y los tres mandan:
   Es la razón de que `instructor/` se verifique a mano y no en el CI (`D-FIX10-2`).
 - **`A-01` · Verificar código fuente con `grep` es frágil por construcción.** Cuando se pueda,
   se parsea.
+- **`D-044-1` · El código de una guía en PDF se EXTRAE de `solucion/`, no se teclea.** El fuente
+  lleva marcadores y `tools/generar-guias.py` los resuelve y los comprueba.
+- **`D-044-2` · Una guía en PDF no puede pedir que se pegue nada cuya sangría sea el significado.**
+  Copiar de un PDF pierde los espacios del principio de línea y parte las líneas largas — medido,
+  y sin arreglo en la cadena de generación. El YAML se edita, no se pega.
 - **`D-043-1` · Los tests de `examen-huecos` entran por HTTP y sus doce huecos son
   independientes.** Si un test llamara al método que el alumno tiene que escribir, la suite no
   compilaría y no correría ninguno. Y sin independencia, quien resuelve once podría sacar cinco.
@@ -101,11 +106,14 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 105 decisiones con fecha y razón
+│   ├── decisiones.md          ← 107 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
 │   ├── troubleshooting.md     ← tabla de problemas con número. Se cita el número
+│   ├── guias/                 ← las guías en PDF del ALUMNO (SPEC-044). Sí viajan
+│   │   ├── fuente/            ← el markdown con marcadores {{codigo ...}}
+│   │   └── estilo/            ← el preámbulo LaTeX y el filtro de pandoc
 │   ├── specs/                 ← SPEC-NNN-*.md
 │   │   └── informes/          ← INFORME-SPEC-NNN.md  (la memoria larga)
 │   ├── spikes/
@@ -127,6 +135,7 @@ springboot-sii-2026/
 │   ├── jib-base/              ← capas de eclipse-temurin:25-jre (lab 13)
 │   ├── settings-sii.xml       ← el Nexus del SII, plan B, sin credenciales
 │   ├── instructor-respaldo.sh ← el puente con el repositorio privado (D-042-1)
+│   ├── generar-guias.py       ← las guías del alumno en PDF (D-044-1)
 │   ├── verificar-temario.py
 │   ├── verificar-instructor.py
 │   ├── verificar-pasos-copiables.py
@@ -242,6 +251,18 @@ cd labs/lab-04-jpa/solucion      # o practica/
 `./mvnw` es el shim del curso: usa el JDK y el Maven del repositorio, en modo offline. **Nunca
 se llama a un `mvn` del sistema.** Los labs se apagan con Ctrl+C.
 
+### Las guías del alumno en PDF
+
+```bash
+python3 tools/generar-guias.py              # las cuatro
+python3 tools/generar-guias.py --verificar  # solo comprueba los bloques, no escribe PDF
+python3 tools/generar-guias.py lab-00       # una
+```
+
+Hace falta **pandoc y una distribución de LaTeX** (`xelatex`), que NO viajan en el repositorio y no
+están en el runner del CI: **los PDF se commitean ya hechos.** Es la excepción a la regla de la
+maleta, y se sostiene porque quien genera guías es quien prepara el material, no el alumno.
+
 ### Los verificadores
 
 ```bash
@@ -332,7 +353,7 @@ git tag material-vX.Y.Z && git push origin material-vX.Y.Z
 - **El informe va en su propio commit**, al final, en `docs/specs/informes/INFORME-SPEC-NNN.md`.
 - **`ESTADO.md` se actualiza al cerrar.** Va en el commit del informe.
 - **Tag al cerrar**: `material-vX.Y.Z`. Patch bump para un `SPEC-FIX`, minor para una SPEC que
-  agrega material. Hoy vamos en `material-v1.6.0`.
+  agrega material. Hoy vamos en `material-v1.7.0`.
 
 > ⚠️ `main` **no** tiene protección en el servidor: GitHub no la permite en repos privados del
 > plan Free. La regla es convencional. El candado está especificado y congelado
@@ -359,14 +380,19 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 28 de agosto de 2026, al cerrar la SPEC-043
+## 8 · Estado al 28 de agosto de 2026, al cerrar la SPEC-044
 
-- `main` en **`material-v1.6.0`**, CI en verde.
-- **Tres SPEC cerraron el 27 y el 28**, y las tres tocan `instructor/` o la evaluación:
+- `main` en **`material-v1.7.0`**, CI en verde.
+- **Cuatro SPEC cerraron el 27 y el 28:**
+  - **SPEC-044** (`v1.7.0`) — **las guías en PDF del alumno**, labs 00 a 03. Formato nuevo. Si
+    convence, los once restantes van en otra SPEC: ésa es la decisión que espera el PO.
   - **SPEC-041** (`v1.4.0`) — los recuadros `POR QUÉ ·` en los labs 04 a 07.
   - **SPEC-042** (`v1.5.0`) — el respaldo privado de `instructor/`.
   - **SPEC-043** (`v1.6.0`) — cuatro frentes: el examen de huecos, el porqué en los labs 08 a 14,
     la prueba de pegado en los labs 10 a 13, y el respaldo al día.
+- **El material tiene ahora TRES formatos, y no hay que confundirlos:** `PASOS.md` es el guion de
+  quien dicta; `docs/guias/*.pdf` es lo que el alumno sigue solo; `instructor/` es la chuleta con
+  los porqués. Lo que se escriba para uno no vale para otro.
 - **Hay DOS instrumentos de evaluación, no uno.** `proyecto-final/` (tres horas, brief de negocio,
   rúbrica a mano) y **`examen-huecos/`** (hora y media estimada, doce huecos, se corrige solo). **El
   PO decide cuál usa.**
@@ -381,14 +407,18 @@ quedó fuera, dicho.
      `INFORME-SPEC-043` deja sin medir, y se cierra en quince minutos (§1.6).
   2. La **fila de aceptación**: `PASOS.md` sobre `practica/` sin abrir `solucion/`, del 00 al 14.
      Empezar por el 14. Pegar ya está comprobado; entenderse, no.
-  3. Las **diapositivas y el material de sala**. No existen.
+  3. Las **diapositivas y el material de sala**. Las guías en PDF cubren cuatro labs del lado del
+     alumno; una presentación para proyectar sigue sin existir.
   4. La casilla de **conocimientos (30 %)**, que sigue vacía.
   5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab 14 sin módulo
      titular.
-- **Anotado para después, del lado del material** (INFORME-SPEC-043 §6): el examen probado en
-  Windows; los tests de `examen-huecos/solucion` en el CI; la paridad del frente 2 con la SPEC-041
-  —hoy va en 7 recuadros por lab contra 21—; y que `verificar-instructor.py` vigile el formato del
-  recuadro y avise si el respaldo divergió.
+- **Anotado para después, del lado del material** (INFORME-SPEC-043 §6 e INFORME-SPEC-044 §10): la
+  V2 de las guías del 01, 02 y 03 —solo está hecha la del 00—; los PDF abiertos en un visor real y
+  en Windows; el examen probado en Windows; los tests de `examen-huecos/solucion` en el CI; la
+  paridad del frente 2 con la SPEC-041 —hoy va en 7 recuadros por lab contra 21—; y que
+  `verificar-instructor.py` vigile el formato del recuadro y avise si el respaldo divergió.
+- **Y una que no es del material:** el **puerto 8082 está ocupado por Docker** en esta máquina, así
+  que el lab 01 no arranca aquí sin cerrarlo (`INFORME-SPEC-044` §7.1).
 - Cobertura del temario, medida en `docs/temario/MAPA-LAB-MODULO.md`: **20 de 35 temas
   cubiertos**, 7 parciales, 8 sin cubrir. Las ocho brechas: gRPC, AOP, manejo de archivos,
   eventos de aplicación, mensajería, caché, Liquibase y OpenAPI/versionado. Tres de ellas son
