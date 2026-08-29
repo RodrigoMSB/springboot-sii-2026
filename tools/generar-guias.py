@@ -62,7 +62,15 @@ def metodo_de(texto, nombre):
         if firma.match(l) and not l.strip().startswith('//'):
             # Las anotaciones de encima son parte del método: `@Bean` es justo lo que
             # la guía señala con el dedo, y sin ella el bloque no enseña lo que dice.
-            while i > 0 and lineas[i - 1].strip().startswith('@'):
+            #
+            # Se sube mientras la línea de arriba NO cierre algo — ni `;`, ni `}`, ni
+            # `{`. Así entran también las anotaciones de varias líneas, como un
+            # `@Query("""...""")`, que con un `startswith('@')` se quedaban fuera y
+            # dejaban el bloque en una sola línea.
+            while i > 0:
+                anterior = lineas[i - 1].strip()
+                if not anterior or anterior.endswith((';', '}', '{')):
+                    break
                 i -= 1
             profundidad = 0
             abierto = False
