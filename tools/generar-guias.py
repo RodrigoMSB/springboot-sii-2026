@@ -41,7 +41,9 @@ import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 FUENTE = RAIZ / 'docs' / 'guias' / 'fuente'
-SALIDA = RAIZ / 'docs' / 'guias'
+# El PDF va A LA CARPETA DEL LAB, junto al README y al PASOS: el alumno abre la
+# carpeta de su laboratorio y lo tiene todo junto, sin tener que saber que existe
+# `docs/`. Aquí solo se queda el fuente y el estilo, que son del generador.
 ESTILO = RAIZ / 'docs' / 'guias' / 'estilo'
 BUILD = RAIZ / 'docs' / 'guias' / '.build'
 
@@ -329,6 +331,15 @@ def a_pdf(md_resuelto, destino, titulo):
         raise SystemExit(f'[ERROR] pandoc falló para {titulo}')
 
 
+def destino_de(fuente):
+    """`guia-lab-04-jpa.md` -> `labs/lab-04-jpa/guia-lab-04-jpa.pdf`."""
+    lab = fuente.stem.removeprefix('guia-')
+    carpeta = RAIZ / 'labs' / lab
+    if not carpeta.is_dir():
+        raise SystemExit(f'[ERROR] {fuente.name}: no existe la carpeta labs/{lab}')
+    return carpeta / (fuente.stem + '.pdf')
+
+
 def main():
     solo_verificar = '--verificar' in sys.argv
     filtros = [a for a in sys.argv[1:] if not a.startswith('--')]
@@ -353,7 +364,7 @@ def main():
         fallos += comprobar(comprobaciones)
 
         if not solo_verificar:
-            destino = SALIDA / (f.stem + '.pdf')
+            destino = destino_de(f)
             a_pdf(resuelto, destino, f.name)
             kb = destino.stat().st_size / 1024
             paginas = subprocess.run(['pdfinfo', str(destino)], capture_output=True, text=True)
