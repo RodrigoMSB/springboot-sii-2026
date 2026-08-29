@@ -210,8 +210,18 @@ def extraer(args):
     if args.get('sangria', 'quitar') == 'quitar' and modo != 'clase':
         lineas = desangrar(lineas)
     # Los comentarios de `solucion/` no van a la guía: la guía los explica en prosa.
-    if args.get('comentarios', 'quitar') == 'quitar' and args.get('lenguaje') == 'java':
-        lineas = [l for l in lineas if not l.strip().startswith('//')]
+    # Los comentarios de `solucion/` no van a la guía: están escritos para quien
+    # prepara la clase, y la guía ya lo explica en prosa a su manera.
+    marca = {'java': '//', 'sql': '--'}.get(args.get('lenguaje'))
+    if marca and args.get('comentarios', 'quitar') == 'quitar':
+        lineas = [l for l in lineas if not l.strip().startswith(marca)]
+        # y los huecos que dejan, si quedan dos seguidos
+        limpias = []
+        for l in lineas:
+            if not l.strip() and limpias and not limpias[-1].strip():
+                continue
+            limpias.append(l)
+        lineas = limpias
     while lineas and not lineas[0].strip():
         lineas.pop(0)
     while lineas and not lineas[-1].strip():
