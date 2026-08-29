@@ -71,3 +71,7 @@ examen-huecos/instructor/
 
 # Los bancos del arnés de independencia del examen. Efímeros.
 examen-huecos/.independencia/
+
+# Los intermedios del generador de guías y la caché de Python de `tools/`.
+__pycache__/
+docs/guias/.build/
