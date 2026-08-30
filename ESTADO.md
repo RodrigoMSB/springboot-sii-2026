@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-044 — hay cuatro guías en PDF que el alumno puede seguir solo.*
+*Última actualización: SPEC-045 — los quince labs tienen guía en PDF que el alumno puede seguir solo.*
 
 ---
 
@@ -58,23 +58,30 @@
   `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
   la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
 
-- **HAY GUÍAS EN PDF QUE EL ALUMNO SIGUE SOLO** (SPEC-044), para los labs **00, 01, 02 y 03**:
-  `docs/guias/`. Es un formato nuevo, distinto de `PASOS.md` —que es el guion de quien dicta—:
-  aquí no hay notas de conducción, y cada paso trae **el problema antes de la solución**, **la
-  alternativa que se descartó**, un **«Vas bien si…»** comprobable y un **«Si te atascas»** con el
-  error literal que el alumno va a ver.
-  - **Una metáfora por lab, y es un mundo que crece**: la oficina de la DGT que abre (00), le pone
-    una ventanilla (01), encarga a un proveedor (02) y aprende a explicar por qué un trámite no
-    procede (03).
+- **LOS QUINCE LABS TIENEN GUÍA EN PDF QUE EL ALUMNO SIGUE SOLO** (SPEC-044 el 00 al 03,
+  SPEC-045 el resto). **El PDF está en la carpeta de su lab**, junto al `README.md` y al
+  `PASOS.md`; en `docs/guias/` sólo se quedan el fuente y el estilo. Es un formato distinto de
+  `PASOS.md` —que es el guion de quien dicta—: aquí no hay notas de conducción, y cada paso trae
+  **el problema antes de la solución**, **la alternativa que se descartó**, un **«Vas bien si…»**
+  comprobable y un **«Si te atascas»** con el error literal que el alumno va a ver.
+  - **Una metáfora por lab, y es un mundo que crece, no quince analogías**: la oficina de la DGT
+    abre (00), pone una ventanilla (01), encarga a un proveedor (02), aprende a explicar por qué
+    un trámite no procede (03), compra un archivador (04-05), cuenta los viajes al sótano (06),
+    reparte un talonario entre veinte funcionarios (07), se deja inspeccionar (08), pone un
+    guardia (09), llama por teléfono a Tesorería (10), enciende su cuadro de luces (11), contrata
+    un conserje de noche (12), se muda dentro de una caja (13) y acaba **partida en cuatro
+    oficinas** (14).
   - **El código no se teclea: se extrae de `solucion/`** con `tools/generar-guias.py`, que además
-    comprueba que cada línea impresa esté ahí (`D-044-1`). 32 bloques, 0 divergencias.
-  - **Los «Si te atascas» están medidos**: once errores rotos a propósito y copiados de la
-    pantalla.
-  - **11, 15, 15 y 13 páginas · 402 KB los cuatro.**
-  - **Falta la prueba de fondo en tres de los cuatro**: la guía del 00 se siguió entera sobre
-    `practica/` limpia y llega al resultado; las del 01, 02 y 03 no. Está en `INFORME-SPEC-044` §10.
-  - **Si el formato convence, los once labs restantes van en otra SPEC.** Es la decisión que el
-    material espera del PO.
+    comprueba que cada línea impresa esté ahí (`D-044-1`). **72 bloques, 0 divergencias.**
+  - **El YAML nunca se pega**, porque copiarlo del PDF pierde la sangría y el archivo dice otra
+    cosa sin dar error: o se edita una clave que ya existe (`D-044-2`), o va marcado **«Se escribe
+    — aquí no se pega nada»** (`D-045-1`). Auditable: 0 bloques de YAML bajo «Se pega».
+  - **1.451 KB los quince**, de 9 a 15 páginas cada uno. **247 entradas de índice, todas apuntan a
+    su página.**
+  - **Falta la prueba de fondo en catorce de los quince**: la única guía seguida entera sobre
+    `practica/` limpia es la del 00. Y **de los labs 04 a 14 no queda registro de haber medido las
+    salidas y los «Si te atascas»** —se perdió con un reinicio de la máquina—, aunque están
+    escritos con el error literal. Las dos cosas, en `INFORME-SPEC-045` §8 y §9.
 
 - **HAY UN SEGUNDO INSTRUMENTO DE EVALUACIÓN, y es corto** (SPEC-043): `examen-huecos/`. Una
   aplicación pequeña que compila y arranca, con **doce huecos marcados** que el alumno completa —
@@ -511,8 +518,8 @@ Lo que viene, en orden:
    el único que no se ha probado nunca fuera de macOS.
 2. **Decidir sobre las brechas del mapa** (§2): las siete baratas primero, y después negociar con
    el SII las tres que dependen de Docker.
-3. **Las diapositivas y el material de sala.** Las guías en PDF de la SPEC-044 cubren la parte
-   del alumno en cuatro labs; una presentación para proyectar, no.
+3. **Las diapositivas y el material de sala.** Las guías en PDF cubren ya la parte del alumno en
+   los quince labs; una presentación para proyectar, no.
 4. **Resolver la aritmética del contrato con el SII** (§2 y mapa §6.4): el material va **nueve
    horas y tres sesiones** por encima de lo contratado, y el lab-14 no tiene módulo titular. Es una
    conversación, no un trabajo pendiente del material.
