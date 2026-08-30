@@ -30,8 +30,9 @@ que distinga entre «estoy muerto, reiníciame» y «estoy vivo pero no puedo at
 ## Cómo copiar el código de esta guía
 
 **Al copiar de un PDF se pierden los espacios del principio de línea, y a veces una línea larga se
-parte en dos.** Con Java no importa; **con el `application.yml` sí**, y por eso aquí nunca se te va
-a pedir pegar un bloque de YAML entero sin decírtelo. El código completo está en
+parte en dos.** Con Java no importa; **con el `application.yml` sí**, y por eso **esta guía no te
+pide pegar YAML en ningún momento**: los cuatro trozos que van al `application.yml` están marcados
+como «se escribe», y se teclean. El código completo está en
 `labs/lab-11-observabilidad/solucion/`.
 
 :::  nota
@@ -108,7 +109,9 @@ orquestador que decide si la reinicia no puede entrar a mirar: necesita **una UR
 - **Actuator con lista blanca nominal**, que es lo de aquí: se nombran uno a uno los que se quieren.
   Añadir uno nuevo pasa a ser **una decisión**, no un descuido.
 
-### Se pega
+### Se escribe — aquí no se pega nada
+
+**El YAML se escribe a mano: la sangría es el significado.** Al copiarlo del PDF se pierden los espacios del principio de línea y el archivo deja de decir esto, **sin dar error**. Son **dos espacios por nivel**, y ninguna tabulación.
 
 En `practica/src/main/resources/application.yml`, donde dice `# escribe aquí`:
 
@@ -193,6 +196,12 @@ Archivo **nuevo** `practica/src/main/java/cl/dgt/observabilidad/infra/FiltroDeCo
 el archivo entero:
 
 {{codigo lab=lab-11-observabilidad archivo=src/main/java/cl/dgt/observabilidad/infra/FiltroDeCorrelacion.java modo=entero lenguaje=java}}
+
+### Se escribe — aquí no se pega nada
+
+**El YAML se escribe a mano: la sangría es el significado.** Al copiarlo del PDF se pierden los
+espacios del principio de línea y el archivo deja de decir esto, **sin dar error**. Son **dos
+espacios por nivel**, y ninguna tabulación.
 
 Y en `application.yml`, el patrón que lo imprime — **fúndelo con el bloque `logging:` que ya
 está**:
@@ -360,9 +369,12 @@ Y el nombre del bean se pone **a mano** —`@Component("baseDeDatos")`— porque
 referencia por ese nombre: si alguien renombra la clase al refactorizar, el grupo se queda apuntando
 a nada y **no falla** — simplemente deja de vigilar la base.
 
-### Se pega
+### Se escribe — aquí no se pega nada
 
-En `application.yml`, **fundido con el `management:` del paso 1**:
+**El YAML se escribe a mano: la sangría es el significado.** Al copiarlo del PDF se pierden los espacios del principio de línea y el archivo deja de decir esto, **sin dar error**. Son **dos espacios por nivel**, y ninguna tabulación.
+
+En `application.yml`, **fundido con el `management:` del paso 1** — el bloque cuelga de
+`management:`, con dos espacios:
 
 ``` yaml
   endpoint:
@@ -437,9 +449,12 @@ reinicios que no arregla nada y tira lo que hubiera a medias.**
 
 La base de datos **no se arregla reiniciando tu proceso**. Va en readiness.
 
-### Se pega
+### Se escribe — aquí no se pega nada
 
-En `application.yml`, **fundido otra vez con el mismo `management:`**:
+**El YAML se escribe a mano: la sangría es el significado.** Al copiarlo del PDF se pierden los espacios del principio de línea y el archivo deja de decir esto, **sin dar error**. Son **dos espacios por nivel**, y ninguna tabulación.
+
+En `application.yml`, **fundido otra vez con el mismo `management:`** — esto cuelga del `health:`
+del paso 4, con seis espacios:
 
 ``` yaml
       probes:
