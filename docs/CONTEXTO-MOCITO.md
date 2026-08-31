@@ -106,12 +106,13 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 107 decisiones con fecha y razón
+│   ├── decisiones.md          ← 108 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
 │   ├── troubleshooting.md     ← tabla de problemas con número. Se cita el número
-│   ├── guias/                 ← las guías en PDF del ALUMNO (SPEC-044). Sí viajan
+│   ├── guias/                 ← el TALLER de las guías del alumno (SPEC-044 y -045).
+│   │   │                        El PDF NO está aquí: va en labs/lab-NN/
 │   │   ├── fuente/            ← el markdown con marcadores {{codigo ...}}
 │   │   └── estilo/            ← el preámbulo LaTeX y el filtro de pandoc
 │   ├── specs/                 ← SPEC-NNN-*.md
@@ -380,19 +381,24 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 28 de agosto de 2026, al cerrar la SPEC-044
+## 8 · Estado al 29 de agosto de 2026, al cerrar la SPEC-045
 
-- `main` en **`material-v1.7.0`**, CI en verde.
-- **Cuatro SPEC cerraron el 27 y el 28:**
-  - **SPEC-044** (`v1.7.0`) — **las guías en PDF del alumno**, labs 00 a 03. Formato nuevo. Si
-    convence, los once restantes van en otra SPEC: ésa es la decisión que espera el PO.
+- `main` en **`material-v1.8.0`**, CI en verde.
+- **Cinco SPEC cerraron entre el 27 y el 29:**
+  - **SPEC-045** (`v1.8.0`) — **las guías en PDF de los once labs restantes**, del 04 al 14. Con
+    ella los quince labs tienen guía del alumno, cada PDF en la carpeta de su lab. Un hallazgo:
+    seis bloques de YAML pedían un pegado contra D-044-2, corregidos, y `D-045-1` da la tercera
+    forma. **Deuda declarada:** V3 y V4 de los labs 04 a 14 no se re-midieron —un reinicio se
+    llevó la sesión que los produjo— y V2 sigue hecha solo en el 00 (INFORME-SPEC-045 §8).
+  - **SPEC-044** (`v1.7.0`) — **las guías en PDF del alumno**, labs 00 a 03. El formato que la
+    SPEC-045 extendió sin tener que cambiarlo.
   - **SPEC-041** (`v1.4.0`) — los recuadros `POR QUÉ ·` en los labs 04 a 07.
   - **SPEC-042** (`v1.5.0`) — el respaldo privado de `instructor/`.
   - **SPEC-043** (`v1.6.0`) — cuatro frentes: el examen de huecos, el porqué en los labs 08 a 14,
     la prueba de pegado en los labs 10 a 13, y el respaldo al día.
 - **El material tiene ahora TRES formatos, y no hay que confundirlos:** `PASOS.md` es el guion de
-  quien dicta; `docs/guias/*.pdf` es lo que el alumno sigue solo; `instructor/` es la chuleta con
-  los porqués. Lo que se escriba para uno no vale para otro.
+  quien dicta; `labs/lab-NN/guia-lab-NN-*.pdf` es lo que el alumno sigue solo; `instructor/` es la
+  chuleta con los porqués. Lo que se escriba para uno no vale para otro.
 - **Hay DOS instrumentos de evaluación, no uno.** `proyecto-final/` (tres horas, brief de negocio,
   rúbrica a mano) y **`examen-huecos/`** (hora y media estimada, doce huecos, se corrige solo). **El
   PO decide cuál usa.**
@@ -407,8 +413,8 @@ quedó fuera, dicho.
      `INFORME-SPEC-043` deja sin medir, y se cierra en quince minutos (§1.6).
   2. La **fila de aceptación**: `PASOS.md` sobre `practica/` sin abrir `solucion/`, del 00 al 14.
      Empezar por el 14. Pegar ya está comprobado; entenderse, no.
-  3. Las **diapositivas y el material de sala**. Las guías en PDF cubren cuatro labs del lado del
-     alumno; una presentación para proyectar sigue sin existir.
+  3. Las **diapositivas y el material de sala**. Las guías en PDF cubren ya los quince labs del
+     lado del alumno; una presentación para proyectar sigue sin existir.
   4. La casilla de **conocimientos (30 %)**, que sigue vacía.
   5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab 14 sin módulo
      titular.
