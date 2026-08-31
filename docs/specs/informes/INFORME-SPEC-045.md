@@ -274,3 +274,23 @@ blanco**, que es como tiene que llegarle al alumno.
    y sigue rompiendo el lab 01 en clase.
 6. **`estadoDelCircuito()` del lab 10 sigue sin usarse.** Viene anotado desde el INFORME-SPEC-043
    §6 y ninguna SPEC desde entonces tocaba código. Ésta tampoco.
+
+---
+
+## 10 · La entrega, y dónde queda el repositorio
+
+**La SPEC-045 está cerrada en `main`.**
+
+```
+PR       #58 · SPEC-045 · Las guías en PDF, los once labs restantes
+merge    dc29060 · main
+tag      material-v1.8.0
+```
+
+**Y el repositorio queda en `main`, actualizado.** El último paso de este cierre —y el de todo
+merge de aquí en adelante— es `git checkout main && git pull`: quien vuelva a la máquina se
+encuentra en la rama que manda y con lo que se acaba de mergear, no parado en una rama de SPEC ya
+fundida. **Comprobado al cerrar:** `main` en `dc29060`, árbol limpio, sin nada pendiente de subir.
+
+Es una instrucción del PO, y vale para las SPEC siguientes: un cierre que deja al PO en la rama
+vieja no está cerrado del todo, por muy mergeado que esté el trabajo.
