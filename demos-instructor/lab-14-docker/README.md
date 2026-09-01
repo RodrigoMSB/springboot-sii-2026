@@ -37,7 +37,7 @@ con sus tres bases separadas. El mismo código, las mismas rutas, el mismo circu
 |---|---|
 | **Docker Desktop** corriendo | única cosa que no viaja en el repositorio |
 | **Red, la primera vez** | para bajar `eclipse-temurin:25-jre-alpine` (233 MB) y `postgres:16-alpine` (388 MB). Después, ninguna |
-| RAM | **871 MiB** las siete piezas en reposo, medido. Techo configurado: 2,5 GiB (4 × 448 MB + 3 × 256 MB) |
+| RAM | **entre 853 y 887 MiB** las siete piezas, medido en tres corridas — varía con la actividad. Techo configurado: 2,5 GiB (4 × 448 MB + 3 × 256 MB) |
 | Disco | **1,28 GB** en imágenes (233 MB de capa base compartida por las cuatro) |
 
 **Baja las dos imágenes antes de la clase.** Es lo único de esta demostración que necesita
