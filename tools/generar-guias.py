@@ -27,6 +27,12 @@
 #    modo=xml      contiene=spring-boot-starter-web
 #                                         el <dependency> o <plugin> que lo contiene
 #
+#  DE DÓNDE SE EXTRAE. Por defecto, de `labs/<lab>/solucion/`, que es donde vive
+#  el código de los quince laboratorios. Una guía puede pedir otra raíz con
+#  `raiz=<ruta desde el repositorio>`, y entonces `lab=` sobra. Existe por las
+#  guías de `demos-instructor/`, que documentan material que NO es un lab y no
+#  tiene la estructura de tres carpetas (SPEC-047).
+#
 #  Uso:
 #    python3 tools/generar-guias.py                 # todas las guías
 #    python3 tools/generar-guias.py --verificar     # solo comprueba, no escribe
@@ -48,6 +54,13 @@ ESTILO = RAIZ / 'docs' / 'guias' / 'estilo'
 BUILD = RAIZ / 'docs' / 'guias' / '.build'
 
 MARCADOR = re.compile(r'\{\{codigo\s+(.*?)\}\}', re.S)
+
+# Las guías cuyo PDF no va a `labs/<lab>/`. Se listan aquí, una a una y a la
+# vista, en vez de deducirlas de una convención: son la excepción, y una
+# excepción que se deduce sola es una excepción que nadie repasa.
+DESTINOS_FUERA_DE_LABS = {
+    'guia-demo-lab-14-docker': RAIZ / 'demos-instructor' / 'lab-14-docker',
+}
 
 
 # -----------------------------------------------------------------------------
@@ -189,12 +202,14 @@ def desangrar(lineas):
 
 
 def extraer(args):
-    lab = args['lab']
+    lab = args.get('lab')
     if args.get('modo') == 'pasos':
         lineas, ruta = bloque_de_pasos(lab, args['ancla'])
         return lineas, ruta
     archivo = args['archivo']
-    ruta = RAIZ / 'labs' / lab / 'solucion' / archivo
+    # `raiz=` gana sobre `lab=`: es para material que no vive en labs/.
+    base = (RAIZ / args['raiz']) if 'raiz' in args else (RAIZ / 'labs' / lab / 'solucion')
+    ruta = base / archivo
     if not ruta.is_file():
         raise SystemExit(f'[ERROR] no existe {ruta.relative_to(RAIZ)}')
     texto = ruta.read_text(encoding='utf-8')
@@ -220,7 +235,12 @@ def extraer(args):
     # Los comentarios de `solucion/` no van a la guía: la guía los explica en prosa.
     # Los comentarios de `solucion/` no van a la guía: están escritos para quien
     # prepara la clase, y la guía ya lo explica en prosa a su manera.
-    marca = {'java': '//', 'sql': '--'}.get(args.get('lenguaje'))
+    # `yaml` y `dockerfile` se añadieron con la guía de la demostración (SPEC-047):
+    # su compose y su Dockerfile llevan bloques de comentario largos, y una guía
+    # que los imprimiera enteros sería ilegible. El único modo de yaml que se usaba
+    # antes, `clave`, ya se saltaba los comentarios por su cuenta, así que esto no
+    # cambia ninguna de las guías anteriores.
+    marca = {'java': '//', 'sql': '--', 'yaml': '#', 'dockerfile': '#'}.get(args.get('lenguaje'))
     if marca and args.get('comentarios', 'quitar') == 'quitar':
         lineas = [l for l in lineas if not l.strip().startswith(marca)]
         # y los huecos que dejan, si quedan dos seguidos
@@ -272,7 +292,12 @@ def parsear(cuerpo):
             raise SystemExit(f'[ERROR] argumento sin `=` en un marcador: {trozo!r}')
         k, v = trozo.split('=', 1)
         args[k] = v
-    obligatorios = ('lab', 'lenguaje') if args.get('modo') == 'pasos' else ('lab', 'archivo', 'lenguaje')
+    if args.get('modo') == 'pasos':
+        obligatorios = ('lab', 'lenguaje')
+    elif 'raiz' in args:
+        obligatorios = ('raiz', 'archivo', 'lenguaje')
+    else:
+        obligatorios = ('lab', 'archivo', 'lenguaje')
     for obligatorio in obligatorios:
         if obligatorio not in args:
             raise SystemExit(f'[ERROR] falta `{obligatorio}` en un marcador: {cuerpo!r}')
@@ -350,7 +375,14 @@ def a_pdf(md_resuelto, destino, titulo):
 
 
 def destino_de(fuente):
-    """`guia-lab-04-jpa.md` -> `labs/lab-04-jpa/guia-lab-04-jpa.pdf`."""
+    """`guia-lab-04-jpa.md` -> `labs/lab-04-jpa/guia-lab-04-jpa.pdf`.
+
+    Y las de `DESTINOS_FUERA_DE_LABS`, a la carpeta que digan."""
+    if fuente.stem in DESTINOS_FUERA_DE_LABS:
+        carpeta = DESTINOS_FUERA_DE_LABS[fuente.stem]
+        if not carpeta.is_dir():
+            raise SystemExit(f'[ERROR] {fuente.name}: no existe {carpeta.relative_to(RAIZ)}')
+        return carpeta / (fuente.stem + '.pdf')
     lab = fuente.stem.removeprefix('guia-')
     carpeta = RAIZ / 'labs' / lab
     if not carpeta.is_dir():

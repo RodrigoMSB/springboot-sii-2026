@@ -3,8 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026. Revisado el 31 de agosto de 2026 al cerrar la SPEC-046, sobre
-`main` en `material-v1.9.0`.*
+*Escrito el 27 de agosto de 2026. Revisado el 1 de septiembre de 2026 al cerrar la SPEC-047, sobre
+`main` en `material-v1.10.0`.*
 
 ---
 
@@ -15,8 +15,8 @@ El material del **curso de Spring Boot para el SII**, año 2026. Repositorio
 cuenta `RodrigoMSB`.
 
 No es una aplicación: es **material de enseñanza**. Lo que aquí se llama "el producto" son
-dieciséis laboratorios, dos instrumentos de evaluación, el temario y el tooling que verifica que
-todo eso siga siendo verdad.
+dieciséis laboratorios, dos instrumentos de evaluación, una demostración que solo corre el
+instructor, el temario y el tooling que verifica que todo eso siga siendo verdad.
 
 ---
 
@@ -43,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — **109** decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **111** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -76,6 +76,11 @@ Están escritas en tres sitios, y los tres mandan:
   alternativa real, se dice y se pasa: no se inventan opciones para rellenar el formato.
 - **`D-042-1` · `instructor/` se respalda en un repositorio PRIVADO aparte.** `D-031-2` no
   cambia: el repositorio público sigue sin llevarla.
+- **`D-047-1` · Lo que necesita algo que no cabe en la maleta va en `demos-instructor/`, fuera de
+  `labs/`.** No es un laboratorio: no lleva `practica/`, ni `PASOS.md`, ni bloques copiables. Y
+  así la exclusión del CI es **estructural**, no una excepción que mantener.
+- **`D-047-2` · Material duplicado, o se vigila con un verificador que enumera sus diferencias, o
+  no se duplica.** Si la copia y el original discrepan, **manda el original**.
 - **`D-022-3` · Offline por defecto.** `--offline` es el contrato, no una limitación.
 - **`D-022-4` · Git LFS prohibido, sin excepciones.**
 - **`D-022-5` · Techo de 95 MB por archivo.** GitHub rechaza los de más de 100.
@@ -106,7 +111,7 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 109 decisiones con fecha y razón
+│   ├── decisiones.md          ← 111 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
@@ -126,6 +131,9 @@ springboot-sii-2026/
 ├── labs/
 │   ├── lab-00-hola-mundo ... lab-14-microservicios   ← dieciséis: quince del 00 al 14,
 │   │                                                  más lab-05b-muchos-a-muchos
+├── demos-instructor/          ← lo que el instructor PROYECTA y el alumno no corre.
+│   └── lab-14-docker/         ← el lab 14 con Docker Compose (SPEC-047). Fuera de labs/
+│                                 a propósito: así el CI lo excluye sin excepciones
 ├── proyecto-final/            ← el instrumento de evaluación largo: tres horas
 │   ├── base/ brief/ rubrica/ plantillas/ instructor/
 ├── examen-huecos/             ← el corto: doce huecos, hora y media, se corrige solo
@@ -141,9 +149,10 @@ springboot-sii-2026/
 │   ├── verificar-temario.py
 │   ├── verificar-instructor.py
 │   ├── verificar-pasos-copiables.py
+│   ├── verificar-demo-docker.py    ← la copia del 14 no se separa (D-047-2)
 │   ├── verificar-guion-vs-practica.py
 │   └── verificar-tamanos.sh
-└── .github/workflows/material-ci.yml   ← seis jobs
+└── .github/workflows/material-ci.yml   ← siete jobs
 ```
 
 ### La anatomía de un lab
@@ -272,6 +281,7 @@ maleta, y se sostiene porque quien genera guías es quien prepara el material, n
 
 ```bash
 python3 tools/verificar-temario.py            # .md <-> .docx no divergen (pide python-docx)
+python3 tools/verificar-demo-docker.py        # la demostración con Docker dice el mismo código que el lab 14
 python3 tools/verificar-instructor.py         # instructor/ al día con solucion/ + XML válido
 python3 tools/verificar-pasos-copiables.py    # PASOS.md no promete código que solucion/ no tiene
 python3 tools/verificar-guion-vs-practica.py  # lo que PASOS.md promete de practica/, practica/ lo trae
@@ -306,13 +316,14 @@ propósito, que es de lo que va el examen.
 
 ### El CI
 
-`.github/workflows/material-ci.yml`, **seis jobs**:
+`.github/workflows/material-ci.yml`, **siete jobs**:
 
 | Job | Qué protege |
 |---|---|
 | `temario` | el `.md` y el `.docx` no divergen |
 | `siembra` | toda `TEORIA.md` con sucesor siembra el módulo N+1 (`P-18`) |
-| `labs` | los **41** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` |
+| `labs` | los **41** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` — **NO `demos-instructor/`**, y ésa es toda la exclusión de Docker |
+| `demo-docker` | la copia del lab 14 en `demos-instructor/` no se ha separado del laboratorio. Compara archivos: **no necesita Docker** |
 | `pasos` | los dieciséis guiones traen el código y no prometen lo que la solución no tiene (196 bloques, 108 métodos) |
 | `guion-practica` | lo que los guiones prometen de `practica/` es lo que `practica/` trae (96 promesas) |
 | `labs-sh` | los scripts, en Linux y en Git Bash |
@@ -385,10 +396,17 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 31 de agosto de 2026, al cerrar la SPEC-046
+## 8 · Estado al 1 de septiembre de 2026, al cerrar la SPEC-047
 
-- `main` en **`material-v1.9.0`**, CI en verde.
-- **Seis SPEC cerraron entre el 27 y el 31:**
+- `main` en **`material-v1.10.0`**, CI en verde, **siete jobs**.
+- **Siete SPEC cerraron entre el 27 de agosto y el 1 de septiembre:**
+  - **SPEC-047** (`v1.10.0`) — **el lab 14 con Docker Compose**, en `demos-instructor/`, para que
+    el PO lo proyecte. **El alumno no lo corre.** Siete contenedores en 21 s contra cuatro
+    terminales y un orden que hay que recordar; un proceso que muere y **vuelve solo en 11 s**.
+    El código es el mismo: 32 archivos idénticos byte a byte, vigilados por `demo-docker`.
+    **Hallazgo:** `docker compose kill` NO reinicia el contenedor aunque la política esté puesta
+    —responde a que muera el proceso, no a que lo mate un operador—, y la demostración se rehízo
+    en dos actos por eso.
   - **SPEC-046** (`v1.9.0`) — **nace el lab 05b, `muchos-a-muchos`**, entre el 05 y el 06 y sin
     renumerar nada. Lo pidió un alumno en clase dictando el 05, y cierra el hueco del arco:
     estaban `@ManyToOne` y `@OneToMany`, faltaba la tercera forma. **El número: el mismo cambio
@@ -417,7 +435,10 @@ quedó fuera, dicho.
 - **`instructor/` va en 181 recuadros `POR QUÉ ·`** repartidos en dieciocho carpetas, y respaldado:
   293 archivos, huellas cuadradas, repositorio privado con 404 sin credenciales.
 - **El material está terminado**: dieciséis labs, las tres carpetas en todos, la maleta completa, y
-  dos instrumentos de evaluación.
+  dos instrumentos de evaluación. Y aparte, **una demostración que solo corre el instructor**.
+- **Docker sigue fuera de la maleta y fuera del CI.** La demostración del 14 lo necesita, vive en
+  `demos-instructor/` —fuera de `labs/`— y por eso ningún job la toca. Lo único que el CI vigila
+  de ella es que su copia del código no se separe del laboratorio.
 - **Lo que falta es del PO, no del material:**
   1. **Elegir instrumento**, y si es el de huecos, medir cuánto tarda de verdad — es lo único que
      `INFORME-SPEC-043` deja sin medir, y se cierra en quince minutos (§1.6).

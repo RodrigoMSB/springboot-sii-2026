@@ -20,6 +20,10 @@
 #   5. `guion-practica` — el guion tampoco miente sobre el PUNTO DE PARTIDA:
 #      lo que promete de `practica/` —carpetas vacías, archivos que ya están,
 #      archivos por crear— es lo que `practica/` trae (SPEC-FIX-10).
+#   6. `demo-docker` — la copia del lab 14 que vive en `demos-instructor/` no se
+#      separa del laboratorio del que salió (SPEC-047). Compara archivos, así que
+#      NO necesita Docker: es lo único de esa demostración que este CI puede
+#      mirar, y en el bloque del job está dicho por qué.
 #
 #  Lo que este CI NO puede proteger: `labs/*/instructor/`, que no viaja en el
 #  repositorio (D-031-2) y por tanto no existe en el runner. Un job suyo pasaría
@@ -52,6 +56,7 @@ on:
       - 'docs/temario/**'
       - 'tools/**'
       - 'labs/**'
+      - 'demos-instructor/**'
       - 'proyecto-final/**'
       - 'repo-maven/**'
       - '.github/workflows/material-ci.yml'
@@ -376,6 +381,44 @@ jobs:
             exit 1
           fi
           echo "[OK] 0 descargas: la maleta está completa."
+  # ---------------------------------------------------------------------------
+  #  demo-docker · la copia del lab 14 no se separa del laboratorio.
+  #
+  #  `demos-instructor/lab-14-docker/` es material de DEMOSTRACION del instructor
+  #  (SPEC-047): el PO lo levanta con Docker en su Mac, proyectando. Los alumnos
+  #  no lo corren, y por eso vive fuera de `labs/`.
+  #
+  #  DOCKER NO ESTA EN ESTE CI Y NO VA A ESTARLO. Ningun job levanta el compose,
+  #  construye una imagen ni descarga `postgres:16-alpine`. La exclusion es
+  #  ESTRUCTURAL, no una lista de excepciones: el job `labs` recorre
+  #  `labs proyecto-final examen-huecos`, y `demos-instructor/` no esta ahi, asi
+  #  que sus cuatro `pom.xml` no entran en la compilacion offline. No hay nada que
+  #  anadir a ningun job para excluirlo; lo que habria que anadir es lo contrario.
+  #
+  #  Lo que SI se puede vigilar sin Docker es la deriva. La demostracion es una
+  #  COPIA del `solucion/` del lab 14, y copiar codigo es aceptar que se separe:
+  #  el dia que alguien arregle un defecto en el laboratorio, la demostracion se
+  #  queda con el defecto y nadie se entera hasta que se proyecta en una sala.
+  #  `verificar-demo-docker.py` compara los dos arboles archivo a archivo y exige
+  #  que sean identicos salvo en las cuatro diferencias declaradas, que son
+  #  exactamente las piezas que el orquestador reemplaza.
+  #
+  #  No es un gate decorativo (P-05): si alguien toca un controlador del lab 14 y
+  #  no la copia, este job se pone rojo.
+  # ---------------------------------------------------------------------------
+  demo-docker:
+    name: demo-docker · la copia no se separa del lab 14
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: La demostracion con Docker dice el mismo codigo que el laboratorio
+        run: python3 tools/verificar-demo-docker.py
+
 
   # ---------------------------------------------------------------------------
   #  El andamiaje de los labs: los scripts que el ALUMNO ejecuta.

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-046 — nace el lab 05b, muchos a muchos: son dieciséis labs.*
+*Última actualización: SPEC-047 — el lab 14 con Docker, para que el instructor lo proyecte.*
 
 ---
 
@@ -166,15 +166,33 @@
 - **El manifiesto pedagógico**: `MANIFIESTO.md`. Por qué el curso se enseña así. Quien vaya a
   dictar lo lee **antes** que nada.
 
-- **Un CI de seis jobs** (`.github/workflows/material-ci.yml`):
+- **Un CI de siete jobs** (`.github/workflows/material-ci.yml`):
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
-  siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
-  necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
-  `proyecto-final/base`) · **`pasos`** (los **dieciséis** guiones traen el código para pegar y ninguno
+  siguiente) · **`labs`** (los **41** proyectos Maven compilan **offline**, y falla si alguien
+  necesitó la red: el Lab 14 aporta ocho —cuatro servicios × dos carpetas—, el 05b dos, más
+  `proyecto-final/base` y los dos de `examen-huecos`) · **`demo-docker`** (la copia del lab 14 que
+  vive en `demos-instructor/` no se ha separado del laboratorio: **compara archivos, no necesita
+  Docker**) · **`pasos`** (los **dieciséis** guiones traen el código para pegar y ninguno
   promete un código que `solucion/` ya no tenga: **196 bloques y 108 métodos** comprobados contra la
   solución) · **`guion-practica`** (lo que los dieciséis guiones prometen de `practica/` —carpetas
   vacías, archivos que ya están, archivos por crear— es lo que `practica/` trae: **96 promesas**
   comprobadas) · `labs-sh` (los scripts, en Linux y en Git Bash).
+
+- **HAY MATERIAL QUE EL INSTRUCTOR PROYECTA Y EL ALUMNO NO CORRE** (SPEC-047):
+  `demos-instructor/`. Existe porque hay cosas que vale la pena **enseñar** y no caben en la
+  maleta. **Nada de ahí es requisito para aprobar y nada entra en el clon del alumno.**
+  - **`lab-14-docker/`** — el sistema del Lab 14, **los mismos cuatro servicios**, levantado con
+    `docker compose up` en vez de cuatro terminales. **Siete contenedores en 21 s**, 853–887 MiB.
+    Demuestra qué aporta un orquestador: el orden de arranque escrito una vez, las bases como
+    contenedores, los servicios hablándose **por nombre**, y un proceso que muere y **vuelve solo
+    en 11 s** sin que el usuario vea un error.
+  - **El código es el mismo, y está comprobado**: 32 archivos idénticos byte a byte y cuatro
+    diferencias declaradas, que son las piezas que el orquestador reemplaza (`D-047-2`).
+  - **Docker no entra en el CI, y la exclusión es estructural** (`D-047-1`): el job `labs` recorre
+    `labs proyecto-final examen-huecos`, y `demos-instructor/` no está ahí. No hubo que escribir
+    ninguna excepción.
+  - Necesita **Docker Desktop** y, **la primera vez, red** para bajar dos imágenes base. Después,
+    ninguna.
 
 ## 1.a · Lo que se retiró, y dónde está
 

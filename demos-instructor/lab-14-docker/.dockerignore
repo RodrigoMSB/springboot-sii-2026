@@ -1,0 +1,9 @@
+# Al contexto de construcción solo le hace falta el jar. Sin esto, cada `build`
+# empaqueta y sube los fuentes de los cuatro servicios al demonio de Docker.
+sistema/*/src
+sistema/*/pom.xml
+sistema/.mvn
+sistema/mvnw
+sistema/mvnw.cmd
+*.md
+*.pdf
