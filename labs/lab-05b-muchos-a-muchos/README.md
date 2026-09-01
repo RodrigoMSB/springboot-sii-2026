@@ -50,7 +50,7 @@ anotación.
 
 | | |
 |---|---|
-| **`practica/`** | Donde trabajas. `Documento` viene dado sin su lado espejo; a `Tramite` le falta la relación entera, y las seis demos llegan vacías. Los dos instrumentos de `soporte/` —el contador y el mirador de la intermedia— vienen hechos: son el arnés, no el ejercicio. |
+| **`practica/`** | Donde trabajas. `Documento` viene dado sin su lado espejo; a `Tramite` le falta la relación entera, y las seis demos llegan vacías. El contador de sentencias y el mirador de la tabla intermedia vienen hechos: son el arnés del laboratorio, no el ejercicio. |
 | **`solucion/`** | El mismo proyecto, terminado. |
 
 Los dos son proyectos completos y arrancan solos.
