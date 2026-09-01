@@ -3,8 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026 al cerrar la SPEC-044, sobre
-`main` en `material-v1.7.0`.*
+*Escrito el 27 de agosto de 2026. Revisado el 31 de agosto de 2026 al cerrar la SPEC-046, sobre
+`main` en `material-v1.9.0`.*
 
 ---
 
@@ -15,8 +15,8 @@ El material del **curso de Spring Boot para el SII**, año 2026. Repositorio
 cuenta `RodrigoMSB`.
 
 No es una aplicación: es **material de enseñanza**. Lo que aquí se llama "el producto" son
-quince laboratorios, un proyecto de evaluación, el temario y el tooling que verifica que todo
-eso siga siendo verdad.
+dieciséis laboratorios, dos instrumentos de evaluación, el temario y el tooling que verifica que
+todo eso siga siendo verdad.
 
 ---
 
@@ -43,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — **107** decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **109** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -106,7 +106,7 @@ springboot-sii-2026/
 ├── .sdkmanrc                  ← java=25-tem
 ├── docs/
 │   ├── CONTEXTO-MOCITO.md     ← este archivo
-│   ├── decisiones.md          ← 108 decisiones con fecha y razón
+│   ├── decisiones.md          ← 109 decisiones con fecha y razón
 │   ├── adn/adn-cypress.md     ← P-01..P-18, A-01..A-04
 │   ├── entorno-alumno.md
 │   ├── guion-reinicio-de-sala.md
@@ -124,7 +124,8 @@ springboot-sii-2026/
 │       ├── MAPA-LAB-MODULO.md               ← trazabilidad lab ↔ módulo
 │       └── README.md
 ├── labs/
-│   ├── lab-00-hola-mundo ... lab-14-microservicios   ← quince, del 00 al 14
+│   ├── lab-00-hola-mundo ... lab-14-microservicios   ← dieciséis: quince del 00 al 14,
+│   │                                                  más lab-05b-muchos-a-muchos
 ├── proyecto-final/            ← el instrumento de evaluación largo: tres horas
 │   ├── base/ brief/ rubrica/ plantillas/ instructor/
 ├── examen-huecos/             ← el corto: doce huecos, hora y media, se corrige solo
@@ -147,7 +148,7 @@ springboot-sii-2026/
 
 ### La anatomía de un lab
 
-Los quince tienen exactamente la misma forma:
+Los dieciséis tienen exactamente la misma forma:
 
 ```
 lab-NN-nombre/
@@ -165,9 +166,11 @@ lab-NN-nombre/
   chuleta de quien dicta. La genera quien prepara la sesión, a partir de `solucion/`.
   Lo mismo con `proyecto-final/instructor/`, que lleva la solución de referencia.
   **Desde la SPEC-042 sí tiene respaldo**, en un repositorio privado aparte
-  (`springboot-sii-2026-instructor`): dieciséis carpetas, **245 archivos**, las mismas rutas.
-  **En los labs 04 a 07** cada decisión técnica lleva además su recuadro `POR QUÉ ·` — son
-  **102** (SPEC-041). Los otros once labs y el proyecto final aún no.
+  (`springboot-sii-2026-instructor`): **dieciocho carpetas, 293 archivos**, las mismas rutas.
+  Cada decisión técnica lleva además su recuadro `POR QUÉ ·`: **181 en total** — 83 en los labs
+  04 a 07 (SPEC-041), 57 en los labs 08 a 14 y el examen (SPEC-043) y 41 en el 05b (SPEC-046).
+  La densidad **no** es pareja: 21 recuadros por lab en los primeros contra 7 en los segundos, y
+  está dicho.
 - **`examen-huecos/` no es un lab y no tiene `PASOS.md`.** Tiene `base/` con doce huecos marcados,
   `solucion/`, y un test por hueco. **Su `solucion/` SÍ viaja** (`D-043-2`): lo que se protege es la
   guía de corrección, que vive en `instructor/`.
@@ -182,7 +185,7 @@ mano con `python3 tools/verificar-instructor.py`, y **el respaldo también: nada
 Si toco `instructor/`, al terminar corro `tools/instructor-respaldo.sh respaldar` o el respaldo
 se queda atrás sin avisar (INFORME-SPEC-042 §9).
 
-### Los quince labs y su puerto
+### Los dieciséis labs y su puerto
 
 | Lab | Tema | Puerto | El número que se proyecta |
 |---|---|---|---|
@@ -192,6 +195,7 @@ se queda atrás sin avisar (INFORME-SPEC-042 §9).
 | 03 | `errores` | 8086 | 404 con cuerpo, 400 con los campos |
 | 04 | `jpa` | 8100 | una clase y una tabla son la misma cosa |
 | 05 | `relaciones` | 8088 | 1 SELECT con LAZY, 4 con EAGER |
+| 05b | `muchos-a-muchos` | 8111 | la tabla intermedia. 1 sentencia con `Set`, 6 con `List` |
 | 06 | `rendimiento` | 8090 | el N+1: 201 consultas contra 1 |
 | 07 | `concurrencia` | 8092 | 20 emisiones a la vez: 21 de 21 con candado |
 | 08 | `testing` | 8094 | el rojo provocado. 0,03 s → 0,7 s con Spring |
@@ -296,7 +300,7 @@ for p in $(find labs proyecto-final examen-huecos -name pom.xml -not -path '*/in
 done
 ```
 
-Son **39 proyectos**: el lab 14 aporta ocho (cuatro servicios × dos carpetas) y `examen-huecos`,
+Son **41 proyectos**: el lab 14 aporta ocho (cuatro servicios × dos carpetas), el 05b dos y `examen-huecos`,
 dos. **Los del examen se compilan pero NO se testean**: los doce tests de su `base/` están rojos a
 propósito, que es de lo que va el examen.
 
@@ -308,9 +312,9 @@ propósito, que es de lo que va el examen.
 |---|---|
 | `temario` | el `.md` y el `.docx` no divergen |
 | `siembra` | toda `TEORIA.md` con sucesor siembra el módulo N+1 (`P-18`) |
-| `labs` | los **39** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` |
-| `pasos` | los quince guiones traen el código y no prometen lo que la solución no tiene (146 bloques, 87 métodos) |
-| `guion-practica` | lo que los guiones prometen de `practica/` es lo que `practica/` trae (88 promesas) |
+| `labs` | los **41** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` |
+| `pasos` | los dieciséis guiones traen el código y no prometen lo que la solución no tiene (196 bloques, 108 métodos) |
+| `guion-practica` | lo que los guiones prometen de `practica/` es lo que `practica/` trae (96 promesas) |
 | `labs-sh` | los scripts, en Linux y en Git Bash |
 
 `pull_request` **no lleva filtro de rutas** a propósito: con filtro, un PR que solo tocara
@@ -354,7 +358,7 @@ git tag material-vX.Y.Z && git push origin material-vX.Y.Z
 - **El informe va en su propio commit**, al final, en `docs/specs/informes/INFORME-SPEC-NNN.md`.
 - **`ESTADO.md` se actualiza al cerrar.** Va en el commit del informe.
 - **Tag al cerrar**: `material-vX.Y.Z`. Patch bump para un `SPEC-FIX`, minor para una SPEC que
-  agrega material. Hoy vamos en `material-v1.7.0`.
+  agrega material. Hoy vamos en `material-v1.9.0`.
 
 > ⚠️ `main` **no** tiene protección en el servidor: GitHub no la permite en repos privados del
 > plan Free. La regla es convencional. El candado está especificado y congelado
@@ -381,10 +385,15 @@ quedó fuera, dicho.
 
 ---
 
-## 8 · Estado al 29 de agosto de 2026, al cerrar la SPEC-045
+## 8 · Estado al 31 de agosto de 2026, al cerrar la SPEC-046
 
-- `main` en **`material-v1.8.0`**, CI en verde.
-- **Cinco SPEC cerraron entre el 27 y el 29:**
+- `main` en **`material-v1.9.0`**, CI en verde.
+- **Seis SPEC cerraron entre el 27 y el 31:**
+  - **SPEC-046** (`v1.9.0`) — **nace el lab 05b, `muchos-a-muchos`**, entre el 05 y el 06 y sin
+    renumerar nada. Lo pidió un alumno en clase dictando el 05, y cierra el hueco del arco:
+    estaban `@ManyToOne` y `@OneToMany`, faltaba la tercera forma. **El número: el mismo cambio
+    cuesta 1 sentencia con `Set` y 6 con `List`** — con `List`, Hibernate borra la relación
+    entera del trámite y la reinserta. Puertos 8110/8111 y 55447/55448.
   - **SPEC-045** (`v1.8.0`) — **las guías en PDF de los once labs restantes**, del 04 al 14. Con
     ella los quince labs tienen guía del alumno, cada PDF en la carpeta de su lab. Un hallazgo:
     seis bloques de YAML pedían un pegado contra D-044-2, corregidos, y `D-045-1` da la tercera
@@ -402,18 +411,19 @@ quedó fuera, dicho.
 - **Hay DOS instrumentos de evaluación, no uno.** `proyecto-final/` (tres horas, brief de negocio,
   rúbrica a mano) y **`examen-huecos/`** (hora y media estimada, doce huecos, se corrige solo). **El
   PO decide cuál usa.**
-- **Los quince guiones ya se han pegado.** La V1 estaba pendiente en el 10, 11, 12 y 13, y encontró
-  de todo: el guion del 10 no parseaba pegado al pie de la letra. Corregidos y comprobados.
-- **`instructor/` va en 140 recuadros `POR QUÉ ·`** repartidos en diecisiete carpetas, y respaldado:
-  279 archivos, huellas cuadradas, repositorio privado con 404 sin credenciales.
-- **El material está terminado**: quince labs, las tres carpetas en todos, la maleta completa, y dos
-  instrumentos de evaluación.
+- **Los dieciséis guiones ya se han pegado.** La V1 estaba pendiente en el 10, 11, 12 y 13, y
+  encontró de todo: el guion del 10 no parseaba pegado al pie de la letra. La del 05b encontró un
+  bloque sin su `import` (D-043-3), y por eso se hace.
+- **`instructor/` va en 181 recuadros `POR QUÉ ·`** repartidos en dieciocho carpetas, y respaldado:
+  293 archivos, huellas cuadradas, repositorio privado con 404 sin credenciales.
+- **El material está terminado**: dieciséis labs, las tres carpetas en todos, la maleta completa, y
+  dos instrumentos de evaluación.
 - **Lo que falta es del PO, no del material:**
   1. **Elegir instrumento**, y si es el de huecos, medir cuánto tarda de verdad — es lo único que
      `INFORME-SPEC-043` deja sin medir, y se cierra en quince minutos (§1.6).
-  2. La **fila de aceptación**: `PASOS.md` sobre `practica/` sin abrir `solucion/`, del 00 al 14.
+  2. La **fila de aceptación**: `PASOS.md` sobre `practica/` sin abrir `solucion/`, los dieciséis.
      Empezar por el 14. Pegar ya está comprobado; entenderse, no.
-  3. Las **diapositivas y el material de sala**. Las guías en PDF cubren ya los quince labs del
+  3. Las **diapositivas y el material de sala**. Las guías en PDF cubren ya los dieciséis labs del
      lado del alumno; una presentación para proyectar sigue sin existir.
   4. La casilla de **conocimientos (30 %)**, que sigue vacía.
   5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab 14 sin módulo
@@ -463,7 +473,7 @@ quedó fuera, dicho.
 
 ## 10 · Convenciones de nombres del código (SPEC-040)
 
-**Un rol, un nombre, una anotación**, en los quince labs. Cero divergencias medidas.
+**Un rol, un nombre, una anotación**, en los dieciséis labs. Cero divergencias medidas.
 
 | Rol | Paquete | Anotación |
 |---|---|---|
