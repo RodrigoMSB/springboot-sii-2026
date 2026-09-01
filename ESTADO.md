@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-045 — los quince labs tienen guía en PDF que el alumno puede seguir solo.*
+*Última actualización: SPEC-046 — nace el lab 05b, muchos a muchos: son dieciséis labs.*
 
 ---
 
@@ -10,7 +10,8 @@
 - **El temario definitivo** (v3, julio 2026): `docs/temario/`. Son 36 horas, 12 sesiones de 3,
   15 módulos. El `.md` manda; el `.docx` es lo que se le entrega al SII.
 
-- **EL ARCO, COMPLETO: quince labs de construcción guiada, del 00 al 14.** Es todo el material
+- **EL ARCO, COMPLETO: dieciséis labs de construcción guiada — quince numerados del 00 al 14, más
+  el 05b, que entró después entre el 05 y el 06.** Es todo el material
   que el alumno usa. Cada uno con `README.md`, `PASOS.md` y **tres carpetas** (`practica/`,
   `solucion/`, `instructor/`). Sin Docker, sin instalar nada, sin red.
 
@@ -22,6 +23,7 @@
   | 03 | `errores` | 404 con cuerpo, 400 con los campos, y el mensaje interno que nunca sale |
   | 04 | `jpa` | una clase y una tabla son la misma cosa; el SQL en la consola |
   | 05 | `relaciones` | **1 SELECT con LAZY, 4 con EAGER**, y la `LazyInitializationException` |
+  | 05b | `muchos-a-muchos` | la tabla intermedia que nadie escribe, y **1 sentencia con `Set` contra 6 con `List`** |
   | 06 | `rendimiento` | el N+1: **201 consultas contra 1** |
   | 07 | `concurrencia` | 20 emisiones a la vez: **21 de 21** con candado |
   | 08 | `testing` | el rojo provocado: `expected: <5938> but was: <5489>`. De 0,03 s a 0,7 s con Spring |
@@ -45,11 +47,11 @@
   - Los **20 requisitos del encargo están atados a su lab y su paso**: no se evalúa nada que no se
     haya enseñado.
 
-- **Los quince `PASOS.md` traen el código listo para pegar** (SPEC-038 y -039): cada paso dice el
+- **Los dieciséis `PASOS.md` traen el código listo para pegar** (SPEC-038, -039 y -046): cada paso dice el
   bloque exacto, el archivo y el sitio. El instructor lo tiene en una ventana y `practica/` en la
   otra. `instructor/` queda para preparar la clase y para el *por qué*.
 
-- **La estructura de tres carpetas rige en los quince** (SPEC-031, -032, -033, -037): `practica/` sin
+- **La estructura de tres carpetas rige en los dieciséis** (SPEC-031, -032, -033, -037, -046): `practica/` sin
   una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
   explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
   `.gitignore`): es la chuleta de quien dicta, y versionarla anularía el motivo de haber vaciado
@@ -64,7 +66,7 @@
   `PASOS.md` —que es el guion de quien dicta—: aquí no hay notas de conducción, y cada paso trae
   **el problema antes de la solución**, **la alternativa que se descartó**, un **«Vas bien si…»**
   comprobable y un **«Si te atascas»** con el error literal que el alumno va a ver.
-  - **Una metáfora por lab, y es un mundo que crece, no quince analogías**: la oficina de la DGT
+  - **Una metáfora por lab, y es un mundo que crece, no dieciséis analogías**: la oficina de la DGT
     abre (00), pone una ventanilla (01), encarga a un proveedor (02), aprende a explicar por qué
     un trámite no procede (03), compra un archivador (04-05), cuenta los viajes al sótano (06),
     reparte un talonario entre veinte funcionarios (07), se deja inspeccionar (08), pone un
@@ -76,12 +78,12 @@
   - **El YAML nunca se pega**, porque copiarlo del PDF pierde la sangría y el archivo dice otra
     cosa sin dar error: o se edita una clave que ya existe (`D-044-2`), o va marcado **«Se escribe
     — aquí no se pega nada»** (`D-045-1`). Auditable: 0 bloques de YAML bajo «Se pega».
-  - **1.451 KB los quince**, de 9 a 15 páginas cada uno. **247 entradas de índice, todas apuntan a
-    su página.**
-  - **Falta la prueba de fondo en catorce de los quince**: la única guía seguida entera sobre
-    `practica/` limpia es la del 00. Y **de los labs 04 a 14 no queda registro de haber medido las
-    salidas y los «Si te atascas»** —se perdió con un reinicio de la máquina—, aunque están
-    escritos con el error literal. Las dos cosas, en `INFORME-SPEC-045` §8 y §9.
+  - **1.604 KB los dieciséis**, de 9 a 15 páginas cada uno.
+  - **Falta la prueba de fondo en quince de los dieciséis**: la única guía seguida entera sobre
+    `practica/` limpia sigue siendo la del 00. La del 05b tampoco —lo que se pegó allí fue su
+    `PASOS.md`, que es otro documento (`INFORME-SPEC-046` §4.1)—. Y **de los labs 04 a 14 no queda
+    registro de haber medido las salidas y los «Si te atascas»** —se perdió con un reinicio de la
+    máquina—, aunque están escritos con el error literal. Todo en `INFORME-SPEC-045` §8 y §9.
 
 - **HAY UN SEGUNDO INSTRUMENTO DE EVALUACIÓN, y es corto** (SPEC-043): `examen-huecos/`. Una
   aplicación pequeña que compila y arranca, con **doce huecos marcados** que el alumno completa —
@@ -100,7 +102,8 @@
   - **El `proyecto-final/` no se tocó.** Sigue entero, y son dos instrumentos, no uno.
 
 - **`instructor/` tiene respaldo, y sigue sin viajar al repositorio público** (SPEC-042). Las
-  dieciséis carpetas —los quince labs y el proyecto final, **245 archivos**— están en un
+  dieciocho carpetas —los dieciséis labs, el proyecto final y el examen de huecos, **293
+  archivos**— están en un
   repositorio **privado** aparte, `springboot-sii-2026-instructor`, con las mismas rutas para que
   restaurar sea copiar. **D-031-2 no cambia** (D-042-1): el clon del alumno sigue sin traerlas.
   - **El puente es `tools/instructor-respaldo.sh`**, con tres verbos: `estado` compara los dos
@@ -136,7 +139,7 @@
     repitió el andamiaje heredado (`pom.xml`, clase de arranque, `infra/`), que ya está documentado
     en el 04. `INFORME-SPEC-043` §2.4 lo mide y lo acota.
 
-- **Los quince labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
+- **Los dieciséis labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
   en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
   hacía de servicio anotada `@Component`, y paquetes que tartamudeaban —`seguridad/seguridad`—.
   Aprendía que da igual, y no da igual. Hoy **un rol, un nombre, una anotación**: `controllers/`
@@ -167,10 +170,10 @@
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
   siguiente) · **`labs`** (los **37** proyectos Maven compilan **offline**, y falla si alguien
   necesitó la red: 36 en `labs/` —el Lab 14 aporta ocho, cuatro servicios × dos carpetas— más
-  `proyecto-final/base`) · **`pasos`** (los **quince** guiones traen el código para pegar y ninguno
-  promete un código que `solucion/` ya no tenga: 146 bloques y 87 métodos comprobados contra la
-  solución) · **`guion-practica`** (lo que los quince guiones prometen de `practica/` —carpetas
-  vacías, archivos que ya están, archivos por crear— es lo que `practica/` trae: **88 promesas**
+  `proyecto-final/base`) · **`pasos`** (los **dieciséis** guiones traen el código para pegar y ninguno
+  promete un código que `solucion/` ya no tenga: **196 bloques y 108 métodos** comprobados contra la
+  solución) · **`guion-practica`** (lo que los dieciséis guiones prometen de `practica/` —carpetas
+  vacías, archivos que ya están, archivos por crear— es lo que `practica/` trae: **96 promesas**
   comprobadas) · `labs-sh` (los scripts, en Linux y en Git Bash).
 
 ## 1.a · Lo que se retiró, y dónde está
@@ -420,7 +423,7 @@ Informes en `docs/specs/informes/INFORME-SPEC-FIX-07.md` y `INFORME-SPEC-FIX-08.
 
 ## 2 · Qué falta
 
-**Del material, nada bloqueante.** El arco está completo: quince labs, los tres formatos de
+**Del material, nada bloqueante.** El arco está completo: dieciséis labs, los tres formatos de
 carpeta en todos, y el CI verificando que los 37 proyectos compilan offline.
 
 **Pendiente del PO, y en los labs guiados es LA prueba, no una más:** sentarse con `PASOS.md` y
@@ -428,17 +431,17 @@ carpeta en todos, y el CI verificando que los 37 proyectos compilan offline.
 resultado, el guion está mal. Es la única prueba que el ejecutor no puede hacer por definición:
 quien escribió el guion no puede juzgar si se entiende.
 
-Los quince están verificados por el ejecutor —cada uno con sus salidas citadas en el informe de
+Los dieciséis están verificados por el ejecutor —cada uno con sus salidas citadas en el informe de
 su SPEC— pero el PO no los ha corrido de punta a punta.
 
-**Lo que sí está cerrado desde la SPEC-043: los quince guiones se han PEGADO.** Faltaba en el 10,
+**Lo que sí está cerrado desde la SPEC-043: los guiones se han PEGADO, los dieciséis.** Faltaba en el 10,
 11, 12 y 13 —era la deuda declarada en `INFORME-SPEC-039` §5— y apareció de todo: el guion del lab
 10 mandaba pegar sentencias de constructor «dentro de la clase», y pegado al pie de la letra **ni
 siquiera parseaba**. Los cuatro guiones están corregidos y la prueba pasa: compilan y el resultado
 es idéntico a `solucion/`. Eso quita una clase entera de sorpresas de la fila de aceptación, pero
 **no la sustituye**: que el código encaje no dice que el guion se entienda.
 
-En el **Lab 14** esa fila importa más que en los otros catorce, por dos razones concretas: es el
+En el **Lab 14** esa fila importa más que en los otros quince, por dos razones concretas: es el
 único que abre **cuatro terminales y tres PostgreSQL a la vez** (memoria y confusión medidas en
 `INFORME-SPEC-037` §6/V8), y **todo se midió en macOS**. Los tres defectos que encontró la
 SPEC-024 eran invisibles desde macOS. Es el lab que más conviene probar en la VM de Windows.
@@ -479,7 +482,7 @@ final, no como instrumento de la casilla de ejercicios. Pero da una nota numéri
 automática sobre los labs 01 a 09, que es exactamente lo que esa casilla pedía. Usarlo así, usarlo
 en lugar del proyecto final, o usar los dos, es una decisión del PO y no del material.
 
-Los quince labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
+Los dieciséis labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
 evaluados» sin definir antes qué se puntúa. Las dos casillas vacías son una decisión del PO, no un
 trabajo pendiente del material.
 
@@ -519,7 +522,7 @@ Lo que viene, en orden:
 2. **Decidir sobre las brechas del mapa** (§2): las siete baratas primero, y después negociar con
    el SII las tres que dependen de Docker.
 3. **Las diapositivas y el material de sala.** Las guías en PDF cubren ya la parte del alumno en
-   los quince labs; una presentación para proyectar, no.
+   los dieciséis labs; una presentación para proyectar, no.
 4. **Resolver la aritmética del contrato con el SII** (§2 y mapa §6.4): el material va **nueve
    horas y tres sesiones** por encima de lo contratado, y el lab-14 no tiene módulo titular. Es una
    conversación, no un trabajo pendiente del material.

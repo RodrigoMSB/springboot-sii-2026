@@ -1,8 +1,9 @@
 # Mapa Laboratorio ↔ Módulo del temario contratado
 
 *Documento de trazabilidad para la entrega al SII. Rehecho por la **SPEC-034** contra el arco de
-catorce labs, actualizado por la **SPEC-035** (que cerró la brecha del proyecto final) y por la
-**SPEC-037**, que añadió el Lab 14 de microservicios.*
+catorce labs, actualizado por la **SPEC-035** (que cerró la brecha del proyecto final), por la
+**SPEC-037**, que añadió el Lab 14 de microservicios, y por la **SPEC-046**, que añadió el Lab 05b
+y con él el `@ManyToMany` que hasta ahora figuraba como complemento pendiente del M5.*
 
 **Fuente de verdad:** `TEMARIO-SPRING-BOOT-SII-v3.md`, §«Estructura del Programa» y §«Matriz
 Módulo × Sesión». **Donde el material y el temario discrepen, manda el temario** y la discrepancia
@@ -78,7 +79,7 @@ Ver §5.
 | **M2** | Controladores REST, Versionado, OpenAPI | 2,5 | **Parcial** | lab-01 pasos 1–6 | **OpenAPI/SpringDoc y Swagger UI** · **versionado nativo de Framework 7** · `@PutMapping`/`@PatchMapping`/`@DeleteMapping` |
 | **M3** | Capas, DTOs, Validaciones, Excepciones | 3,0 | **Parcial** | lab-02 paso 6 (capas) · lab-01 paso 4 (DTO) · lab-03 pasos 2–5 | **`ProblemDetail` (RFC 9457)** — se usa un record propio · validaciones personalizadas (`ConstraintValidator`), grupos, i18n · MapStruct |
 | **M4** | Testing I: JUnit y Mockito | 1,5 | **Cubierto** | lab-08 pasos 1–4 | (complementos: `@ParameterizedTest`, AssertJ, `ArgumentCaptor`, spy) |
-| **M5** | Persistencia con JPA e Hibernate | 4,0 | **Cubierto** | lab-04 pasos 1–9 · lab-05 pasos 1–6 · lab-06 pasos 1–5 | (complementos: `Pageable`/`Sort` y endpoint paginado · `JdbcClient` · `@OneToOne`/`@ManyToMany` · `CascadeType`) |
+| **M5** | Persistencia con JPA e Hibernate | 4,0 | **Cubierto** | lab-04 pasos 1–9 · lab-05 pasos 1–6 · lab-05b pasos 1–6 · lab-06 pasos 1–5 | (complementos: `Pageable`/`Sort` y endpoint paginado · `JdbcClient` · `@OneToOne` · `CascadeType`) |
 | **M6** | Testing II: Integración y Testcontainers | 1,5 | **Parcial** | lab-08 pasos 5–6 (`@WebMvcTest`, `@SpringBootTest`, pirámide) | **Testcontainers 2 y `@ServiceConnection`** · **RestTestClient** · `@DataJpaTest` (mencionado) · H2 · `spring-boot-docker-compose` |
 | **M7** | Transacciones y Optimización | 2,0 | **Cubierto** | lab-07 pasos 1–5 · lab-06 pasos 1–5 | (complementos: propagación · aislamiento y anomalías · `@Version` optimista · índices y plan de ejecución · HikariCP como tema) |
 | **M8** | Migraciones: Flyway y Liquibase | 1,5 | **Parcial** | lab-07 paso 5 (migración correctiva con restricción) · Flyway en uso en 6 labs | **Liquibase, entero** · la mecánica de Flyway como tema (historial, repetibles, baseline, `ddl-auto` como antipatrón) |
@@ -108,7 +109,7 @@ Deducidos del contenido de su módulo (ver la nota de la §0).
 | IV | M2 | Versionado nativo y OpenAPI | **No cubierto** | — |
 | V | M5 | Entidades y configuración JPA | **Cubierto** | lab-04 paso 1 |
 | VI | M5 | Repositorios y consultas | **Cubierto** | lab-04 pasos 2–8 (derivadas); lab-06 paso 2 (`@Query` con JPQL) |
-| VII | M5 | Relaciones | **Cubierto** | lab-05 pasos 1–6 |
+| VII | M5 | Relaciones | **Cubierto** | lab-05 pasos 1–6 (`@ManyToOne`, `@OneToMany`) · lab-05b pasos 1–6 (`@ManyToMany`) |
 | VIII | M5 | Fetch, N+1 y proyecciones | **Cubierto** | lab-06 pasos 1–5 |
 | IX | M3 | Arquitectura en capas y DTOs | **Cubierto** | lab-02 paso 6; lab-01 paso 4 |
 | X | M7 | Transacciones | **Cubierto** | lab-07 pasos 1–5 |

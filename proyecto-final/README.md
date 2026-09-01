@@ -2,7 +2,7 @@
 
 **Esto no es un laboratorio.** Es el instrumento con el que se evalúa el curso.
 
-En los quince labs se construyó en vivo, con guion y con la solución al lado. Aquí no hay guion:
+En los dieciséis labs se construyó en vivo, con guion y con la solución al lado. Aquí no hay guion:
 hay un requerimiento de negocio incompleto en los bordes, tres horas, y una rúbrica que se puede
 leer antes de empezar.
 
