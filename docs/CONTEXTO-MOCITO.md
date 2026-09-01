@@ -3,8 +3,8 @@
 **Lo primero que leo cuando me reinician.** Si estoy arrancando sin memoria de este repositorio,
 este archivo tiene lo que necesito para trabajar sin preguntar nada obvio.
 
-*Escrito el 27 de agosto de 2026. Revisado el 28 de agosto de 2026 al cerrar la SPEC-044, sobre
-`main` en `material-v1.7.0`.*
+*Escrito el 27 de agosto de 2026. Revisado el 31 de agosto de 2026 al empezar la SPEC-046, sobre
+`main` en `material-v1.8.0`.*
 
 ---
 
@@ -43,7 +43,7 @@ Están escritas en tres sitios, y los tres mandan:
 
 - **`ESTADO.md`** — qué existe hoy, qué falta y qué viene. Una página, sin jerga. **Toda SPEC lo
   actualiza al cerrar. Un `ESTADO.md` desactualizado es un bug del material, no un descuido.**
-- **`docs/decisiones.md`** — **107** decisiones con fecha y razón. Las que llevan identificador
+- **`docs/decisiones.md`** — **108** decisiones con fecha y razón. Las que llevan identificador
   (`D-022-1`, `D-031-2`, `D-FIX10-2`…) se citan por su código en informes y comentarios.
 - **`docs/specs/informes/`** — un informe por SPEC ejecutada. Es la memoria larga del proyecto:
   qué se hizo, qué se midió y con qué salida. **Cuando algo no cuadra, la respuesta suele estar
@@ -165,9 +165,10 @@ lab-NN-nombre/
   chuleta de quien dicta. La genera quien prepara la sesión, a partir de `solucion/`.
   Lo mismo con `proyecto-final/instructor/`, que lleva la solución de referencia.
   **Desde la SPEC-042 sí tiene respaldo**, en un repositorio privado aparte
-  (`springboot-sii-2026-instructor`): dieciséis carpetas, **245 archivos**, las mismas rutas.
-  **En los labs 04 a 07** cada decisión técnica lleva además su recuadro `POR QUÉ ·` — son
-  **102** (SPEC-041). Los otros once labs y el proyecto final aún no.
+  (`springboot-sii-2026-instructor`): **diecisiete carpetas, 279 archivos**, las mismas rutas.
+  Cada decisión técnica lleva además su recuadro `POR QUÉ ·`: **140 en total** — 83 en los labs
+  04 a 07 (SPEC-041) y 57 en los labs 08 a 14 y el examen (SPEC-043). La densidad **no** es
+  pareja: 21 recuadros por lab en los primeros contra 7 en los segundos, y está dicho.
 - **`examen-huecos/` no es un lab y no tiene `PASOS.md`.** Tiene `base/` con doce huecos marcados,
   `solucion/`, y un test por hueco. **Su `solucion/` SÍ viaja** (`D-043-2`): lo que se protege es la
   guía de corrección, que vive en `instructor/`.
