@@ -1,0 +1,36 @@
+server:
+  # Dentro del contenedor los CUATRO escuchan en el 8080, y no es pereza: es la
+  # consecuencia de tener un orquestador. Cada servicio tiene su propia red y su
+  # propia interfaz, así que ya no hay que repartir puertos para que no choquen.
+  # Quien decide en qué puerto se ve cada uno DESDE FUERA es el `ports:` del
+  # compose, y eso es configuración de despliegue, no del programa.
+  port: 8080
+
+spring:
+  application:
+    name: lab14-gateway-docker
+
+lab14:
+  # Las tres direcciones del sistema. Lo único que cambió respecto del laboratorio
+  # es lo que hay antes de los dos puntos: `localhost` pasó a ser el NOMBRE DEL
+  # SERVICIO. Lo resuelve el DNS interno de la red del compose, que devuelve la IP
+  # que tenga el contenedor en este momento — y esa IP cambia en cada arranque.
+  #
+  # Es el service discovery del lab viejo, hecho por la plataforma en vez de por
+  # un Eureka que hubiera que arrancar, configurar y operar.
+  contribuyentes:
+    url: http://contribuyentes:8080
+  tramites:
+    url: http://tramites:8080
+  auditoria:
+    url: http://auditoria:8080
+  jwt:
+    secreto: ${LAB14_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] GATEWAY - %msg%n"

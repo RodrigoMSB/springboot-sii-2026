@@ -1,0 +1,269 @@
+# =============================================================================
+#  compose.yaml — el lab 14 sin cuatro terminales
+# -----------------------------------------------------------------------------
+#  Siete contenedores: los CUATRO servicios del laboratorio, tal cual, y TRES
+#  PostgreSQL de verdad — uno por servicio con base, igual que las tres bases
+#  Zonky que el lab levanta por dentro.
+#
+#  El sistema hace exactamente lo mismo que el laboratorio. Lo único que cambia
+#  es cómo se arranca, y ése es el tema de la demostración:
+#
+#    en el laboratorio          aquí
+#    -----------------------    ------------------------------------------
+#    cuatro terminales          docker compose up
+#    un orden de arranque       depends_on: condition: service_healthy
+#    tres Zonky embebidos       tres contenedores de PostgreSQL
+#    http://localhost:8211      http://contribuyentes:8080
+#    si algo muere, se murió    restart: unless-stopped
+#
+#  ---------------------------------------------------------------------------
+#  ARRANQUE ORDENADO, SIN UN SOLO `sleep`
+#  ---------------------------------------------------------------------------
+#  El README del laboratorio dice el orden a mano: contribuyentes -> trámites ->
+#  auditoría -> gateway, de dentro hacia fuera. Y dice también lo que pasa si se
+#  arranca al revés: el circuito se abre por fallos que solo ocurrieron durante
+#  el arranque, y tarda 18 s en cerrarse solo.
+#
+#  Aquí ese orden está escrito una vez, en los `depends_on`, y lo cumple la
+#  máquina. Con `condition: service_healthy`, además, no espera un cronómetro
+#  sino el HEALTHCHECK real de cada pieza. Un `sleep 30` funciona en el portátil
+#  de quien lo escribió y falla en el del vecino; un healthcheck espera lo que
+#  haga falta y ni un segundo más.
+#
+#  Y ojo con la conclusión fácil, que es la misma que hacía el lab viejo: esto NO
+#  significa que el sistema NECESITE ese orden. Significa que arrancar ordenado
+#  evita el circuito abierto de los primeros segundos. La dependencia es de
+#  ARRANQUE, no de vida: mata el de contribuyentes con el sistema arriba y los
+#  demás siguen respondiendo.
+# =============================================================================
+
+services:
+
+  # ===========================================================================
+  #  LAS TRES BASES. Una por servicio, en tres motores distintos.
+  # ===========================================================================
+  #  En el laboratorio son tres PostgreSQL embebidos (Zonky) que cada servicio
+  #  levanta dentro de su propio proceso, en los puertos 55460, 55461 y 55462.
+  #  Aquí son tres contenedores.
+  #
+  #  La frontera entre servicios queda MÁS fuerte que en el laboratorio, y más
+  #  que en el lab viejo. Aquél usaba una sola instancia con dos bases y dos
+  #  usuarios, y la frontera era un GRANT que no existía: correcta, y dentro del
+  #  mismo motor. Aquí son tres motores separados Y tres REDES separadas (ver
+  #  `networks:` al final del archivo): desde `tramites`, el nombre
+  #  `db-contribuyentes` no resuelve. El JOIN «rápido» no es que esté prohibido:
+  #  es que no hay por dónde intentarlo.
+  #
+  #  Y esto se comprobó: la primera versión de este archivo NO lo cumplía. Con
+  #  una sola red por defecto, `getent hosts db-contribuyentes` desde `tramites`
+  #  devolvía una IP. Las redes por servicio están para que la frase sea verdad.
+  # ===========================================================================
+  db-contribuyentes:
+    image: postgres:16-alpine
+    # Tres bases pequeñas con unas pocas filas de semilla. 256 MB sobran.
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: dgt_contribuyentes
+      POSTGRES_USER: svc_contribuyentes
+      # Credencial de LABORATORIO, para una base desechable que muere con
+      # `docker compose down -v`. Versionarla es correcto y hace el entorno
+      # reproducible. Lo que jamás va versionado es una credencial de producción.
+      POSTGRES_PASSWORD: contribuyentes-dev
+    networks: [datos-contribuyentes]
+    ports:
+      # Publicados para poder abrirlas con DBeaver durante la demostración y
+      # enseñar que son tres bases y no una. Fuera de una demo, no se publican.
+      - "55470:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U svc_contribuyentes -d dgt_contribuyentes"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  db-tramites:
+    image: postgres:16-alpine
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: dgt_tramites
+      POSTGRES_USER: svc_tramites
+      POSTGRES_PASSWORD: tramites-dev
+    networks: [datos-tramites]
+    ports:
+      - "55471:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U svc_tramites -d dgt_tramites"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  db-auditoria:
+    image: postgres:16-alpine
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: dgt_auditoria
+      POSTGRES_USER: svc_auditoria
+      POSTGRES_PASSWORD: auditoria-dev
+    networks: [datos-auditoria]
+    ports:
+      - "55472:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U svc_auditoria -d dgt_auditoria"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # ===========================================================================
+  #  CONTRIBUYENTES · el padrón. No llama a nadie.
+  # ===========================================================================
+  contribuyentes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: contribuyentes
+    # Techo de memoria, y no es decoración: es lo que hace que el
+    # -XX:MaxRAMPercentage del Dockerfile se calcule sobre un número igual en
+    # todas las máquinas. Sin él, cada JVM mide la RAM de la máquina anfitriona.
+    mem_limit: 448m
+    environment:
+      DB_USUARIO: svc_contribuyentes
+      DB_CLAVE: contribuyentes-dev
+    # En la red común, para que los demás lo llamen por su nombre; y en la suya
+    # de datos, que es la única desde la que se ve su base.
+    networks: [red-dgt, datos-contribuyentes]
+    ports:
+      # 8221, para poder preguntarle a él directamente y enseñar que el gateway
+      # no es la única forma de llegar — solo la única puerta pública.
+      - "8221:8080"
+    depends_on:
+      db-contribuyentes:
+        condition: service_healthy
+    # Lo que Compose puede hacer y cuatro terminales no: si el proceso muere, lo
+    # vuelve a levantar. `unless-stopped` = salvo que lo haya parado una persona.
+    restart: unless-stopped
+    healthcheck:
+      # Contra `/salud`, que el laboratorio ya trae. No hace falta actuator.
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/salud || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ===========================================================================
+  #  TRÁMITES · el que sufre. Llama a contribuyentes y avisa a auditoría.
+  # ===========================================================================
+  tramites:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: tramites
+    mem_limit: 448m
+    environment:
+      DB_USUARIO: svc_tramites
+      DB_CLAVE: tramites-dev
+    networks: [red-dgt, datos-tramites]
+    ports:
+      - "8222:8080"
+    depends_on:
+      db-tramites:
+        condition: service_healthy
+      # Y de sus dos vecinos, no para funcionar: para ARRANCAR sin hacerse daño.
+      # Sin estas dos líneas pasa lo que el README del laboratorio tiene medido:
+      # las primeras llamadas fallan porque el otro todavía no está, el circuit
+      # breaker las cuenta como fallos —porque LO SON— y abre. Un sistema entero
+      # sano, recién levantado, respondiendo degradado durante 18 segundos.
+      #
+      # Le pasa a todo el mundo en producción en cada despliegue, y la causa
+      # nunca es el circuit breaker: es haber aceptado tráfico antes de estar
+      # listo para servirlo. Es la diferencia entre liveness y readiness del
+      # Lab 11, con consecuencias.
+      contribuyentes:
+        condition: service_healthy
+      auditoria:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/salud || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ===========================================================================
+  #  AUDITORÍA · el que recibe eventos y no contesta a nadie.
+  # ===========================================================================
+  auditoria:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: auditoria
+    mem_limit: 448m
+    environment:
+      DB_USUARIO: svc_auditoria
+      DB_CLAVE: auditoria-dev
+    networks: [red-dgt, datos-auditoria]
+    ports:
+      - "8223:8080"
+    depends_on:
+      db-auditoria:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/salud || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  # ===========================================================================
+  #  GATEWAY · la única puerta. El último en arrancar, de dentro hacia fuera.
+  # ===========================================================================
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULO: gateway
+    mem_limit: 448m
+    # El gateway NO entra en ninguna red de datos: no es dueño de ninguna base.
+    networks: [red-dgt]
+    ports:
+      # 8220: la única dirección que hay que recordar durante la demostración.
+      - "8220:8080"
+    depends_on:
+      tramites:
+        condition: service_healthy
+      contribuyentes:
+        condition: service_healthy
+      auditoria:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/salud || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+# =============================================================================
+#  LAS REDES · una común y una por servicio con base
+# -----------------------------------------------------------------------------
+#  `red-dgt` es por donde se hablan los cuatro servicios. Es la que hace que
+#  `http://contribuyentes:8080` signifique algo.
+#
+#  Las tres `datos-*` tienen exactamente DOS miembros: un servicio y su base.
+#  Eso convierte «una base por servicio» de convención en imposible de saltarse:
+#  desde `tramites`, el nombre `db-contribuyentes` no resuelve. No hay credencial
+#  que robar ni GRANT que pedir, porque no hay ruta.
+#
+#  Para verlo en la demostración:
+#      docker compose exec tramites getent hosts db-tramites        -> una IP
+#      docker compose exec tramites getent hosts db-contribuyentes  -> nada
+# =============================================================================
+networks:
+  red-dgt:
+  datos-contribuyentes:
+  datos-tramites:
+  datos-auditoria:
