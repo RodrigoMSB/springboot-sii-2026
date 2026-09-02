@@ -11,7 +11,7 @@ spring:
       ddl-auto: validate
     # Encendido: hoy hay UNA línea de SQL que hay que ver con los propios ojos,
     # la del paso 4. Termina en `for update`.
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
