@@ -1,6 +1,6 @@
 # Pasos · Lab 09 · Seguridad
 
-Seis pasos. Se trabaja en `practica/`, en vivo. Después de cada paso se reinicia la aplicación y
+Cinco pasos. Se trabaja en `practica/`, en vivo. Después de cada paso se reinicia la aplicación y
 se prueba antes de seguir.
 
 ```bash
@@ -17,7 +17,7 @@ se escribe hoy vive en tres carpetas que llegan vacías:
 config/      →  SeguridadConfig
 services/    →  UsuarioDetailsService, ServicioDeTokens
 soporte/     →  SembradorDeUsuarios
-controllers/ →  AuthController, y dos endpoints en ProductoController
+controllers/ →  AuthController, y un endpoint en ProductoController
 ```
 
 ---
@@ -87,82 +87,140 @@ va en el paso siguiente.
 
 ---
 
-## Paso 2 · La cadena de filtros
+## Paso 2 · La cadena de filtros, y los cuatro beans
 
 **Se explica:** ahora se toma el control. Una petición, antes de llegar a un controller, atraviesa
-una **cadena de filtros**; ahí se decide si sigue o se corta. Se declara en una clase de
-configuración, y lo primero que se dice es qué es público y qué no.
+una **cadena de filtros**; ahí se decide si sigue o se corta. Se declara una vez, en una clase de
+configuración, y **no se vuelve a tocar en todo el laboratorio**: los pasos siguientes añaden
+piezas alrededor, no aquí.
 
-Se empieza con un usuario **en memoria**, escrito a mano, porque el asunto de este paso son las
-rutas, no de dónde salen los usuarios. Eso es el paso 3.
+Se escribe entera de una vez —la cadena y sus cuatro beans— y después se lee en voz alta.
+
+**Se pega:** en `practica/pom.xml`, **dentro de `<dependencies>`** — la segunda y última
+dependencia del día. Es la que trae el validador de tokens y la librería que firma.
+
+```xml
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+```
 
 **Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java` — el archivo entero.
-
-<!-- pasos:intermedio · los pasos 3, 4, 5 y 6 lo van cambiando -->
 
 ```java
 package cl.dgt.seguridad.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class SeguridadConfig {
 
+    @Value("${lab09.jwt.secreto}")
+    private String secreto;
+
     @Bean
     SecurityFilterChain cadena(HttpSecurity http) throws Exception {
         return http
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(rutas -> rutas
-                        .requestMatchers("/productos").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/productos/administracion").hasAuthority("SCOPE_ROLE_ADMIN")
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
+                .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
     }
 
     @Bean
-    UserDetailsService usuariosEnMemoria() {
-        return new InMemoryUserDetailsManager(
-                User.withUsername("ana").password("{noop}secreta").roles("ADMIN").build());
+    PasswordEncoder codificadorDeClaves() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    AuthenticationManager gestorDeAutenticacion(AuthenticationConfiguration configuracion) throws Exception {
+        return configuracion.getAuthenticationManager();
+    }
+
+    private SecretKeySpec clave() {
+        return new SecretKeySpec(secreto.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    }
+
+    @Bean
+    JwtEncoder codificadorDeTokens() {
+        return NimbusJwtEncoder.withSecretKey(clave()).build();
+    }
+
+    @Bean
+    JwtDecoder decodificadorDeTokens() {
+        return NimbusJwtDecoder.withSecretKey(clave()).build();
     }
 }
 ```
+
+**Se corre:** `./mvnw spring-boot:run`
 
 **En consola:**
 
 ```
 $ curl -o /dev/null -w "%{http_code}\n" http://localhost:8095/productos
-200                                    ← pública: la declaramos permitAll
+401
 
-$ curl -o /dev/null -w "%{http_code}\n" http://localhost:8095/productos/2
-401                                    ← no la declaramos: anyRequest().authenticated()
-
-$ curl -o /dev/null -w "%{http_code}\n" -u ana:secreta http://localhost:8095/productos/2
-200
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer cualquier-cosa" \
+       http://localhost:8095/productos
+401
 ```
 
-Y **desapareció** la línea de la contraseña generada: en cuanto hay un `UserDetailsService`
-propio, Spring deja de inventarse uno.
+Y **desapareció** la línea de la contraseña generada: en cuanto la aplicación declara su propia
+cadena y su propio gestor, Spring deja de inventarse un usuario.
 
-**Lo que hay que notar:** el orden de las reglas importa y se lee de arriba abajo — gana la
-primera que encaja. Y `{noop}` delante de la clave significa «esta contraseña está en texto
-plano». Spring **obliga** a decirlo: sin ese prefijo, falla con
-`There is no PasswordEncoder mapped for the id "null"`. Es una molestia deliberada, y el paso
-siguiente la resuelve de verdad.
+**Lo que hay que notar,** y son cuatro cosas que se leen sobre el archivo proyectado:
+
+- **`STATELESS`** — no hay sesión. Cada petición trae su credencial y se basta sola. Es lo que
+  permite tener diez instancias detrás de un balanceador sin compartir nada entre ellas.
+- **`csrf().disable()`** — no es bajar la guardia. CSRF existe porque el navegador adjunta la
+  cookie **solo**; aquí la credencial es una cabecera que hay que poner a mano en cada llamada,
+  y ninguna página ajena puede hacer que el navegador la ponga. Sin cookie de sesión no hay CSRF
+  que prevenir.
+- **El orden de las reglas** — se leen de arriba abajo y gana la primera que encaja. Si la línea
+  de `/productos/administracion` estuviera **debajo** de `anyRequest()`, no se llegaría nunca a
+  ella y la ruta quedaría abierta a cualquier autenticado. Sin error y sin aviso: sólo un
+  agujero. De lo más específico a lo más general, siempre.
+- **`anyRequest().authenticated()`** — el cierre, y la línea más importante de las tres. Es el
+  mismo default que Spring aplicó solo en el paso 1, ahora escrito a propósito.
+
+> **Aviso, porque muerde:** hay que usar `NimbusJwtEncoder.withSecretKey(...)`. Con el
+> constructor genérico, el encoder intenta firmar con RS256, la clave es HMAC, y falla en
+> ejecución con `Failed to select a JWK signing key`.
+
+Y el estado en que queda la aplicación es el interesante: **todo cerrado y sin forma de entrar
+todavía**. Falta quién eres —el paso 3— y cómo lo demuestras —el paso 4.
 
 ---
 
-## Paso 3 · BCrypt, y por qué una clave no se guarda
+## Paso 3 · Los usuarios, y por qué una clave no se guarda
 
-**Se explica:** el `{noop}` de arriba es exactamente lo que no se hace nunca. Y el problema no es
-sólo que alguien lea la base: es que **la gente repite contraseñas**, así que una filtración aquí
-compromete el correo y el banco de esa persona.
+**Se explica:** hacen falta usuarios de verdad, en la base. Y aquí aparece la regla que no se
+negocia: **una contraseña no se guarda nunca**. El problema no es sólo que alguien lea la base:
+es que **la gente repite contraseñas**, así que una filtración aquí compromete el correo y el
+banco de esa persona.
 
 La salida no es cifrar —cifrar es reversible— sino guardar un **hash**: una función de un solo
 sentido. Al hacer login se vuelve a calcular y se comparan los hashes; la clave original **no
@@ -175,6 +233,8 @@ BCrypt añade dos cosas sobre un hash normal:
   hashes precalculada.
 - **Costo**: es **lento a propósito**. El `10` del hash significa 2¹⁰ vueltas. Al que hace login
   le cuesta unos milisegundos; al que prueba millones de claves por segundo le arruina el negocio.
+
+El `PasswordEncoder` ya está declarado desde el paso 2. Faltan las dos clases que lo usan.
 
 **Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/services/UsuarioDetailsService.java` — el archivo entero.
 Es el puente entre la tabla y Spring Security.
@@ -210,10 +270,11 @@ public class UsuarioDetailsService implements UserDetailsService {
 }
 ```
 
-y `soporte/SembradorDeUsuarios.java`, que crea los dos usuarios la primera vez:
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/soporte/SembradorDeUsuarios.java` — el archivo entero.
+Crea los dos usuarios la primera vez, y **imprime los hashes siempre**, se haya sembrado o no.
 
 ```java
-package cl.dgt.seguridad.services;
+package cl.dgt.seguridad.soporte;
 
 import cl.dgt.seguridad.entities.Usuario;
 import cl.dgt.seguridad.repositories.UsuarioRepository;
@@ -234,11 +295,10 @@ public class SembradorDeUsuarios implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repositorio.count() > 0) {
-            return;
+        if (repositorio.count() == 0) {
+            repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
+            repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
         }
-        repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
-        repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
 
         System.out.println("[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)");
         repositorio.findAll().forEach(u ->
@@ -247,18 +307,12 @@ public class SembradorDeUsuarios implements CommandLineRunner {
 }
 ```
 
-En `SeguridadConfig`, **se borra** el `usuariosEnMemoria()` y se pone el codificador:
-
-```java
-    @Bean
-    PasswordEncoder codificadorDeClaves() {
-        return new BCryptPasswordEncoder();
-    }
-```
+**Se corre:** `./mvnw spring-boot:run`
 
 **En consola:**
 
 ```
+[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)
 [semilla] ana   ADMIN    $2a$10$z2RuZ6YymqMEOa9haqcN2.m1B31q1pL1oGfPzUUaYNbi43Lor3Lsy
 [semilla] luis  USUARIO  $2a$10$RBxoDtr9qH5oevKTWzwRaeKxD0Oc2pXrQtT07ayvBXO2h09HtqiN2
 ```
@@ -273,6 +327,11 @@ $2a$ 10 $ z2RuZ6YymqMEOa9haqcN2. m1B31q1pL1oGfPzUUaYNbi43Lor3Lsy
  └── algoritmo BCrypt
 ```
 
+La guarda `if (repositorio.count() == 0)` envuelve **sólo la siembra**, no el método entero: por
+eso los hashes también salen en la segunda corrida, cuando la tabla ya está poblada. La base
+sobrevive al apagado —vive en el directorio `.datos-pg/`— y los hashes son los mismos. Quien
+quiera verlos nacer distintos otra vez borra `.datos-pg/` y vuelve a arrancar.
+
 **Y se abre DBeaver** con `localhost:55440`, base `postgres`, usuario `postgres`, sin clave:
 
 ```sql
@@ -284,19 +343,18 @@ saber cuál era la contraseña.**
 
 ---
 
-## Paso 4 · El token, y la sorpresa del día
+## Paso 4 · El login y el token
 
-**Se explica:** con HTTP Basic, cada petición manda usuario y clave, y el servidor consulta la
-base y calcula BCrypt **cada vez**. Es lento y obliga a que la clave viaje una y otra vez.
-
-La alternativa: se hace login **una vez** y se recibe un **JWT** — un papel firmado que dice quién
-eres y hasta cuándo vale. En las siguientes peticiones se manda el papel.
+**Se explica:** ya hay usuarios y ya hay puerta. Falta la llave. Se hace login **una vez** y se
+recibe un **JWT**: un papel firmado que dice quién eres y hasta cuándo vale. En las siguientes
+peticiones se manda el papel, y el servidor no vuelve a consultar la base.
 
 **Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/services/ServicioDeTokens.java` — el archivo entero.
 
 ```java
 package cl.dgt.seguridad.services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -310,12 +368,14 @@ import java.util.stream.Collectors;
 @Service
 public class ServicioDeTokens {
 
-    private static final Duration VIGENCIA = Duration.ofMinutes(30);
+    private final Duration vigencia;
 
     private final JwtEncoder codificador;
 
-    public ServicioDeTokens(JwtEncoder codificador) {
+    public ServicioDeTokens(JwtEncoder codificador,
+                            @Value("${lab09.jwt.vigencia-segundos:1800}") long vigenciaSegundos) {
         this.codificador = codificador;
+        this.vigencia = Duration.ofSeconds(vigenciaSegundos);
     }
 
     public String emitir(Authentication autenticacion) {
@@ -327,9 +387,9 @@ public class ServicioDeTokens {
                 .collect(Collectors.joining(" "));
 
         JwtClaimsSet cuerpo = JwtClaimsSet.builder()
-                .issuer("lab08")
+                .issuer("lab09")
                 .issuedAt(ahora)
-                .expiresAt(ahora.plus(VIGENCIA))
+                .expiresAt(ahora.plus(vigencia))
                 .subject(autenticacion.getName())
                 .claim("scope", roles)
                 .build();
@@ -339,7 +399,7 @@ public class ServicioDeTokens {
 }
 ```
 
-y `controllers/AuthController.java`:
+**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/seguridad/controllers/AuthController.java` — el archivo entero.
 
 ```java
 package cl.dgt.seguridad.controllers;
@@ -388,57 +448,132 @@ public class AuthController {
 }
 ```
 
-y en `SeguridadConfig`, las piezas que hacen falta: el `AuthenticationManager`, la clave de firma,
-y `/auth/login` como ruta pública.
-
-```java
-    @Value("${lab08.jwt.secreto}")
-    private String secreto;
-
-    private SecretKeySpec clave() {
-        return new SecretKeySpec(secreto.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-    }
-
-    @Bean
-    JwtEncoder codificadorDeTokens() {
-        return NimbusJwtEncoder.withSecretKey(clave()).build();
-    }
-
-    @Bean
-    AuthenticationManager gestorDeAutenticacion(AuthenticationConfiguration configuracion) throws Exception {
-        return configuracion.getAuthenticationManager();
-    }
-```
-
-> **Aviso, porque muerde:** hay que usar `NimbusJwtEncoder.withSecretKey(...)`. Con el
-> constructor genérico, el encoder intenta firmar con RS256, la clave es HMAC, y falla con
-> `An error occurred while attempting to encode the Jwt: Failed to select a JWK signing key`.
-
 **Se corre:**
 
 ```bash
-curl -X POST http://localhost:8095/auth/login \
-     -H 'Content-Type: application/json' \
-     -d '{"usuario":"ana","clave":"secreta"}'
+TOKEN=$(curl -s -X POST http://localhost:8095/auth/login \
+        -H 'Content-Type: application/json' \
+        -d '{"usuario":"ana","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 ```
 
-**En consola:**
+**En consola — las tres pruebas del paso:**
 
-```json
-{"token":"eyJraWQiOiI5ZHUzd2JRZnJYcU1DOXpSRUU4NzM4Q250cWhTWS01TnN2MXVtZHN6T0VZIiwidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifQ.eyJpc3MiOiJsYWIwOCIsInN1YiI6ImFuYSIsImV4cCI6MTc4NzA3MTcxMSwiaWF0IjoxNzg3MDY5OTExLCJzY29wZSI6IlJPTEVfQURNSU4ifQ.7bK..."}
+```
+$ curl -o /dev/null -w "%{http_code}\n" http://localhost:8095/productos
+401                                              ← sin token
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
+       http://localhost:8095/productos
+200                                              ← con token
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer ${TOKEN%.*}.FIRMAFALSA" \
+       http://localhost:8095/productos
+401                                              ← token manipulado
+```
+
+Y la clave equivocada, que no llega ni a emitir token:
+
+```
+$ curl -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8095/auth/login \
+       -H 'Content-Type: application/json' -d '{"usuario":"ana","clave":"otra"}'
+401
+```
+
+**Lo que hay que notar:** nadie consultó la base en esas peticiones. El token **se basta a sí
+mismo** —trae quién eres y va firmado—, y por eso `sessionCreationPolicy(STATELESS)`: no hay
+sesión que guardar. Ese es el motivo por el que este esquema escala a muchos servidores: no hay
+nada compartido entre ellos.
+
+### La demostración del token vencido
+
+Un token no se puede revocar: el servidor no lo guarda en ninguna parte, sólo verifica su firma.
+Si a alguien se le despide a las 10:00 y su token vale hasta las 18:00, sigue entrando hasta las
+18:00. Por eso vencen pronto — 30 minutos es el **techo del daño**.
+
+Y se puede ver, sin tocar una línea de Java. **Se pega:** en `practica/src/main/resources/application.yml`,
+se baja la vigencia:
+
+```yaml
+lab09:
+  jwt:
+    vigencia-segundos: 40
+```
+
+Se reinicia, se pide un token y se vuelve a usar dos veces, con paciencia:
+
+```
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
+       http://localhost:8095/productos
+200        ← recién emitido
+
+  (a los 50 segundos, con el token ya vencido según su propio `exp`)
+200        ← todavía pasa
+
+  (a los 101 segundos)
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
+       http://localhost:8095/productos
+401        ← vencido
+```
+
+**Los cien segundos no son un error de la demo: son la lección.** El token decía `exp` a los 40
+segundos y siguió pasando cuarenta más. La razón es que `NimbusJwtDecoder` aplica de fábrica una
+**tolerancia de reloj de 60 segundos**: acepta un token vencido hace menos de un minuto, porque el
+reloj del emisor y el del verificador no tienen por qué estar sincronizados al segundo, y rechazar
+un token por medio segundo de deriva sería peor que aceptarlo por medio minuto.
+
+O sea: **40 de vigencia + 60 de tolerancia = 100 segundos.** Conviene decirlo en voz alta, porque
+si no, la sala ve un 200 donde esperaba un 401 y concluye que la expiración no funciona.
+
+Nadie escribió la comprobación de la fecha: la hace el `JwtDecoder` solo, leyendo el claim `exp` —
+y la tolerancia también es suya. **Se vuelve a dejar en `1800`** antes de seguir, o el resto del
+laboratorio obliga a hacer login cada dos curl.
+
+---
+
+## Paso 5 · La sorpresa del día, y 401 no es 403
+
+**Se explica:** hasta aquí, todo el que entra puede hacer todo. Falta la segunda mitad:
+**autenticación** es quién eres; **autorización** es qué te toca. La regla ya está escrita desde
+el paso 2 —la línea de `hasAuthority`—; falta la ruta que protege.
+
+**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/seguridad/controllers/ProductoController.java`,
+**arriba**, junto a `import java.util.List;`.
+
+```java
+import java.util.Map;
+```
+
+**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase** — es un
+endpoint nuevo, no reemplaza a ninguno.
+
+```java
+    @GetMapping("/administracion")
+    public Map<String, String> administracion() {
+        return Map.of("mensaje", "Sólo un ADMIN ve esto");
+    }
+```
+
+**Se corre:** se piden los dos tokens, uno de cada usuario.
+
+```bash
+ANA=$(curl -s -X POST http://localhost:8095/auth/login -H 'Content-Type: application/json' \
+      -d '{"usuario":"ana","clave":"secreta"}'  | sed 's/.*"token":"\([^"]*\)".*/\1/')
+LUIS=$(curl -s -X POST http://localhost:8095/auth/login -H 'Content-Type: application/json' \
+      -d '{"usuario":"luis","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 ```
 
 ### El momento del laboratorio
 
-Se mira el token: tiene **tres partes separadas por puntos**. Y se decodifican las dos primeras
-**sin la clave, sin permiso, sin nada** — es Base64, no cifrado:
+Antes de cruzar las peticiones se **abren los dos tokens**. Tienen tres partes separadas por
+puntos, y las dos primeras se decodifican **sin la clave, sin permiso, sin nada** — es Base64, no
+cifrado:
 
 ```
-$ echo $TOKEN | cut -d. -f1 | base64 -d
-{"kid":"9du3wbQfrXqMC9zREE8738CntqhSY-5Nsv1umdszOEY","typ":"JWT","alg":"HS256"}
+$ echo $ANA | cut -d. -f2 | base64 -d
+{"iss":"lab09","sub":"ana","exp":1787071711,"iat":1787069911,"scope":"ROLE_ADMIN"}
 
-$ echo $TOKEN | cut -d. -f2 | base64 -d
-{"iss":"lab08","sub":"ana","exp":1787071711,"iat":1787069911,"scope":"ROLE_ADMIN"}
+$ echo $LUIS | cut -d. -f2 | base64 -d
+{"iss":"lab09","sub":"luis","exp":1787071713,"iat":1787069913,"scope":"ROLE_USUARIO"}
 ```
 
 (También sirve pegarlo en un decodificador de JWT en el navegador. Sale lo mismo.)
@@ -449,131 +584,39 @@ $ echo $TOKEN | cut -d. -f2 | base64 -d
 >
 > La tercera parte —la firma— no impide **leerlo**: impide **cambiarlo**. Cualquiera puede ver
 > que este token dice `ana` y `ROLE_ADMIN`; nadie puede fabricar uno que diga `ROLE_ADMIN` sin la
-> clave del servidor.
+> clave del servidor. Es lo que se acaba de comprobar en el paso 4 con `FIRMAFALSA`.
 
 Corolario, y es lo que hay que llevarse: **nunca se mete en un token nada que no pueda leer el
 que lo lleva.** Ni un RUT que no sea suyo, ni un correo de otro, ni una nota interna. Va firmado,
 no va tapado.
 
----
+Y de paso, ahí está el `scope` que la cadena va a leer dentro de un segundo: `ROLE_ADMIN` en uno,
+`ROLE_USUARIO` en el otro. **Ojo al nombre**, que es la trampa del día: el lector de tokens de
+Spring le antepone `SCOPE_` a lo que encuentre en ese claim, así que la autoridad se llama
+`SCOPE_ROLE_ADMIN` — que es exactamente lo que pide la línea del paso 2. Cuando los prefijos no
+cuadran, el error no dice nada: dice 403.
 
-## Paso 5 · Validar el token en cada petición
+### La matriz
 
-**Se explica:** el token ya se emite. Falta que el servidor lo **exija** y lo compruebe. Eso lo
-hace un filtro, y no hay que escribirlo: se declara la aplicación como *resource server* y Spring
-pone el filtro.
-
-**Se pega:** en `practica/pom.xml`, **dentro de `<dependencies>`** — la segunda dependencia del
-día.
-
-```xml
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
-```
-
-y en `SeguridadConfig`, se cambia `httpBasic` por el validador de tokens, se declara el
-decodificador, y la sesión se apaga:
-
-```java
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(rutas -> rutas
-                        .requestMatchers("/auth/login").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
-```
-
-```java
-    @Bean
-    JwtDecoder decodificadorDeTokens() {
-        return NimbusJwtDecoder.withSecretKey(clave()).build();
-    }
-```
-
-Y en `ProductoController`, el endpoint que demuestra que el token llegó entero.
-
-**Se pega (1 de 2):** en `practica/src/main/java/cl/dgt/seguridad/controllers/ProductoController.java`,
-**arriba**, con los imports.
-
-```java
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-
-import java.util.Map;
-```
-
-**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
-
-```java
-    @GetMapping("/quien-soy")
-    public Map<String, Object> quienSoy(@AuthenticationPrincipal Jwt jwt) {
-        return Map.of("usuario", jwt.getSubject(), "roles", jwt.getClaimAsString("scope"));
-    }
-```
-
-**Se corre — las tres pruebas del paso:**
-
-```
-$ curl -o /dev/null -w "%{http_code}\n" http://localhost:8095/productos
-401                                              ← sin token
-
-$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
-       http://localhost:8095/productos
-200                                              ← con token
-
-$ curl -H "Authorization: Bearer $TOKEN" http://localhost:8095/productos/quien-soy
-{"roles":"ROLE_ADMIN","usuario":"ana"}
-```
-
-Y la tercera, que es la que prueba la firma. Se le cambia el final al token:
-
-```
-$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer ${TOKEN%.*}.FIRMAFALSA" \
-       http://localhost:8095/productos
-401                                              ← token manipulado
-```
-
-**Lo que hay que notar:** nadie consultó la base en esas tres peticiones. El token **se basta a
-sí mismo** — trae quién eres y va firmado—, y por eso `sessionCreationPolicy(STATELESS)`: no hay
-sesión que guardar. Ese es el motivo por el que este esquema escala a muchos servidores: no hay
-nada compartido entre ellos.
-
----
-
-## Paso 6 · 401 no es 403
-
-**Se explica:** hasta aquí, todo el que entra puede hacer todo. Falta la segunda mitad:
-**autenticación** es quién eres; **autorización** es qué te toca.
-
-**Se pega:** en `practica/src/main/java/cl/dgt/seguridad/controllers/ProductoController.java`, **antes de la llave que cierra la
-clase** — es un endpoint nuevo, no reemplaza a ninguno.
-
-```java
-    @GetMapping("/administracion")
-    public Map<String, String> administracion() {
-        return Map.of("mensaje", "Sólo un ADMIN ve esto");
-    }
-```
-
-**Se pega:** en `config/SeguridadConfig.java`, **reemplazando la línea de `anyRequest()`** por
-estas dos. El orden importa: la regla del ADMIN va **antes**, que si no nunca se llega a ella.
-
-```java
-                        .requestMatchers("/productos/administracion").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-```
-
-**Se corre:** se piden dos tokens, uno de cada usuario, y se cruzan las peticiones.
+**Se corre:** las cinco peticiones del README, en orden.
 
 **En consola:**
 
 ```
-GET /productos                  sin token      401
-GET /productos                  ana ADMIN      200
-GET /productos                  luis USUARIO   200
-GET /productos/administracion   ana ADMIN      200
-GET /productos/administracion   luis USUARIO   403
+$ curl -o /dev/null -w "%{http_code}\n" http://localhost:8095/productos
+401
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $ANA"  http://localhost:8095/productos
+200
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $LUIS" http://localhost:8095/productos
+200
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $ANA"  http://localhost:8095/productos/administracion
+200
+
+$ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $LUIS" http://localhost:8095/productos/administracion
+403
 ```
 
 **Las dos últimas líneas son el paso.** Se comparan con la primera:
@@ -589,6 +632,10 @@ autenticado*. Se nombra en voz alta porque genera confusión el resto de la carr
 Y hay una consecuencia práctica que conviene dejar dicha: **un 403 se le devuelve a alguien que
 ya sabemos quién es.** Eso vale para el registro de auditoría —hay un nombre que anotar— y para
 el mensaje: a un 401 no se le cuenta nada; a un 403 se le puede decir qué rol haría falta.
+
+**Lo que hay que notar:** el endpoint `/administracion` **no comprueba el rol**. No hay un
+`if (esAdmin)`. La regla vive en `SeguridadConfig`, y el método de luis no llega a ejecutarse
+nunca: el filtro cortó antes.
 
 ---
 

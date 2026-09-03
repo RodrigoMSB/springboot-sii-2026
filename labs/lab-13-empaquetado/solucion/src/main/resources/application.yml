@@ -6,7 +6,7 @@ spring:
   application:
     name: lab13-empaquetado-solucion
 
-lab12:
+lab13:
   # Valores por defecto. Cada perfil los pisa, y una variable de entorno pisa al perfil.
   saludo: Hola desde el entorno por defecto
   tesoreria-url: http://localhost:9999/tesoreria-falsa

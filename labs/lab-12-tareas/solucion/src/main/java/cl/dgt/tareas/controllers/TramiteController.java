@@ -1,6 +1,5 @@
 package cl.dgt.tareas.controllers;
 
-import cl.dgt.tareas.soporte.Instancia;
 import cl.dgt.tareas.services.NotificadorService;
 import cl.dgt.tareas.programadas.CierreNocturno;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,12 +16,10 @@ public class TramiteController {
 
     private final NotificadorService notificador;
     private final CierreNocturno cierre;
-    private final Instancia instancia;
 
-    public TramiteController(NotificadorService notificador, CierreNocturno cierre, Instancia instancia) {
+    public TramiteController(NotificadorService notificador, CierreNocturno cierre) {
         this.notificador = notificador;
         this.cierre = cierre;
-        this.instancia = instancia;
     }
 
     /** Tres avisos, uno detrás de otro: el usuario espera los tres. */
@@ -42,7 +39,6 @@ public class TramiteController {
     @GetMapping("/quien")
     public Map<String, Object> quien() {
         return Map.of(
-                "instancia", instancia.nombre(),
                 "vueltasDelCierre", cierre.vueltas(),
                 "hiloQueAtiende", Thread.currentThread().toString(),
                 "esVirtual", Thread.currentThread().isVirtual());

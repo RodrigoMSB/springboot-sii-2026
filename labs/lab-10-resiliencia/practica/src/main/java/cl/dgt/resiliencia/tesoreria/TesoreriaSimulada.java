@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class TesoreriaSimulada {
 
     @Bean(destroyMethod = "stop")
-    WireMockServer tesoreria(@Value("${lab09.tesoreria.puerto}") int puerto) {
+    WireMockServer tesoreria(@Value("${lab10.tesoreria.puerto}") int puerto) {
         WireMockServer servidor = new WireMockServer(WireMockConfiguration.options().port(puerto));
         servidor.start();
         sana(servidor);

@@ -18,7 +18,7 @@ Tu aplicación llama a Tesorería para consultar un pago. Hoy vas a ver qué pas
 no contesta**, y a descubrir que el problema no es de Tesorería: es tuyo, porque tus usuarios se
 quedan esperando con ella.
 
-Vas a medir la espera, cortarla, reintentar cuando tenga sentido, **dejar de llamar** a quien está
+Vas a medir la espera, cortarla, **dejar de llamar** a quien está
 caído, y finalmente contestar algo útil aunque no haya respuesta.
 
 ## Qué necesitas tener listo
@@ -62,16 +62,19 @@ Tesorería va bien, no se nota. Cuando va mal, se nota en la DGT.
 Mientras estás al teléfono, **el de tu ventanilla espera contigo**. Si Tesorería tarda medio
 minuto en coger, tu ciudadano espera medio minuto — y tú no puedes atender a nadie más.
 
-Cuatro decisiones, y son las cuatro del laboratorio:
+Tres decisiones, y son las tres del laboratorio:
 
 1. **Colgar a los dos segundos.** Si no cogen, no te quedas escuchando el tono. Es el **timeout**.
-2. **Volver a marcar una vez más.** A veces es la línea, no el organismo. Es el **reintento**.
-3. **Dejar de llamar un rato.** Si llevas cinco llamadas seguidas sin respuesta, Tesorería está
+2. **Dejar de llamar un rato.** Si llevas cinco llamadas seguidas sin respuesta, Tesorería está
    caída: seguir marcando no la arregla, **y encima la entorpece cuando intenta levantarse**. Es el
    **circuit breaker**.
-4. **Atender igual, con lo que sabes.** «No he podido confirmar el pago; su trámite sigue su
-   curso». Es la **degradación**, y es la única de las cuatro que es una decisión de negocio y no
+3. **Atender igual, con lo que sabes.** «No he podido confirmar el pago; su trámite sigue su
+   curso». Es la **degradación**, y es la única de las tres que es una decisión de negocio y no
    técnica.
+
+(Hay una cuarta que no se hace hoy: **volver a marcar**, el reintento. Sirve cuando fue la línea y
+no el organismo, y empeora las cosas cuando el organismo de verdad está cerrado. Se nombra al final
+de la guía.)
 :::
 
 # Los pasos
@@ -199,70 +202,7 @@ Es el caso de Apache: si no fijaste el transporte a mano, Spring puede haber ele
 que ignora tu configuración. Comprueba que está el `JdkClientHttpRequestFactory`.
 :::
 
-## Paso 3 · Reintentar, y cuándo no
-
-### Qué vamos a hacer
-
-Volver a intentarlo un par de veces antes de rendirse.
-
-### Para entenderlo mejor
-
-Volver a marcar. Muchos fallos de red son de un instante: un paquete perdido, un reinicio de un
-segundo. Marcar otra vez cuesta poco y salva esos casos.
-
-### El problema
-
-Un fallo transitorio no distingue: se ve igual que uno permanente. Rendirse al primero convierte un
-parpadeo en un error para el usuario.
-
-### La alternativa, y por qué no
-
-- **No reintentar**: cualquier parpadeo llega al usuario.
-- **Reintentar siempre y muchas veces**: convierte un servicio caído en **más carga sobre un
-  servicio caído**, y multiplica la espera del usuario por el número de intentos.
-- **Tres intentos con 200 ms de espera**, que es lo de aquí: cubre el parpadeo y acota el daño.
-
-**Y una línea que importa más de lo que parece:** cuando el circuito del paso 4 esté abierto, el
-reintento **no debe reintentar**. Reintentar un rechazo instantáneo es esperar 400 ms para recibir
-tres veces el mismo «no» — y borra la ganancia del paso siguiente. Un circuito abierto no es un
-fallo transitorio: es **una decisión ya tomada**.
-
-### Se pega
-
-En `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`, **arriba**:
-
-``` java
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-```
-
-Los campos, **entre los de la clase**, y el bloque **dentro del constructor**, después de
-`this.cliente = cliente;`:
-
-{{codigo lab=lab-10-resiliencia archivo=src/main/java/cl/dgt/resiliencia/services/PagoService.java modo=entre desde="this.reintento = Retry.of" hasta="circuito.getEventPublisher" lenguaje=java sangria=no}}
-
-::: vasbien
-Con Tesorería caída ves en la consola las líneas `>>> REINTENTO n.º 1` y `>>> REINTENTO n.º 2`
-antes de que la petición falle.
-:::
-
-::: atasco
-**1 · No aparece ninguna línea de reintento.**
-
-Falta el publicador de eventos, o el `log` no está declarado. Sin la línea en consola el reintento
-puede estar funcionando igual — pero este lab se demuestra viéndolo.
-
-**2 · Ahora la petición tarda mucho más que 2 segundos.**
-
-Es lo esperado: son tres intentos de 2 s más las esperas entre ellos. El timeout limita **cada
-intento**, no el total.
-:::
-
-## Paso 4 · Dejar de llamar — el circuito
+## Paso 3 · Dejar de llamar — el circuito
 
 ### Qué vamos a hacer
 
@@ -291,7 +231,8 @@ levantarse.
 
 ### La alternativa, y por qué no
 
-- **Sólo timeout y reintento**: fallas rápido, y sigues llamando eternamente a un muerto.
+- **Sólo timeout**: fallas rápido, y sigues llamando eternamente a un muerto — dos segundos cada
+  vez, para nada.
 - **Los valores de fábrica del circuito**: pide **100 llamadas** antes de opinar. En una sesión de
   clase no abriría nunca; en un servicio con poco tráfico, tampoco.
 - **Una ventana de 5 llamadas y 50 % de fallos**, que es lo de aquí: abre a tiempo y se puede ver
@@ -303,16 +244,18 @@ levantarse.
 **Arriba, con los `import`**:
 
 ``` java
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 ```
 
-La configuración, **dentro del constructor y delante del reintento**:
+La configuración, **dentro del constructor**, después de `this.cliente = cliente;`:
 
-{{codigo lab=lab-10-resiliencia archivo=src/main/java/cl/dgt/resiliencia/services/PagoService.java modo=entre desde="this.cliente = cliente;" hasta="this.reintento = Retry.of" lenguaje=java sangria=no}}
+{{codigo lab=lab-10-resiliencia archivo=src/main/java/cl/dgt/resiliencia/services/PagoService.java modo=entre desde="this.cliente = cliente;" hasta="/** Paso 4" lenguaje=java sangria=no}}
 
 Y los dos métodos que permiten mirarlo desde fuera:
 
@@ -320,8 +263,11 @@ Y los dos métodos que permiten mirarlo desde fuera:
 
 ### Se corre
 
+Con Tesorería **lenta**, la misma de los pasos 1 y 2, y siete peticiones: hacen falta cinco para
+que el circuito opine.
+
 ``` bash
-curl -X POST localhost:8097/simulador/caida
+curl -X POST "localhost:8097/simulador/lenta?segundos=30"
 for i in 1 2 3 4 5 6 7; do
   curl -s -o /dev/null -w "%{time_total}s  " localhost:8097/pagos/77
   curl -s localhost:8097/pagos/estado-circuito; echo
@@ -331,21 +277,28 @@ done
 ### Lo que vas a ver
 
 ``` text
-petición 1: 0.445439s  circuito=CLOSED  httpReales=3
-petición 2: 0.220409s  circuito=OPEN    httpReales=4
-petición 3: 0.001903s  circuito=OPEN    httpReales=4
-petición 4: 0.001633s  circuito=OPEN    httpReales=4
-petición 5: 0.001526s  circuito=OPEN    httpReales=4
-petición 6: 0.002644s  circuito=OPEN    httpReales=4
-petición 7: 0.001807s  circuito=OPEN    httpReales=4
+petición 1: 2.038955s  circuito=CLOSED  httpReales=1
+petición 2: 2.015943s  circuito=CLOSED  httpReales=2
+petición 3: 2.013656s  circuito=CLOSED  httpReales=3
+petición 4: 2.008409s  circuito=CLOSED  httpReales=4
+petición 5: 2.015010s  circuito=OPEN    httpReales=5
+petición 6: 0.003290s  circuito=OPEN    httpReales=5
+petición 7: 0.003000s  circuito=OPEN    httpReales=5
 ```
 
 **Aquí hay que pararse y señalar el contador con el dedo.**
 
-`httpReales` es cuántas veces se salió de verdad a la red. **Se queda en 4 y no se mueve.** Se
-hicieron siete peticiones y sólo cuatro tocaron Tesorería: las otras tres se resolvieron aquí
-dentro, **en dos milésimas** — más de cien veces más rápido — y sin poner un gramo más de peso
+`httpReales` es cuántas veces se salió de verdad a la red. **Se queda en 5 y no se mueve.** Se
+hicieron siete peticiones y sólo cinco tocaron Tesorería: las otras dos se resolvieron aquí
+dentro, **en tres milésimas** — seiscientas veces más rápido — y sin poner un gramo más de peso
 sobre un servicio que está intentando levantarse.
+
+Y ahí está el arco entero del día, los tres números del **mismo escenario**:
+
+``` text
+30,01 s   ->   2,04 s   ->   0,003 s
+sin nada       timeout        circuito abierto
+```
 
 **Ése es el doble regalo del circuito: protege a quien llama y a quien es llamado.**
 
@@ -380,18 +333,18 @@ milésimas.
 Los valores de fábrica piden 100 llamadas. Comprueba que pusiste `slidingWindowSize(5)` y
 `minimumNumberOfCalls(5)`.
 
-**2 · Abre, pero las peticiones siguen tardando cientos de milésimas.**
+**2 · Abre a la segunda o la tercera petición, no a la quinta.**
 
-Falta el `.ignoreExceptions(CallNotPermittedException.class)` en el reintento: está reintentando el
-rechazo del circuito.
+Hay llamadas fallidas de antes en la ventana. Reinicia la aplicación y vuelve a empezar: la ventana
+son las **últimas cinco** llamadas, no las cinco de este `for`.
 
 **3 · `httpReales` sigue subiendo con el circuito abierto.**
 
-El circuito no está envolviendo la llamada, o lo pusiste **por fuera** del reintento en vez de por
-dentro.
+El circuito no está envolviendo la llamada: comprueba que `consultar` usa
+`CircuitBreaker.decorateSupplier(...)` y no llama al cliente directamente.
 :::
 
-## Paso 5 · Contestar aunque no haya respuesta
+## Paso 4 · Contestar aunque no haya respuesta
 
 ### Qué vamos a hacer
 
@@ -454,33 +407,40 @@ escapa.
 
 **1 · Sin timeout, quien decide cuánto esperas es el otro.**
 
-30,15 s contra 2,21 s, sobre el mismo servicio lento. El criterio no es cuánto tarda normalmente:
+30,01 s contra 2,04 s, sobre el mismo servicio lento. El criterio no es cuánto tarda normalmente:
 es cuánto está dispuesto a esperar tu usuario.
 
-**2 · Reintentar cubre el parpadeo, y sólo el parpadeo.**
+**2 · El circuito protege a los dos lados.**
 
-Tres intentos salvan un paquete perdido y no salvan un servicio caído — ahí sólo multiplican la
-espera y la carga sobre el que está mal.
-
-**3 · El circuito protege a los dos lados.**
-
-Con él abierto, las llamadas se resolvieron en **0,0018 s** y el contador de llamadas reales **dejó
+Con él abierto, las llamadas se resolvieron en **0,003 s** y el contador de llamadas reales **dejó
 de subir**. Tu aplicación deja de esperar, y el servicio caído deja de recibir peticiones mientras
-se levanta.
+se levanta. Y vuelve a cerrarse **solo** cuando el otro se recupera: nadie tiene que avisarle.
 
-**4 · Qué contestar cuando no hay respuesta es una decisión de negocio.**
+**3 · Qué contestar cuando no hay respuesta es una decisión de negocio.**
 
 Degradar sólo es correcto si el trámite puede seguir sin ese dato. Eso no lo sabe quien escribe el
 cliente HTTP: lo sabe quien conoce el trámite.
 
+# Lo que no vimos hoy
+
+- **El reintento**, y su regla en una línea: sirve cuando el fallo es **transitorio** —un paquete
+  perdido, un reinicio de un segundo— y **empeora** las caídas de verdad: el usuario espera el
+  triple y el servicio moribundo recibe el triple de tráfico. Eso se llama **tormenta de
+  reintentos**, y es de las formas más comunes de convertir una caída parcial en una total. Por eso
+  un reintento va siempre acompañado de un circuito, nunca solo.
+- **Backoff exponencial con jitter**: si se reintenta, esperando 200 ms, luego 400, luego 800, y a
+  cada espera un margen aleatorio — para que mil clientes no reintenten en el mismo milisegundo.
+- **Bulkheads**: un número fijo de hilos reservado por dependencia, para que la que se cuelga no se
+  lleve por delante los que atienden a todo lo demás.
+- **Rate limiting**: defenderse del exceso de llamadas *entrantes*, que es el problema simétrico
+  del de hoy.
+
 # Para profundizar
 
 - **Sube el timeout a 10 segundos** y repite el paso 2. ¿Mejora algo?
-- **Quita el `ignoreExceptions`** y mide otra vez con el circuito abierto. Compara con los
-  0,0018 s.
 - **Baja `waitDurationInOpenState` a 3 segundos** y observa el paso por `HALF_OPEN`.
-- **Pon el reintento por dentro del circuito** en vez de por fuera. ¿Qué le pasa al circuito
-  ahora, con los reintentos contando como fallos?
+- **Añade un `Retry` de tres intentos por fuera del circuito** y vuelve a medir el paso 3. ¿Cuántas
+  peticiones hacen falta ahora para que el circuito abra, y por qué?
 
 # Antes de cerrar
 
@@ -496,9 +456,8 @@ curl -X POST localhost:8097/simulador/sana
 
 **Lo que te llevas:**
 
-> Timeout para no esperar indefinidamente, reintento para el parpadeo, circuito para dejar de
-> llamar a un caído, y degradación para contestar igual. Las tres primeras son técnicas; la cuarta
-> la decide el negocio.
+> Timeout para no esperar indefinidamente, circuito para dejar de llamar a un caído, y degradación
+> para contestar igual. Las dos primeras son técnicas; la tercera la decide el negocio.
 
 **Lo que queda pendiente, y abre el Lab 11:** todo lo que has medido hoy lo has medido **tú, a
 mano, con un `curl` y un cronómetro**. En producción nadie está mirando. En el Lab 11 la aplicación

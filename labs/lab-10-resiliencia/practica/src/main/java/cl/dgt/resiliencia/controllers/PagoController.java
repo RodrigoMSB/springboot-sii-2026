@@ -23,6 +23,6 @@ public class PagoController {
         return servicio.consultar(id);
     }
 
-    // Paso 4 · expone el estado del circuito.
+    // Paso 3 · expone el estado del circuito.
     // escribe aquí
 }

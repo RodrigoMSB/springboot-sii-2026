@@ -5,7 +5,7 @@ spring:
   application:
     name: lab13-empaquetado
 
-lab12:
+lab13:
   saludo: Hola desde el entorno por defecto
   tesoreria-url: http://localhost:9999/tesoreria-falsa
 

@@ -25,10 +25,7 @@ public class ProductoController {
         return repositorio.todos();
     }
 
-    // Paso 5 · devuelve el usuario y los roles que vienen dentro del token.
-    // escribe aquí
-
-    // Paso 6 · devuelve un mensaje, y sólo para ADMIN.
+    // Paso 5 · devuelve un mensaje, y sólo para ADMIN.
     // escribe aquí
 
     @GetMapping("/{id}")

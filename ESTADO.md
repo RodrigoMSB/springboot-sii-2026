@@ -155,8 +155,10 @@
 - **La maleta**: el alumno solo necesita Git. Dentro del repositorio viajan
   - `tools/jdk/` — el JDK 25, partido en trozos y ensamblado al vuelo por el shim `mvnw`
   - `tools/maven/` + `repo-maven/` — Maven y **todas** las dependencias (D-022-1)
-  - `tools/jib-base/` — las capas de `eclipse-temurin:25-jre`, para que el Lab 13 construya su
-    imagen OCI sin salir a la red (D-032-1)
+  - `tools/jib-base/` — las capas de `eclipse-temurin:25-jre`, para construir imágenes OCI sin
+    salir a la red (D-032-1). Desde la SPEC-033 el Lab 13 ya no las usa —dejó de construir la
+    imagen—, pero **sí** el proyecto final y el examen, que entregan Jib como parte de lo resuelto
+    y apuntan ahí con su propio `.mvn/maven.config`
   - y PostgreSQL, que llega como dependencia Maven y arranca como proceso hijo — sin Docker
 
 - **La portabilidad, blindada**: `.gitattributes` fija los finales de línea (LF para los `.sh`,

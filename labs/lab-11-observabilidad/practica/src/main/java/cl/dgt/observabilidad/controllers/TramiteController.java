@@ -21,10 +21,8 @@ public class TramiteController {
 
     private final TramiteRepository repositorio;
 
-    // Paso 3 · pide el MeterRegistry y declara un contador de trámites emitidos.
     public TramiteController(TramiteRepository repositorio) {
         this.repositorio = repositorio;
-        // escribe aquí
     }
 
     public record NuevoTramite(String tipo, String rut) {
@@ -34,8 +32,6 @@ public class TramiteController {
     public Map<String, Object> emitir(@RequestBody NuevoTramite nuevo) {
         log.info("Emitiendo trámite tipo={} rut={}", nuevo.tipo(), nuevo.rut());
         Tramite guardado = repositorio.save(new Tramite(nuevo.tipo(), nuevo.rut()));
-        // Paso 3 · incrementa el contador.
-        // escribe aquí
         log.info("Trámite {} emitido", guardado.getId());
         return Map.of("id", guardado.getId(), "tipo", guardado.getTipo());
     }

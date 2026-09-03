@@ -1,7 +1,6 @@
 # Pasos · Lab 12 · Tareas y asincronía
 
-Cinco pasos. Se trabaja en `practica/`, en vivo. El último necesita **dos aplicaciones corriendo
-a la vez**.
+Tres pasos y el paso 0. Se trabaja en `practica/`, en vivo.
 
 ```bash
 cd practica
@@ -14,10 +13,10 @@ Hoy **no hay dependencias nuevas**: `@Scheduled`, `@Async` y los hilos virtuales
 lo que ya hay. Lo que se escribe:
 
 ```
-Lab12Application.java        →  pasos 1 y 3 (las dos anotaciones que lo encienden)
-programadas/                 →  pasos 1 y 2 (llega vacía)
-services/NotificadorService  →  paso 3
-application.yml              →  paso 4 (una línea)
+Lab12Application.java        →  pasos 1 y 2 (las dos anotaciones que lo encienden)
+programadas/                 →  paso 1 (llega vacía)
+services/NotificadorService  →  paso 2
+application.yml              →  paso 3 (una línea)
 ```
 
 ---
@@ -33,12 +32,11 @@ curl http://localhost:8103/tramites/quien
 **En consola:**
 
 ```json
-{"instancia":"instancia-8103",
- "hiloQueAtiende":"Thread[#58,http-nio-8103-exec-1,5,main]",
+{"hiloQueAtiende":"Thread[#58,http-nio-8103-exec-1,5,main]",
  "esVirtual":false}
 ```
 
-Guárdese esa línea del hilo: en el paso 4 va a cambiar.
+Guárdese esa línea del hilo: en el paso 3 va a cambiar.
 
 ---
 
@@ -67,7 +65,6 @@ y el archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/CierreN
 ```java
 package cl.dgt.tareas.programadas;
 
-import cl.dgt.tareas.soporte.Instancia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -81,18 +78,13 @@ public class CierreNocturno {
 
     private static final Logger log = LoggerFactory.getLogger(CierreNocturno.class);
 
-    private final Instancia instancia;
     private final AtomicInteger vueltas = new AtomicInteger();
-
-    public CierreNocturno(Instancia instancia) {
-        this.instancia = instancia;
-    }
 
     @Scheduled(fixedDelay = 5000, initialDelay = 3000)
     public void ejecutar() throws InterruptedException {
         int n = vueltas.incrementAndGet();
-        log.info("[CIERRE] {} · vuelta {} · {} · hilo {}",
-                instancia.nombre(), n, LocalTime.now().withNano(0), Thread.currentThread());
+        log.info("[CIERRE] vuelta {} · {} · hilo {}",
+                n, LocalTime.now().withNano(0), Thread.currentThread());
         Thread.sleep(1000);
     }
 
@@ -117,10 +109,9 @@ el campo **debajo** de `private final NotificadorService notificador;` y el cons
 ```
 
 ```java
-    public TramiteController(NotificadorService notificador, CierreNocturno cierre, Instancia instancia) {
+    public TramiteController(NotificadorService notificador, CierreNocturno cierre) {
         this.notificador = notificador;
         this.cierre = cierre;
-        this.instancia = instancia;
     }
 ```
 
@@ -133,9 +124,9 @@ y una línea más en lo que devuelve `/quien`:
 **En consola** — sin llamar a nada, solo esperando:
 
 ```
-[CIERRE] instancia-8103 · vuelta 1 · 13:00:07
-[CIERRE] instancia-8103 · vuelta 2 · 13:00:13
-[CIERRE] instancia-8103 · vuelta 3 · 13:00:19
+[CIERRE] vuelta 1 · 13:00:07 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 2 · 13:00:13 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 3 · 13:00:19 · hilo Thread[#63,scheduling-1,5,main]
 ```
 
 **Lo que hay que notar:** entre vuelta y vuelta pasan **6 segundos**, no 5. Y ahí está el
@@ -156,79 +147,22 @@ de la consola lo confirman.
 `initialDelay` existe para no ejecutar la tarea en mitad del arranque, cuando la aplicación
 todavía está levantándose.
 
----
+Y el nombre del hilo, `scheduling-1`, dice otra cosa que conviene señalar: **la tarea no corre en
+el hilo de Tomcat.** Tiene el suyo, y ahí no hay ninguna petición esperando al otro lado.
 
-## Paso 2 · Cron, y cómo se lee
+**Se corre** para confirmarlo desde fuera:
 
-**Se explica:** `fixedDelay` sirve para «cada tanto». Para «todos los días a las 3 de la mañana»
-hace falta un cron.
-
-**Se pega:** archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/Recordatorio.java`
-— el archivo entero.
-
-```java
-package cl.dgt.tareas.programadas;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalTime;
-
-@Component
-public class Recordatorio {
-
-    private static final Logger log = LoggerFactory.getLogger(Recordatorio.class);
-
-    @Scheduled(cron = "*/10 * * * * *", zone = "America/Santiago")
-    public void avisar() {
-        log.info("[CRON] recordatorio · {}", LocalTime.now().withNano(0));
-    }
-}
+```bash
+curl http://localhost:8103/tramites/quien
+# ...esperar seis segundos...
+curl http://localhost:8103/tramites/quien
 ```
 
-**Se explica la expresión, campo por campo, de izquierda a derecha:**
-
-```
- *  /10   *      *      *      *       *
- └─ segundo  minuto  hora  día-mes  mes  día-semana
-```
-
-> **El cron de Spring tiene SEIS campos, no cinco.** El de Unix empieza en los minutos; Spring
-> antepone los segundos. Copiar un cron de cinco campos de internet y pegarlo aquí no da error:
-> **se corre todo un campo** y la tarea se ejecuta a una hora que no es. Es el error número uno
-> con `@Scheduled`, y no avisa.
-
-Algunos ejemplos que conviene leer en voz alta:
-
-| expresión | cuándo |
-|---|---|
-| `*/10 * * * * *` | cada 10 segundos |
-| `0 0 3 * * *` | todos los días a las 03:00:00 |
-| `0 30 8 * * MON-FRI` | de lunes a viernes a las 08:30 |
-| `0 0 0 1 * *` | el día 1 de cada mes, a medianoche |
-
-**Y la zona horaria, que no es decorativa:**
-
-> `zone = "America/Santiago"`. Sin esto se usa la zona **del servidor**, y el servidor de
-> producción casi siempre está en UTC. Un cierre programado «a las 3 de la mañana» se ejecutaría a
-> las 23:00 o a la medianoche según la época del año — porque Chile cambia la hora y UTC no.
-
-**En consola:**
-
-```
-[CRON] recordatorio · 13:00:10
-[CRON] recordatorio · 13:00:20
-[CRON] recordatorio · 13:00:30
-```
-
-Segundos exactos 10, 20, 30: el cron se ancla al reloj, no al arranque. Es la otra diferencia con
-`fixedDelay`.
+`vueltasDelCierre` subió sin que nadie llamara a nada. Eso es todo el paso.
 
 ---
 
-## Paso 3 · Que el usuario no espere
+## Paso 2 · Que el usuario no espere
 
 **Se explica:** crear un trámite manda tres avisos por correo. Cada uno tarda un segundo. Hoy el
 usuario espera los tres, y la pregunta es por qué: **el aviso no es parte de crear el trámite.**
@@ -241,7 +175,7 @@ curl -X POST -w "  (%{time_total}s)\n" http://localhost:8103/tramites/sincrono
 ```
 
 ```
-{"tramite":"creado","modo":"SINCRONO"}  (3.020019s)
+{"tramite":"creado","modo":"SINCRONO"}  (3.018813s)
 ```
 
 **Tres segundos** por algo que el usuario no necesita ver.
@@ -294,22 +228,32 @@ curl -X POST -w "  (%{time_total}s)\n" http://localhost:8103/tramites/asincrono
 **En consola:**
 
 ```
-{"tramite":"creado","modo":"ASINCRONO"}  (0.004253s)
+{"tramite":"creado","modo":"ASINCRONO"}  (0.004011s)
 ```
 
 y un segundo después, cuando el usuario ya se fue:
 
 ```
-[ASINCRONO] aviso enviado a ana@sii.cl   · hilo VirtualThread[#73,task-1]
-[ASINCRONO] aviso enviado a luis@sii.cl  · hilo VirtualThread[#74,task-2]
-[ASINCRONO] aviso enviado a sofia@sii.cl · hilo VirtualThread[#75,task-3]
+17:00:17.272  [ASINCRONO] aviso enviado a ana@sii.cl   · hilo VirtualThread[#73,task-1]
+17:00:17.272  [ASINCRONO] aviso enviado a sofia@sii.cl · hilo VirtualThread[#76,task-3]
+17:00:17.273  [ASINCRONO] aviso enviado a luis@sii.cl  · hilo VirtualThread[#74,task-2]
 ```
 
-**De 3,03 s a 0,004 s.** Y dos cosas que notar en esas tres líneas:
+**De 3,02 s a 0,004 s.** Y dos cosas que notar en esas tres líneas:
 
 1. **Tres hilos distintos** (`task-1`, `task-2`, `task-3`): los avisos no sólo dejaron de bloquear,
    además se hicieron en paralelo. Tres segundos de trabajo en uno.
-2. **Los tres tienen la misma marca de tiempo.** Empezaron a la vez.
+2. **Los tres tienen prácticamente la misma marca de tiempo.** Empezaron a la vez.
+
+Compárese con los tres síncronos, todos en el **mismo** hilo y separados por un segundo exacto:
+
+```
+17:00:14.236  [SINCRONO] aviso enviado a ana@sii.cl   · hilo VirtualThread[#70,tomcat-handler-2]
+17:00:15.241  [SINCRONO] aviso enviado a luis@sii.cl  · hilo VirtualThread[#70,tomcat-handler-2]
+17:00:16.248  [SINCRONO] aviso enviado a sofia@sii.cl · hilo VirtualThread[#70,tomcat-handler-2]
+```
+
+Y ese hilo es **el que atiende al usuario**: mientras manda correos, no atiende a nadie más.
 
 ### Las tres trampas de `@Async`, que hay que decir ahora
 
@@ -323,15 +267,19 @@ y un segundo después, cuando el usuario ya se fue:
    llamó ya se fue. Se pierde salvo que se configure un manejador. Es la razón por la que el
    trabajo asíncrono **necesita** su propio registro de errores.
 
+Y hay una cuarta cosa, que no es trampa sino precio: **el asíncrono devuelve antes porque no sabe
+si el trabajo salió bien.** Los tres segundos del síncrono compraban una certeza. Es aceptable
+para un aviso; no lo sería para un cobro.
+
 ---
 
-## Paso 4 · Hilos virtuales
+## Paso 3 · Hilos virtuales
 
 **Se explica:** un hilo de Java, de los de toda la vida, es un hilo del sistema operativo: pesa
 alrededor de **1 MB de pila** y cambiar de uno a otro lo hace el núcleo. Por eso un servidor tiene
 un *pool* de 200 y no de 200.000, y por eso una petición que se queda esperando a un servicio
-lento es tan cara: **ocupa un recurso escaso sin hacer nada.** (Es justo lo que se vio en el Lab
-09.)
+lento es tan cara: **ocupa un recurso escaso sin hacer nada.** (Es justo lo que se vio en el
+Lab 10, con Tesorería tardando treinta segundos.)
 
 Un **hilo virtual** lo gestiona la JVM, no el sistema operativo. Pesa unos pocos cientos de bytes,
 y cuando se bloquea esperando entrada/salida, la JVM lo **aparta** y usa el hilo real para otra
@@ -356,7 +304,8 @@ después: "hiloQueAtiende": "VirtualThread[#68,tomcat-handler-0]/..."     "esVir
 ```
 
 **Una línea de configuración, y Tomcat entero pasó a hilos virtuales.** No se tocó una sola línea
-de código de la aplicación.
+de código de la aplicación. Hasta el nombre del hilo cambia: `http-nio-...-exec-N` era el pool
+clásico de Tomcat; `tomcat-handler-N` es el modo de hilos virtuales.
 
 ### Cuándo importa, y cuándo no — que es la mitad del paso
 
@@ -374,105 +323,84 @@ distinto; los hilos virtuales lo resuelven con una línea de YAML.
 
 ---
 
-## Paso 5 · El problema que nadie ve venir
+## Lo que no vimos hoy
 
-**Se explica:** todo lo de hoy funciona. Y ahora la aplicación tiene éxito, y hay que poner un
-segundo servidor detrás de un balanceador. Antes de correr nada, la pregunta y una mano alzada:
+**El cron.** `fixedDelay` sirve para «cada tanto». Para «todos los días a las 3 de la mañana» hace
+falta `@Scheduled(cron = "0 0 3 * * *", zone = "America/Santiago")`, y hay dos cosas que decir de
+esa línea:
 
-> Hay **dos instancias** de esta aplicación corriendo. ¿Cuántas veces se ejecuta el cierre
-> nocturno?
+- **El cron de Spring tiene SEIS campos, no cinco** — segundo, minuto, hora, día del mes, mes, día
+  de la semana. El de Unix empieza en los minutos. Copiar un cron de cinco campos de internet y
+  pegarlo aquí **no da error**: se corre todo un campo y la tarea se ejecuta a una hora que no es.
+- **La zona horaria se escribe siempre.** Sin ella se usa la del servidor, que en producción casi
+  siempre está en UTC. Un cierre «a las 3 de la mañana» se ejecutaría a las 23:00 o a la
+  medianoche según la época del año, porque Chile cambia la hora y UTC no.
 
-**Se corre:** se deja `practica/` levantada y **se levanta `solucion/` en otra terminal**.
+**El problema de las dos instancias**, que es el más importante de los dos y hay que contarlo
+entero:
 
-```bash
-# terminal 1 — ya está corriendo
-cd practica && ./mvnw spring-boot:run
+> La aplicación tiene éxito y se levanta un segundo servidor detrás de un balanceador.
+> **¿Cuántas veces se ejecuta el cierre nocturno?**
 
-# terminal 2
-cd solucion && ./mvnw spring-boot:run
-```
-
-Y se miran las dos consolas a la vez.
-
-**En consola:**
-
-```
-terminal 1:  [CIERRE] instancia-8103 · vuelta 6 · 12:58:55
-terminal 2:  [CIERRE] instancia-8104 · vuelta 1 · 12:58:55     ← el mismo segundo
-
-terminal 1:  [CIERRE] instancia-8103 · vuelta 7 · 12:59:01
-terminal 2:  [CIERRE] instancia-8104 · vuelta 2 · 12:59:01     ← otra vez
-
-terminal 1:  [CIERRE] instancia-8103 · vuelta 8 · 12:59:07
-terminal 2:  [CIERRE] instancia-8104 · vuelta 3 · 12:59:07     ← y otra
-```
-
-**Dos servidores, dos cierres, en el mismo segundo.**
-
-**Lo que hay que notar, y hay que decirlo despacio:**
-
-`@Scheduled` es una anotación **local**. Cada instancia tiene su propio reloj y no sabe que la
-otra existe. Nadie hizo nada mal: el código es correcto, y el fallo aparece **el día que se
+Dos. `@Scheduled` es una anotación **local**: cada instancia tiene su propio planificador, su
+propio reloj y ninguna idea de que la otra existe. Las dos consolas escriben `[CIERRE]` en el
+mismo segundo. Y nadie hizo nada mal — el código es correcto, y el fallo aparece **el día que se
 duplica el servidor**, que es un día de éxito y en el que nadie está mirando los cierres.
 
-Las consecuencias, con nombre y apellido:
+Las consecuencias, con nombre y apellido: el total del cierre sale duplicado, el contribuyente
+recibe dos veces el mismo aviso, y si la tarea genera folios se generan dos series.
 
-- El total del cierre sale **duplicado**.
-- El contribuyente recibe **dos veces** el mismo aviso.
-- Y si la tarea genera folios, se generan dos series — que es el problema del Lab 07, otra vez, y
-  ahora entre procesos distintos.
-
-### La solución, nombrada y no implementada
-
-> Hace falta un **candado distribuido**: un sitio compartido por las dos instancias donde la
-> primera que llega deja una marca —«el cierre del 18 de agosto es mío»— y la segunda, al no poder
-> dejarla, se salta la ejecución.
-
-Ese sitio compartido puede ser una fila en una tabla (con `INSERT` sobre una clave única, que es
-atómico), una clave en Redis, o una librería que lo haga por uno (ShedLock). Y el candado necesita
+La solución es un **candado distribuido**: un sitio compartido donde la primera instancia que
+llega deja una marca —«el cierre del 18 de agosto es mío»— y la segunda, al no poder dejarla, se
+salta la ejecución. Ese sitio puede ser una fila en una tabla con `INSERT` sobre clave única, una
+clave en Redis, o ShedLock, que es una librería que hace exactamente esto. Y el candado necesita
 **expiración**: si la instancia que lo tomó se cae a mitad, alguien tiene que poder retomarlo.
 
-**No se implementa hoy, y es a propósito:** requiere un almacén compartido, y montarlo convertiría
-este laboratorio en otro. Lo que hay que llevarse es **reconocer el problema**, que es la parte
-difícil:
+**Y aquí hay que tener cuidado con lo que se dice**, porque es fácil sacar la conclusión
+equivocada: el candado del **Lab 07 sí funciona entre procesos**. Aquel candado vivía en la
+base —un bloqueo sobre la fila del folio— y la base es precisamente el sitio compartido que hace
+falta. Lo que **no** funciona entre procesos es `synchronized`, que es memoria de una sola JVM. Y
+`@Scheduled`, por la misma razón: cada JVM tiene su planificador.
 
-> Toda tarea programada en una aplicación que puede tener más de una instancia necesita un candado
-> distribuido. **Y casi ninguna lo tiene**, porque en desarrollo siempre hay una sola instancia y
-> el fallo no se puede ver.
+Y hay más cosas que quedan fuera:
+
+- **Colas de mensajes** (RabbitMQ, Kafka): cuando el trabajo asíncrono tiene que sobrevivir a que
+  el proceso se caiga. `@Async` vive en memoria; si la aplicación muere, el aviso se pierde.
+- **Planificadores distribuidos** (Quartz en clúster, el cron del orquestador): sacar la
+  programación fuera de la aplicación.
 
 ---
 
 ## Al terminar
 
-`practica/` hace lo mismo que `solucion/`: dos tareas corriendo solas, el endpoint asíncrono en
+`practica/` hace lo mismo que `solucion/`: la tarea corriendo sola, el endpoint asíncrono en
 milésimas, y los hilos virtuales encendidos.
 
 | | |
 |---|---|
-| síncrono | 3,03 s |
+| síncrono | 3,02 s |
 | asíncrono | 0,004 s |
-| cierre con dos instancias | **2 ejecuciones** |
+| `esVirtual` | de `false` a `true` |
 
 Lo que hay que poder decir con las propias palabras:
 
-> `fixedDelay` cuenta desde que termina la anterior, y por eso no se solapan. El cron de Spring
-> tiene seis campos y la zona se escribe siempre. `@Async` devuelve el control al instante, y sus
-> excepciones no llegan a nadie. Los hilos virtuales sirven para esperar, no para calcular. Y una
-> tarea programada en dos instancias se ejecuta dos veces.
+> `fixedDelay` cuenta desde que termina la anterior, y por eso no se solapan. `@Async` devuelve el
+> control al instante, no pasa por el proxy si se llama desde dentro, y sus excepciones no llegan
+> a nadie. Los hilos virtuales sirven para esperar, no para calcular, y se encienden con una línea
+> de YAML sin tocar el código.
 
 ### Lo que siembra este lab
 
-De los cinco pasos, cuatro salieron bien y **uno quedó abierto a propósito**: el cierre duplicado
-sigue duplicándose al terminar la sesión.
+Hay algo que quedó dicho y **no resuelto**: el cierre nocturno se ejecuta dos veces en cuanto haya
+dos instancias, y al terminar la sesión sigue siendo así.
 
-No es un descuido del guion. Es la forma honesta de dejar planteado lo que viene: hay una clase de
-problemas que **no se pueden resolver dentro de un proceso**. El candado del Lab 07 funcionaba
-porque los dos hilos vivían en la misma JVM y compartían memoria. Aquí no hay memoria compartida:
-hay dos procesos que ni siquiera saben el uno del otro.
+No es un descuido. Es la forma honesta de dejar planteado lo que viene: hay una clase de problemas
+que **no se pueden resolver dentro de un proceso**. Dos procesos no comparten memoria, ni reloj,
+ni contadores — y ninguna de esas cosas avisa cuando deja de ser cierta.
 
 > **Lo que se lleva planteado:** en cuanto una aplicación tiene más de una instancia, todo lo que
-> dependa de «yo soy el único» deja de ser cierto — el reloj, el contador en memoria, el caché,
-> el candado. Y ninguna de esas cosas avisa cuando deja de serlo.
+> dependa de «yo soy el único» deja de valer. Lo que quede compartido tiene que estar **fuera** del
+> proceso: en la base, en Redis, en algún sitio que las dos instancias puedan ver.
 
 Y hay un corolario práctico para el laboratorio siguiente, el del empaquetado: si la aplicación se
 va a desplegar en varias copias, **la copia tiene que ser exactamente la misma** y la diferencia

@@ -1,6 +1,6 @@
 # Pasos · Lab 11 · Observabilidad
 
-Cinco pasos. Se trabaja en `practica/`, en vivo.
+Tres pasos y el paso 0. Se trabaja en `practica/`, en vivo.
 
 ```bash
 cd practica
@@ -9,14 +9,13 @@ cd practica
 
 Escucha en el **8101** (`solucion/`, en el 8102). La base va en el **55442**.
 
-Lo que llega hecho: los trámites, la base y el mando a distancia. Lo que se escribe hoy:
+Lo que llega hecho: los trámites y la base. Lo que se escribe hoy:
 
 ```
 pom.xml                        →  paso 1 (una dependencia)
-application.yml                →  pasos 1, 2, 4 y 5
-infra/                         →  pasos 2 y 4 (FiltroDeCorrelacion y SaludDeLaBase;
-                                   el resto de `infra/` llega dado)
-controllers/TramiteController  →  paso 3
+application.yml                →  pasos 1, 2 y 3
+infra/FiltroDeCorrelacion      →  paso 2
+infra/SaludDeLaBase            →  paso 3
 ```
 
 ---
@@ -37,13 +36,13 @@ curl -X POST http://localhost:8101/tramites \
 ```
 {"id":1,"tipo":"F29"}
 
-2026-08-18T14:00:41  INFO  c.d.o.controllers.TramiteController : Emitiendo trámite tipo=F29 rut=11.111.111-1
+2026-09-03T14:00:41  INFO  c.d.o.controllers.TramiteController : Emitiendo trámite tipo=F29 rut=11.111.111-1
 ```
 
 Y ahora las preguntas del día, que no se pueden contestar:
 
 - ¿Está sana la aplicación **ahora mismo**? — «Parece que sí, acabo de llamarla.»
-- ¿Cuántos trámites lleva emitidos hoy? — «Ni idea.»
+- ¿Y la base de datos que hay debajo? — «Si la aplicación contesta, supongo que sí.»
 - De las cuarenta líneas que hay en el log, ¿cuáles son **de esta petición**? — «Las que están
   cerca, supongo.»
 
@@ -72,17 +71,17 @@ importante del paso es lo que se deja fuera**.
 
 y en `practica/src/main/resources/application.yml`, donde dice `# escribe aquí`.
 
-> **Ojo con el YAML de este lab:** los pasos 1, 4 y 5 pegan cada uno un trozo bajo `management:`.
-> **Es una sola clave**, no tres: el segundo trozo y el tercero se **funden** con lo que ya
-> escribiste, no se pegan debajo. Un `application.yml` con `management:` repetido tres veces no
-> es válido y la aplicación no arranca.
+> **Ojo con el YAML de este lab:** los pasos 1 y 3 pegan cada uno un trozo bajo `management:`.
+> **Es una sola clave**, no dos: el segundo trozo se **funde** con lo que ya escribiste, no se
+> pega debajo. Un `application.yml` con `management:` repetido dos veces no es válido y la
+> aplicación no arranca.
 
 ```yaml
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
 ```
 
 **Se corre:** `curl http://localhost:8101/actuator`
@@ -90,7 +89,7 @@ management:
 **En consola:**
 
 ```
-  expuesto: health health-path info metrics metrics-requiredMetricName self
+  expuesto: health  health-path  info  self
 ```
 
 Y lo que **no** está:
@@ -103,10 +102,11 @@ Y lo que **no** está:
   /actuator/loggers      -> 404
   /actuator/mappings     -> 404
   /actuator/configprops  -> 404
+  /actuator/metrics      -> 404
 ```
 
 **Lo que hay que notar, y es todo el paso:** la lista es **nominal**. No es `include: "*"`, y hay
-que decir por qué mirando los cuatro que quedaron fuera:
+que decir por qué mirando los que quedaron fuera:
 
 | endpoint | qué regala |
 |---|---|
@@ -120,6 +120,11 @@ que decir por qué mirando los cuatro que quedaron fuera:
 
 La regla: **se enumera lo que se expone, uno por uno.** Y en producción, además, esto va detrás de
 autenticación o en un puerto que no sale a internet.
+
+**Y por qué `metrics` tampoco está**, que alguien lo va a preguntar: porque una métrica que nadie
+recoge es un número que se pierde al reiniciar. Encender el endpoint es la parte fácil; lo que le
+da sentido —un Prometheus preguntando cada quince segundos y un tablero dibujando la curva— está
+en «lo que no vimos hoy».
 
 ---
 
@@ -194,24 +199,28 @@ hay ninguno — las líneas de arranque, que no pertenecen a ninguna petición.
 **En consola:**
 
 ```
-14:00:25.895 INFO  [823c094e] c.d.o.c.TramiteController - Emitiendo trámite tipo=F29 rut=11.111.111-1
-14:00:25.926 INFO  [823c094e] c.d.o.c.TramiteController - Trámite 1 emitido
-14:00:25.941 INFO  [49598873] c.d.o.c.TramiteController - Emitiendo trámite tipo=F22 rut=22.222.222-2
-14:00:25.942 INFO  [49598873] c.d.o.c.TramiteController - Trámite 2 emitido
+16:54:36.245 INFO  [b3189d84] c.d.o.c.TramiteController - Emitiendo trámite tipo=F29 rut=11.111.111-1
+16:54:36.317 INFO  [b3189d84] c.d.o.c.TramiteController - Trámite 1 emitido
+16:54:36.331 INFO  [ceccad1e] c.d.o.c.TramiteController - Emitiendo trámite tipo=F22 rut=22.222.222-2
+16:54:36.338 INFO  [ceccad1e] c.d.o.c.TramiteController - Trámite 2 emitido
 ```
 
-**Dos peticiones, dos identificadores.** Con esto, buscar `823c094e` en el log de producción
+**Dos peticiones, dos identificadores.** Con esto, buscar `b3189d84` en el log de producción
 devuelve **la historia completa de esa petición y nada más**. Sin esto, la pregunta «¿qué pasó con
 el trámite del señor Pérez a las 14:03?» no tiene respuesta.
 
-**Dos detalles que valen la sesión:**
+**Y hay que fijarse en dónde NO está el traceId:** en `TramiteController` no aparece por ninguna
+parte. No se pasa por parámetro, no se menciona. Lo pone el filtro en el MDC y el patrón de log lo
+imprime. Ése es todo el argumento del MDC.
+
+**Tres detalles que valen la sesión:**
 
 1. **El id vuelve en la cabecera de la respuesta.** Así, cuando un usuario reclama, puede decir su
    número:
 
 ```
 $ curl -D- -o /dev/null -X POST http://localhost:8101/tramites ...
-X-Trace-Id: 49153662
+X-Trace-Id: 92110101
 ```
 
 2. **Si el que llama ya trae un id, se respeta.** Ese `if` de tres líneas es lo que hace que el id
@@ -220,7 +229,7 @@ X-Trace-Id: 49153662
 
 ```
 $ curl -H "X-Trace-Id: MI-ID-123" http://localhost:8101/tramites
-14:00:25.978 INFO  [MI-ID-123] c.d.o.c.TramiteController - Listando trámites
+16:54:36.352 INFO  [MI-ID-123] c.d.o.c.TramiteController - Listando trámites
 ```
 
 3. **Y el `finally` no es opcional.** El hilo que atendió esta petición **se reutiliza** para la
@@ -229,71 +238,7 @@ $ curl -H "X-Trace-Id: MI-ID-123" http://localhost:8101/tramites
 
 ---
 
-## Paso 3 · Una métrica que le importa al negocio
-
-**Se explica:** Actuator ya trae decenas de métricas técnicas —memoria, hilos, peticiones HTTP,
-pool de conexiones—. Lo que no puede traer es **cuántos trámites se emitieron**, porque eso sólo lo
-sabe esta aplicación.
-
-**Se pega:** en `practica/src/main/java/cl/dgt/observabilidad/controllers/TramiteController.java`,
-**arriba, con los demás `import`**:
-
-```java
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-```
-
-**Se pega:** en el mismo archivo, el campo **debajo** de `private final TramiteRepository
-repositorio;`, y el constructor **reemplazando el que hay** — le entra un parámetro más.
-
-```java
-    private final Counter emitidos;
-
-    public TramiteController(TramiteRepository repositorio, MeterRegistry registro) {
-        this.repositorio = repositorio;
-        this.emitidos = Counter.builder("dgt.tramites.emitidos")
-                .description("Trámites emitidos desde que arrancó la aplicación")
-                .register(registro);
-    }
-```
-
-```java
-        emitidos.increment();
-```
-
-**Se corre:**
-
-```bash
-curl http://localhost:8101/actuator/metrics/dgt.tramites.emitidos
-```
-
-**En consola:**
-
-```json
-{"name":"dgt.tramites.emitidos",
- "description":"Trámites emitidos desde que arrancó la aplicación",
- "measurements":[{"statistic":"COUNT","value":3.0}]}
-```
-
-Se emiten dos más y se vuelve a mirar: **5.0**.
-
-**Lo que hay que notar:**
-
-- El `MeterRegistry` **se pide por constructor**, como cualquier dependencia. Lo pone Actuator.
-- El contador **se declara una vez** y se guarda. Crearlo dentro del método también funciona
-  —Micrometer devuelve el mismo si el nombre coincide— pero es trabajo por petición para nada.
-- El nombre es jerárquico y con puntos: `dgt.tramites.emitidos`. La convención importa porque el
-  día que haya un tablero, `dgt.*` es lo que se agrupa.
-- Un `Counter` **sólo sube**. Para algo que sube y baja (trámites en curso) hay `Gauge`; para
-  medir duraciones, `Timer`.
-
-Y la pregunta que conviene dejar caer: *¿por qué esto y no un `SELECT count(*)`?* Porque la métrica
-está **siempre disponible, es barata y no toca la base** — y porque un tablero la va a preguntar
-cada quince segundos.
-
----
-
-## Paso 4 · Un health que dice QUÉ se rompió
+## Paso 3 · Un health que dice QUÉ, y a quién le importa
 
 **Se explica:** `/actuator/health` ya contesta, y contesta poco:
 
@@ -302,9 +247,13 @@ cada quince segundos.
 ```
 
 Sirve para un semáforo y para nada más. Si un día dice `DOWN`, la pregunta siguiente —**¿qué se
-cayó?**— no tiene respuesta.
+cayó?**— no tiene respuesta. Este paso tiene dos mitades: primero se hace que el health **diga
+qué**, y después se decide **a quién le importa cada cosa**.
 
-**Se pega:** en `practica/src/main/resources/application.yml`.
+### Primera mitad · que diga qué
+
+**Se pega:** en `practica/src/main/resources/application.yml`, dentro del `management:` que ya
+escribiste en el paso 1.
 
 ```yaml
 management:
@@ -367,9 +316,12 @@ public class SaludDeLaBase implements HealthIndicator {
 
 ```json
 {"status":"UP","components":{
-  "baseDeDatos":{"status":"UP","details":{"consulta":"SELECT count(*) FROM tramite","milisegundos":0}},
+  "baseDeDatos":{"status":"UP","details":{"consulta":"SELECT count(*) FROM tramite","milisegundos":5}},
   "db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},
-  "diskSpace":{"status":"UP", ...}}}
+  "diskSpace":{"status":"UP", ...},
+  "livenessState":{"status":"UP"},
+  "readinessState":{"status":"UP"},
+  "ping":{"status":"UP"}, "ssl":{"status":"UP", ...}}}
 ```
 
 **Lo que hay que notar:**
@@ -385,11 +337,9 @@ public class SaludDeLaBase implements HealthIndicator {
 - Y el `catch` **nombra la causa**. Es la diferencia entre «algo pasa» y «la base no responde», que
   es la diferencia entre buscar media hora y no buscar.
 
----
+### Segunda mitad · liveness no es readiness
 
-## Paso 5 · Liveness no es readiness
-
-**Se explica:** ahora la pregunta que de verdad importa, y que casi todo el mundo contesta mal.
+**Se explica:** y ahora la pregunta que de verdad importa, y que casi todo el mundo contesta mal.
 
 Un orquestador (Kubernetes, o el que sea) le hace **dos** preguntas distintas a la aplicación:
 
@@ -410,7 +360,7 @@ La respuesta —y hay que dejar que se equivoquen primero:
   «apagada».
 - **readiness: DOWN.** No puede atender. Que dejen de mandarle tráfico hasta que la base vuelva.
 
-**Se pega:** en `practica/src/main/resources/application.yml`.
+**Se pega:** en `practica/src/main/resources/application.yml`, en el mismo `management:`.
 
 ```yaml
 management:
@@ -433,43 +383,64 @@ a liveness.
 
 ```
 liveness  -> 200 {"components":{"livenessState":{"status":"UP"}},"status":"UP"}
-readiness -> 200 {"components":{"baseDeDatos":{...,"status":"UP"}},"status":"UP"}
+readiness -> 200 {"components":{"baseDeDatos":{"details":{"consulta":"SELECT count(*) FROM tramite",
+                 "milisegundos":4},"status":"UP"},"readinessState":{"status":"UP"}},"status":"UP"}
 ```
 
-**Y ahora se tira la base**, con la aplicación viva:
+**Los dos dan 200, y no dicen lo mismo.** Liveness mira un solo estado —el del proceso—; readiness
+mira además la base. Ahí ya se ve la diferencia: **son dos preguntas, no dos formas de preguntar
+lo mismo.**
 
-```bash
-curl -X POST http://localhost:8101/simulador/base-caida
-```
+### Y ahora lo que pasaría con la base caída
 
-**En consola:**
+**Esto no se corre. Se proyecta y se explica**, porque tirar la base en vivo cuesta media hora de
+andamiaje que no enseña nada. Lo que respondería la aplicación:
 
 ```
 liveness  -> 200 {"status":"UP"}      ← el proceso está sano. NO lo reinicies
-readiness -> 503
-             readiness: DOWN
-             causa: la base de datos no responde
+
+readiness -> 503 {"status":"DOWN","components":{
+                   "baseDeDatos":{"status":"DOWN","details":{
+                     "causa":"la base de datos no responde",
+                     "detalle":"Connection to localhost:55442 refused.",
+                     "milisegundos":2003}},
+                   "readinessState":{"status":"UP"}}}
 ```
 
 **Aquí se para y se señalan los dos números.** 200 y 503, **al mismo tiempo**, contestando dos
-preguntas distintas sobre la misma aplicación. Y el 503 viene con el nombre de lo que falló.
+preguntas distintas sobre la misma aplicación. Y el 503 viene con el nombre de lo que falló y con
+el mensaje exacto del error.
 
-**Se levanta otra vez:**
-
-```bash
-curl -X POST http://localhost:8101/simulador/base-sana
-```
-
-```
-readiness -> 200 UP
-```
-
-**Sin reiniciar nada.** El pool se reconecta, el health vuelve a consultar y la aplicación vuelve a
-rotación sola.
+Y cuando la base vuelve, readiness pasa a 200 **sin reiniciar nada**: el pool se reconecta, el
+health vuelve a consultar y la aplicación vuelve a rotación sola.
 
 > **La regla que se llevan:** liveness responde «¿sirve reiniciarme?». Readiness responde «¿puedo
-> trabajar ahora?». Meter una dependencia externa en liveness es firmar un bucle de reinicios el
-> día que esa dependencia falle.
+> trabajar ahora?».
+>
+> **Ninguna dependencia externa va en liveness. Nunca.** Ni la base, ni Tesorería, ni el disco de
+> red. Meter una dependencia externa en liveness es firmar un bucle de reinicios el día que esa
+> dependencia falle — y el día que falle, un bucle de reinicios es exactamente lo último que hace
+> falta.
+
+---
+
+## Lo que no vimos hoy
+
+- **Métricas.** Actuator trae decenas —memoria, hilos, peticiones HTTP, pool de conexiones— y la
+  aplicación puede declarar las suyas: un `Counter` de trámites emitidos, un `Timer` de cuánto
+  tarda cada emisión. Se declara en tres líneas con Micrometer. Lo que no cabe en la sesión es lo
+  que les da sentido: **alguien que las recoja**. Una métrica sin recolector es un número que se
+  pierde al reiniciar.
+- **Prometheus y un tablero.** Un proceso que pregunta `/actuator/prometheus` cada quince segundos,
+  guarda la serie y dibuja la curva. Porque lo que importa casi nunca es el valor de ahora: es que
+  los trámites emitidos cayeron a la mitad esta mañana.
+- **Logs centralizados.** Los de todas las instancias en un solo sitio, buscables. Spring Boot 4
+  trae logging estructurado nativo: `logging.structured.format.console: ecs` y cada línea sale
+  como un JSON, sin añadir una sola dependencia.
+- **Trazas distribuidas** (OpenTelemetry): el `traceId` de hoy, pero cruzando automáticamente de un
+  servicio a otro, con el tiempo que se pasó en cada uno. Lo del paso 2 es la versión a mano de
+  esa idea, y por eso se hace a mano: para entender qué está automatizando la herramienta.
+- **Alertas.** Que alguien se entere a las tres de la mañana sin estar mirando.
 
 ---
 
@@ -479,9 +450,9 @@ rotación sola.
 
 > Actuator se expone por lista nominal, nunca con asterisco, porque `/env` y `/heapdump` regalan
 > el sistema entero. Un id de correlación por petición convierte un log ilegible en una historia
-> que se puede seguir. Una métrica de negocio la declara la aplicación, porque nadie más la sabe.
-> Y un health tiene que decir **qué** se cayó: liveness para reiniciar, readiness para sacar de
-> rotación, y una base caída sólo afecta a la segunda.
+> que se puede seguir, y no cuesta ni una línea en el código de negocio. Y un health tiene que
+> decir **qué** se cayó: liveness para reiniciar, readiness para sacar de rotación, y una
+> dependencia externa sólo afecta a la segunda.
 
 ### Lo que siembra este lab
 
@@ -490,13 +461,18 @@ Con esto, la aplicación ya cuenta lo que le pasa. Y aparece la pregunta que no 
 
 Hoy los datos se miraron con `curl`, a mano, uno por uno. Eso funciona con una aplicación, un
 laboratorio y una persona mirando. En producción hay varias instancias, nadie mirando, y lo que
-importa no es el valor de ahora: es **la curva** — que los trámites emitidos cayeron a la mitad
-esta mañana, que el health estuvo `DOWN` cuatro minutos de madrugada.
+importa no es el valor de ahora: es **la curva** — que el health estuvo `DOWN` cuatro minutos de
+madrugada, que las emisiones cayeron a la mitad esta mañana.
 
-> **Lo que queda planteado:** una métrica que nadie recoge es un número que se pierde al reiniciar,
-> y un log que nadie centraliza es un archivo dentro de una máquina que mañana no existe.
+> **Lo que queda planteado:** un log que nadie centraliza es un archivo dentro de una máquina que
+> mañana no existe, y un health que nadie consulta es un endpoint que nadie llama.
 
-Eso —Prometheus recogiendo cada quince segundos, un tablero dibujando la curva, los logs de todas
-las instancias en un solo sitio, y el `traceId` cruzando de un servicio a otro— es lo que está en
-«lo que no vimos hoy». El trabajo de este laboratorio es lo que lo hace posible: **nada de eso se
-puede montar sobre una aplicación que no dice nada.**
+Eso es lo que está en «lo que no vimos hoy». El trabajo de este laboratorio es lo que lo hace
+posible: **nada de eso se puede montar sobre una aplicación que no dice nada.**
+
+Y queda una segunda cosa, más cercana. Todo lo de hoy pasa **mientras alguien llama**. Pero hay
+trabajo que la aplicación tiene que hacer **sin que nadie llame** —un cierre a medianoche, un
+correo que no debe hacer esperar al usuario— y eso todavía no sabemos hacerlo.
+
+> **La pregunta que abre el Lab 12** — ¿cómo se hace que la aplicación haga algo **sola**, sin que
+> haya una petición esperando al otro lado?

@@ -4,20 +4,20 @@ La aplicación funciona y no cuenta nada.
 
 En el Lab 10 el circuito abrió, el servicio se degradó y el usuario recibió una respuesta rara
 pero razonable. **Nadie se enteró.** Hoy la aplicación aprende a decir qué está viviendo: si está
-sana, cuánto trabajo hizo, y —cuando algo se cae— **qué** se cayó.
+sana, y —cuando algo se cae— **qué** se cayó.
 
 ## Qué se aprende
 
 - Qué expone **Actuator**, y sobre todo **qué no se expone nunca** en producción.
-- Un **id de correlación** por petición en el MDC: seguir *una* petición entre miles en el log.
-- Una **métrica de negocio** propia, y verla subir.
+- Un **id de correlación** por petición en el MDC: seguir *una* petición entre miles en el log,
+  sin tocar una línea del código de negocio.
 - Un **health indicator** que no dice «UP» porque sí: consulta la base y **nombra** la causa.
 - **Liveness contra readiness**, que no son lo mismo y confundirlos cuesta caro: uno reinicia el
   proceso, el otro lo saca de rotación.
 
 ## El momento del laboratorio
 
-Se tira la base de datos con la aplicación viva:
+Las dos sondas, con la base arriba y con la base caída:
 
 ```
                     base arriba          base caída
@@ -30,18 +30,22 @@ y el health dice **qué** pasó, no sólo que pasó:
 ```json
 {"status":"DOWN","components":{"baseDeDatos":{"status":"DOWN",
   "details":{"causa":"la base de datos no responde",
-             "detalle":"HikariPool-1 - Connection is not available..."}}}}
+             "detalle":"Connection to localhost:55442 refused.",
+             "milisegundos":2003}}}}
 ```
 
 **Liveness sigue en 200 a propósito.** Reiniciar el proceso no arregla una base caída: sólo tira
 las peticiones que estaba atendiendo. Lo que hay que hacer es **sacarlo de rotación** hasta que la
 base vuelva — y eso es readiness.
 
+La columna de la derecha se **explica**, no se corre: provocar la caída en vivo costaba media
+aplicación de andamiaje y no enseñaba nada que estas dos columnas no digan.
+
 ## Las tres carpetas
 
 | | |
 |---|---|
-| **`practica/`** | Donde trabajas. Sin Actuator, sin traceId, sin métricas ni health propio |
+| **`practica/`** | Donde trabajas. Sin Actuator, sin traceId y sin health propio |
 | **`solucion/`** | Todo puesto y funcionando |
 | **`instructor/`** | Los mismos archivos explicados línea por línea. **No viaja en el repositorio** |
 
@@ -65,26 +69,30 @@ cd practica          # o solucion
 ## Los endpoints
 
 ```
-POST /tramites                      emite un trámite (y mueve la métrica)
+POST /tramites                      emite un trámite
 GET  /tramites                      los lista
-POST /simulador/base-caida          tira la base de datos
-POST /simulador/base-sana           la vuelve a levantar
 
 GET  /actuator/health               con detalle, incluido el indicador propio
 GET  /actuator/health/liveness      ¿hay que reiniciar el proceso?
 GET  /actuator/health/readiness     ¿puede atender peticiones?
-GET  /actuator/metrics/dgt.tramites.emitidos
+GET  /actuator/info                 curso y número de lab
 ```
 
 ## Lo que no vimos hoy
 
-- **Prometheus y Grafana**: quién recoge estas métricas cada quince segundos y las dibuja. Hoy se
-  miran a mano con `curl`, que sirve para entender el mecanismo y para nada más.
+- **Métricas**, y quién las recoge. Declarar un `Counter` de trámites emitidos con Micrometer son
+  tres líneas; lo que no cabe aquí es **Prometheus** preguntando cada quince segundos y un tablero
+  dibujando la curva. Y sin eso, una métrica es un número que se pierde al reiniciar. Por eso
+  `metrics` ni siquiera está en la lista de endpoints expuestos.
+- **Logs centralizados**: los de todas las instancias en un solo sitio, buscables. Spring Boot 4
+  trae logging estructurado nativo —`logging.structured.format.console: ecs`— y cada línea sale
+  como JSON sin añadir una dependencia.
 - **Tracing distribuido** (OpenTelemetry, Zipkin): el `traceId` de hoy vive dentro de esta
   aplicación. Cuando son cinco servicios, hace falta que el id **viaje** entre ellos y que algo
   dibuje el recorrido completo. El filtro del paso 2 ya está preparado —respeta el id que llega en
   la cabecera—, pero el resto es otra sesión.
+- **Alertas**: que alguien se entere a las tres de la mañana sin estar mirando.
 
 ## El guion
 
-`PASOS.md` — los cinco pasos de la sesión.
+`PASOS.md` — el paso 0 y los tres pasos de la sesión.

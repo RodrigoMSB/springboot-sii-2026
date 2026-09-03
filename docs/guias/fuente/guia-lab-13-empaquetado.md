@@ -4,9 +4,9 @@ subtitle: "Curso de Spring Boot · Servicio de Impuestos Internos · 2026"
 date: "60 minutos · Spring Boot 4.1.0 · Java 25 (Temurin)"
 abstract-title: "Lo que se demuestra"
 abstract: |
-  Que la aplicación se empaqueta entera —con su Java dentro— en una imagen de contenedor de
-  **138,9 MB, sin Docker y sin internet**. Y que **el mismo artefacto** se comporta distinto según
-  dónde arranque, sin recompilar nada.
+  Que la aplicación se empaqueta entera —con su servidor dentro— en **un solo archivo de 21 MB**
+  que arranca con `java -jar`, partido en cuatro capas por velocidad de cambio. Y que **el mismo
+  artefacto** se comporta distinto según dónde arranque, sin reconstruir nada.
 lang: es
 ---
 
@@ -56,9 +56,9 @@ igual.
 ::: metafora
 **Meter la oficina entera en una caja, y que abra igual en cualquier sitio.**
 
-Dentro de la caja va todo lo que la oficina necesita para funcionar: el mobiliario (tu código), las
-herramientas (las bibliotecas) y **hasta la instalación eléctrica** (el Java). Nadie en el destino
-tiene que instalar nada ni saber qué versión de nada hace falta.
+Dentro de la caja va todo lo que la oficina necesita para funcionar: el mobiliario (tu código) y
+las herramientas (las bibliotecas, **incluido el servidor web**). Nadie en el destino tiene que
+instalar un servidor de aplicaciones ni saber qué versión hace falta.
 
 Y la caja se hace **por capas**, como se embala de verdad:
 
@@ -66,7 +66,8 @@ Y la caja se hace **por capas**, como se embala de verdad:
 - Arriba, lo ligero que **cambia cada día**: los papeles de encima de la mesa. Es tu código.
 
 Así, cuando cambias una línea de código, no vuelves a embalar los archivadores: **cambias la caja
-de arriba**. Kilobytes en vez de ciento treinta y ocho megas.
+de arriba**. Kilobytes en vez de ciento treinta y ocho megas — que es lo que pesa la mudanza
+completa el día que esta caja acabe dentro de un contenedor.
 
 **Y una cosa que NO va dentro de la caja: el cartel de la puerta.** El cartel dice si esto es la
 oficina de pruebas o la de verdad, y a qué Tesorería llama. Eso se pone **al llegar**, en el
@@ -158,15 +159,17 @@ Embalar por separado lo que nunca cambia y lo que cambia a diario.
 
 ### El problema
 
-Un jar es **una sola pieza**. Si cambias una línea de código, la pieza entera es distinta — y en
-una imagen de contenedor eso significa volver a subir y bajar los 138 megas enteros por una letra.
+Un jar es **una sola pieza**. Si cambias una línea de código, la pieza entera es distinta — y el
+día que ese jar viaje dentro de una imagen de contenedor, eso significa volver a subir y bajar los
+138 megas enteros por una letra.
 
 ### La alternativa, y por qué no
 
 - **Jar plano**: lo de fábrica, y perfecto cuando sólo copias el jar a un servidor. Ahí las capas
   no aportan nada.
 - **Jar por capas**, que es lo de aquí: sólo tiene sentido cuando hay una imagen de por medio — y
-  entonces cambia mucho, porque lo pesado deja de viajar.
+  entonces cambia mucho, porque lo pesado deja de viajar. Hoy no vas a construir esa imagen (ver el
+  paso 3), pero el jar queda listo para el día que alguien lo haga.
 
 ### Se pega
 
@@ -210,119 +213,84 @@ El comando lista las cuatro capas, con `application` la última.
 No activaste las capas en el `pom.xml`, o no volviste a empaquetar después de activarlas.
 :::
 
-## Paso 3 · Construir la imagen, sin Docker
+## Paso 3 · Qué es un contenedor
 
 ### Qué vamos a hacer
 
-Empaquetar la aplicación en una imagen de contenedor **sin tener Docker instalado**.
-
-### Para entenderlo mejor
-
-Cerrar la caja del todo: con la instalación eléctrica —el Java— dentro.
+**Nada. Veinte minutos de explicación**, y es donde el paso 2 cobra sentido.
 
 ### El problema
 
-Construir una imagen normalmente exige **un demonio de Docker corriendo**, y las máquinas del SII
-no tienen Docker ni pueden instalarlo.
+Despliegas el jar del paso 1 en un servidor y no arranca: el servidor tiene Java 17 y tu jar se
+compiló con Java 25. Instalas Java 25 y rompes **otra** aplicación que necesitaba la 17. Y aparece
+la frase:
+
+> «En mi máquina funciona.»
+
+Y es literalmente cierta. El jar es idéntico; lo que cambia es **todo lo que hay debajo**: la
+versión de Java, las bibliotecas del sistema, la zona horaria, la codificación por defecto.
 
 ### La alternativa, y por qué no
 
-- **Un `Dockerfile` con `docker build`**: lo que hace todo el mundo, y **exige el demonio**.
-- **`spring-boot:build-image`** (Cloud Native Buildpacks): también exige el demonio.
-- **Jib**, que es lo de aquí: construye la imagen **desde Maven**, sin demonio y sin escribir un
-  Dockerfile. Lee el proyecto, arma las capas y escribe el resultado.
+- **Instalar a mano lo que haga falta en cada servidor**: es lo que se hacía, y es de donde viene
+  el problema.
+- **Una máquina virtual**: llevarse el sistema operativo entero en un archivo. Funciona, y cuesta
+  varios GB y un minuto de arranque por cada copia.
+- **Un contenedor**, que es lo de aquí: **comparte el núcleo del sistema y aísla todo lo demás.**
 
-Su límite, y conviene saberlo: **Jib no ejecuta comandos dentro de la imagen**, sólo copia
-archivos. Si necesitaras instalar un paquete del sistema, harían falta las otras opciones.
+### Qué es un contenedor, entonces
 
-**Y la imagen base viaja en el repositorio.** El `.mvn/maven.config` de este proyecto lleva
-`-Djib.baseImageCache=../../../tools/jib-base`, y ahí están las capas de `eclipse-temurin:25-jre`
-commiteadas. Sin eso, Jib intentaría bajarla de un registro — y aquí no hay internet.
+No lleva sistema operativo. Es un **proceso normal** de la máquina anfitriona al que el núcleo le
+ha mentido sobre el mundo: ve su propio sistema de archivos, sus propios procesos —se cree el
+número 1—, su propia red con su propia IP, y tiene un tope de memoria y de procesador. Lo hace el
+núcleo de Linux con dos mecanismos: *namespaces* (qué ve) y *cgroups* (cuánto consume).
 
-### Se pega
+| | máquina virtual | contenedor |
+|---|---|---|
+| lleva sistema operativo | **sí**, completo | no: comparte el núcleo |
+| tamaño típico | varios GB | decenas o cientos de MB |
+| arranque | de 30 s a minutos | **milisegundos** |
+| aislamiento | total (hardware virtual) | bueno, pero comparte núcleo |
 
-En `practica/pom.xml`, **dentro de `<plugins>`**. La versión sale de la propiedad `jib.version`,
-que el `pom.xml` ya trae declarada arriba:
+La **imagen** es la plantilla; el **contenedor** es una imagen corriendo. Misma relación que entre
+una clase y un objeto.
 
-{{codigo lab=lab-13-empaquetado archivo=pom.xml modo=xml contiene=jib-maven-plugin lenguaje=xml}}
+### Y aquí es donde cobra el paso 2
 
-### Se corre
-
-``` bash
-./mvnw package jib:buildTar
-```
-
-### Lo que vas a ver
-
-``` text
-[INFO] Containerizing application to file at 'target/jib-image.tar'...
-[INFO] Built image tarball at target/jib-image.tar
-[INFO] BUILD SUCCESS
-```
+La imagen está hecha de **capas apiladas**, de sólo lectura y **compartidas**: si diez imágenes
+usan la misma base de Java, esa base se guarda una vez. Una imagen de esta aplicación repartiría
+así sus ciento treinta y ocho megas:
 
 ``` text
-target/jib-image.tar   138.9 MB
+  ~120 MB   la base: sistema mínimo + JRE 25        ┐
+   ~18 MB   las dependencias (Spring, Tomcat...)    ├─ no cambian casi nunca
+  < 0,1 MB  TU CÓDIGO                               ┘  cambia cada día
 ```
 
-**Una imagen de contenedor, sin Docker y sin internet.**
+Las cuatro capas del jar se convierten en capas de la imagen. Y entonces:
+
+> Al desplegar una corrección no se mueven 138 MB. Se mueve **la capa que cambió**, unos
+> kilobytes. Todo lo demás ya está en el servidor.
+
+Sin el `layers.enabled` del paso 2, el jar sería un solo archivo indivisible dentro de la imagen y
+cualquier cambio movería los 21 MB enteros.
+
+### OCI, Docker, y por qué hoy no construyes ninguna imagen
+
+**OCI** (*Open Container Initiative*) es el **estándar** de formato de imagen. **Docker** es un
+programa que construye y ejecuta imágenes OCI: el más conocido, y no el único.
+
+Y la parte honesta: **en las máquinas de esta sala no hay Docker y no se puede instalar.** Así que
+este laboratorio explica qué es un contenedor y no construye ninguno. Fabricar un archivo que nadie
+puede ejecutar, para abrirlo con `tar` y mirar un JSON, ocupa media hora y enseña menos que este
+dibujo. El nombre de la herramienta que sí lo haría está en «lo que no vimos hoy».
 
 ::: vasbien
-Existe `target/jib-image.tar` y pesa alrededor de 138 MB.
+Puedes explicar con tus palabras en qué se diferencia un contenedor de una máquina virtual, y por
+qué el jar por capas del paso 2 hace más barato un despliegue.
 :::
 
-::: atasco
-**1 · `Cannot run Jib in offline mode; eclipse-temurin:25-jre not found in local Jib cache`**
-
-Falta la caché de la imagen base, o el `.mvn/maven.config` no la apunta. Comprueba que existe
-`tools/jib-base/` en el repositorio.
-
-**2 · Jib intenta salir a la red y falla.**
-
-Lo mismo: sin la caché local, va al registro.
-:::
-
-## Paso 4 · Qué hay dentro
-
-### Qué vamos a hacer
-
-Abrir la imagen con `tar` y mirar. Una imagen **no es magia**: es un tar con capas y un JSON.
-
-### Para entenderlo mejor
-
-Abrir la caja en el destino y comprobar el inventario antes de montar nada.
-
-### Se corre
-
-``` bash
-mkdir -p /tmp/img && tar -xf target/jib-image.tar -C /tmp/img
-ls /tmp/img
-```
-
-### Lo que vas a ver
-
-Un puñado de `.tar.gz` —las capas—, un `manifest.json` y un JSON de configuración. Y dentro de la
-configuración:
-
-``` text
-  capas en la imagen: 10
-  entrypoint: java -cp @/app/jib-classpath-file cl.dgt.empaquetado.Lab13Application
-  puerto: ['8106/tcp']
-  env SPRING_PROFILES_ACTIVE: ['SPRING_PROFILES_ACTIVE=prod']
-```
-
-**Tres cosas que vale la pena mirar:**
-
-- **El `entrypoint`** es un `java -cp` normal y corriente. Nada exótico.
-- **El puerto** que declaraste en el `pom.xml`.
-- **`SPRING_PROFILES_ACTIVE=prod`**, grabado dentro. Un contenedor arrancado sin decir nada se
-  comporta como producción — que es el valor por defecto **seguro**: al revés, un despliegue mal
-  hecho apuntaría a pruebas sin quejarse.
-
-::: vasbien
-Puedes listar las capas y leer el entrypoint y el puerto en el JSON de configuración.
-:::
-
-## Paso 5 · La misma caja, dos comportamientos
+## Paso 4 · La misma caja, dos comportamientos
 
 ### Qué vamos a hacer
 
@@ -340,8 +308,8 @@ los incidentes que nadie sabe reproducir.
 
 ### La alternativa, y por qué no
 
-- **Una imagen por entorno**: se hace, y sólo tiene sentido cuando cambian las dependencias y no la
-  configuración.
+- **Un artefacto por entorno**: se hace, y sólo tiene sentido cuando cambian las dependencias y no
+  la configuración.
 - **Perfiles + variables de entorno**, que es lo de aquí: un artefacto, y el entorno decide. Y hay
   un orden de precedencia: **la variable de entorno gana al perfil, y el perfil gana al
   `application.yml`**.
@@ -353,7 +321,7 @@ los incidentes que nadie sabe reproducir.
 Archivo **nuevo** `practica/src/main/resources/application-dev.yml` — el archivo entero:
 
 ``` yaml
-lab12:
+lab13:
   saludo: Hola desde DESARROLLO
   tesoreria-url: http://localhost:9098/pagos
 ```
@@ -361,7 +329,7 @@ lab12:
 Y `practica/src/main/resources/application-prod.yml` — entero:
 
 ``` yaml
-lab12:
+lab13:
   saludo: Hola desde PRODUCCIÓN
   tesoreria-url: ${TESORERIA_URL:https://tesoreria.example.cl/pagos}
 ```
@@ -405,21 +373,22 @@ prod, con TESORERIA_URL:
  "perfilesActivos":["prod"],"javaVersion":"25.0.4"}
 ```
 
-**Mismo jar. Tres comportamientos.** Y fíjate en el `javaVersion`: **25.0.4 en los tres**, que es el
-Java que viaja en la caja.
+**Mismo jar. Tres comportamientos.** No se reconstruyó nada entre una ejecución y la siguiente: es
+el mismo archivo, byte por byte.
 
 :::  nota
 **Y la regla que cierra el laboratorio: NINGÚN SECRETO en estos archivos.**
 
 Ni la contraseña de la base, ni el secreto de firma del JWT del Lab 09, ni una clave de API. Y la
-razón es concreta, no una buena práctica abstracta: **estos archivos están DENTRO de la imagen**, y
-una imagen se copia, se comparte, se sube a un registro y **se abre con `tar`** — como acabas de
-hacer en el paso 4. Cualquiera que tenga la imagen tiene estos archivos.
+razón es concreta, no una buena práctica abstracta: **estos archivos viajan DENTRO del jar**, y un
+jar se descomprime con `unzip` como cualquier zip. El día que ese jar acabe dentro de una imagen,
+peor todavía: una imagen se sube a un registro y se abre con `tar`. Cualquiera que tenga el
+artefacto tiene estos archivos.
 
 Además están en el repositorio, así que el secreto quedaría en el historial de Git **para siempre**,
 y borrarlo después no lo borra.
 
-Los secretos van por **variable de entorno**, que las pone el orquestador al arrancar y no quedan
+Los secretos van por **variable de entorno**, que las pone quien despliega al arrancar y no quedan
 escritas en ninguna parte.
 :::
 
@@ -451,27 +420,43 @@ un contenedor de aplicaciones aparte.
 Dependencias abajo, tu código arriba. Cambiar una línea mueve kilobytes en vez de 138 MB — y sólo
 importa cuando hay una imagen de por medio.
 
-**3 · Se puede construir una imagen sin Docker.**
+**3 · Un contenedor no es una máquina virtual.**
 
-Jib lo hace desde Maven, con la imagen base viajando en el repositorio. Y la imagen no es magia: es
-un tar con capas y un JSON que puedes abrir y leer.
+No lleva sistema operativo: es un proceso al que el núcleo le aisló lo que ve. Por eso arranca en
+milisegundos y pesa cientos de MB en vez de gigabytes. Y una imagen no es magia: es un tar con
+capas y un JSON.
 
 **4 · El mismo artefacto, y el entorno decide.**
 
 Perfiles y variables de entorno, con una precedencia clara. Un artefacto por entorno rompe la única
 garantía que tienes: que lo que probaste es lo que desplegaste. Y ahí dentro **no van secretos**.
 
+# Lo que no vimos hoy
+
+**Construir la imagen.** El paso 3 explicó qué es un contenedor y no construyó ninguno, porque en
+esta sala no hay Docker. Si quieres probarlo fuera del curso, el nombre es **Jib**
+(`jib-maven-plugin`, de Google): construye una imagen OCI **sin demonio Docker** —escribe el `.tar`
+directamente, sin permisos de administrador y sin `Dockerfile`—, y toma el jar por capas del paso 2
+para convertir cada capa del jar en una capa de la imagen. Se declara en el `pom.xml`, se ejecuta
+con `./mvnw package jib:buildTar`, y el resultado se abre con `tar -xf` como cualquier tar. El
+proyecto final de este curso lo usa, así que tienes un ejemplo funcionando al que mirar.
+
+Y tres cosas más:
+
+- **Kubernetes** y los orquestadores: quién arranca esa imagen, cuántas copias, y qué hace cuando
+  una se cae. Ahí vuelven el liveness y el readiness del Lab 11.
+- **Registries**: dónde se guardan las imágenes y cómo llegan al servidor que las va a correr.
+- **CI/CD**: que todo esto lo haga una máquina en cada cambio, en vez de una persona.
+
 # Para profundizar
 
-- **Cambia una línea de tu código**, vuelve a construir la imagen, y mira cuáles de las capas
-  cambian de huella.
-- **Quita `<layers>`** y compara el resultado.
-- **Cambia la imagen base** a `eclipse-temurin:25-jdk` y compara el tamaño. ¿Cuánto cuesta llevar el
-  compilador que no vas a usar?
-- **Arranca sin `SPRING_PROFILES_ACTIVE`** y mira qué perfil sale. ¿Por qué es más seguro que salga
-  ése?
-- **Busca `distroless`** y piensa qué ganarías y qué perderías si no pudieras entrar a la imagen a
-  mirar.
+- **Cambia una línea de tu código**, vuelve a empaquetar y comprueba con `list-layers` que las
+  capas siguen siendo las mismas cuatro. ¿Cuál de ellas es la única que cambió por dentro?
+- **Quita `<layers>`**, vuelve a empaquetar y ejecuta `list-layers`. Compara el resultado.
+- **Descomprime el jar** con `unzip -l` y busca tus `application-*.yml`. Ahí está, en una línea, el
+  motivo por el que no van secretos dentro.
+- **Arranca con `--spring.profiles.active=dev` Y con `SPRING_PROFILES_ACTIVE=prod` a la vez.**
+  ¿Cuál gana? ¿Cuadra con la tabla de precedencia?
 
 # Antes de cerrar
 
@@ -484,9 +469,9 @@ lsof -ti:8105 | xargs kill -9
 
 **Lo que te llevas:**
 
-> La aplicación viaja entera —con su Java— en una imagen por capas que se construye sin Docker. La
-> configuración se pone al llegar, no dentro. Y dentro de la caja no van secretos, porque la caja
-> se abre con `tar`.
+> La aplicación viaja entera —con su servidor dentro— en un jar por capas que arranca con
+> `java -jar`. La configuración se pone al llegar, no dentro. Y dentro de la caja no van secretos,
+> porque la caja se abre con `unzip`.
 
 **Lo que queda pendiente, y abre el Lab 14:** todo esto es **una** aplicación. En el Lab 14 la DGT
 se parte en cuatro procesos con tres bases distintas, y aparecen los problemas que sólo existen

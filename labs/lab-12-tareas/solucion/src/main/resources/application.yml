@@ -1,5 +1,5 @@
 server:
-  # `practica` en el 8103 y `solucion` en el 8104. En el paso 5 corren los dos a la vez.
+  # `practica` en el 8103 y `solucion` en el 8104: pueden correr a la vez.
   port: 8104
 
 spring:
@@ -8,7 +8,7 @@ spring:
 
   threads:
     virtual:
-      # Java 25: Tomcat y @Async pasan a hilos virtuales. Una línea. Paso 4.
+      # Java 25: Tomcat y @Async pasan a hilos virtuales. Una línea. Paso 3.
       enabled: true
 
 logging:

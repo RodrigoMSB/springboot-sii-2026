@@ -1,27 +1,40 @@
 package cl.dgt.observabilidad;
 
-import cl.dgt.observabilidad.infra.MotorDePostgres;
+import cl.dgt.observabilidad.infra.CandadoLibre;
+import cl.dgt.observabilidad.infra.PuertoLibre;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
+import java.io.File;
 import java.io.IOException;
 
 @SpringBootApplication
 public class Lab11Application {
 
-    // `practica` usa el 55442 y `solucion` el 55443. Tiene que cuadrar con el
-    // `spring.datasource.url` del application.yml.
+    public static void main(String[] args) {
+        SpringApplication.run(Lab11Application.class, args);
+    }
+
+    // `practica` usa el 55442 y `solucion` el 55443: pueden correr a la vez.
     static final int PUERTO_BASE = 55443;
 
-    public static void main(String[] args) throws IOException {
-        // La base arranca ANTES del contexto: Flyway y el pool se conectan al construirse,
-        // y con la base como un bean más llegaban antes que ella.
-        MotorDePostgres motor = new MotorDePostgres(PUERTO_BASE);
-        motor.levantar();
+    @Bean(destroyMethod = "close")
+    EmbeddedPostgres postgresEmbebido() throws IOException {
+        PuertoLibre.exigir(PUERTO_BASE);
+        CandadoLibre.exigir(new File(".datos-pg"));
 
-        SpringApplication aplicacion = new SpringApplication(Lab11Application.class);
-        aplicacion.addInitializers(contexto ->
-                contexto.getBeanFactory().registerSingleton("motorDePostgres", motor));
-        aplicacion.run(args);
+        return EmbeddedPostgres.builder()
+                .setPort(PUERTO_BASE)
+                .setDataDirectory(new File(".datos-pg"))
+                .setCleanDataDirectory(false)
+                .start();
+    }
+
+    @Bean
+    DataSource dataSource(EmbeddedPostgres postgresEmbebido) {
+        return postgresEmbebido.getPostgresDatabase();
     }
 }

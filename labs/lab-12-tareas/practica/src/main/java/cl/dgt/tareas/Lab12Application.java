@@ -3,7 +3,7 @@ package cl.dgt.tareas;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-// Paso 1 · enciende la programación de tareas. Paso 3 · enciende la asincronía.
+// Paso 1 · enciende la programación de tareas. Paso 2 · enciende la asincronía.
 // escribe aquí
 
 @SpringBootApplication

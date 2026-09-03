@@ -86,7 +86,7 @@ Entrar a la sala interna sin que nadie pregunte nada. Es el punto de partida, y 
 ### Se corre
 
 ``` bash
-curl -i localhost:8095/productos/administracion
+curl -i localhost:8095/productos
 ```
 
 ### Lo que vas a ver
@@ -94,7 +94,7 @@ curl -i localhost:8095/productos/administracion
 La respuesta llega, con su contenido. **Sin identificarse, sin nada.**
 
 ::: vasbien
-El endpoint de administración responde 200 a cualquiera. Es lo que vas a cerrar hoy.
+La API responde 200 a cualquiera. Es lo que vas a cerrar hoy.
 :::
 
 ::: atasco
@@ -339,11 +339,14 @@ En `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java`, la cad
 
 {{codigo lab=lab-09-seguridad archivo=src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java modo=metodo nombre=cadena lenguaje=java}}
 
-**Dos trampas en esa línea de `hasRole`, y las dos caen siempre:**
+**Dos trampas en esa línea, y las dos caen siempre:**
 
-- **`hasRole("ADMIN")` busca la autoridad `ROLE_ADMIN`**: el prefijo lo añade Spring por su cuenta.
-  Escribir `hasRole("ROLE_ADMIN")` **no funciona** — busca `ROLE_ROLE_ADMIN` — y el síntoma es un
-  403 a quien sí debería pasar.
+- **El nombre de la autoridad no es el que escribiste en el token.** El token lleva
+  `"scope": "ROLE_ADMIN"`, y el lector de tokens de Spring le antepone `SCOPE_` a todo lo que
+  encuentra en ese claim. La autoridad acaba llamándose **`SCOPE_ROLE_ADMIN`**, y eso es lo que
+  hay que pedir. Si escribes `hasRole("ADMIN")` —que busca `ROLE_ADMIN`— **no encaja nunca**, y
+  el síntoma es un 403 a quien sí debería pasar. Hay dos capas que añaden prefijos por su cuenta;
+  cuando no cuadran, el error no dice nada: dice 403.
 - **El orden manda.** Las reglas se evalúan de arriba abajo y `anyRequest()` captura todo: lo que
   vaya **detrás** de él no se mira nunca.
 
@@ -392,7 +395,9 @@ token no está llegando; si 200 en los tres, la regla no se está aplicando.
 ::: atasco
 **1 · Ana recibe 403 y debería recibir 200.**
 
-**Es la trampa del prefijo.** Escribiste `hasRole("ROLE_ADMIN")`. Se escribe `hasRole("ADMIN")`.
+**Es la trampa del prefijo.** Decodifica el trozo del medio de su token: dirá `"scope":"ROLE_ADMIN"`.
+La autoridad que Spring construye a partir de ahí se llama `SCOPE_ROLE_ADMIN`, y es lo que hay que
+escribir. Con `hasRole("ADMIN")` se busca `ROLE_ADMIN`, que no existe.
 
 **2 · Luis recibe 200 en la sala interna.**
 
@@ -406,36 +411,6 @@ comprueba que la variable del token no salió vacía.
 **4 · `/auth/login` también devuelve 401.**
 
 Le falta el `permitAll()`, o está detrás de `anyRequest()`.
-:::
-
-## Paso 6 · Quién eres, dentro del código
-
-### Qué vamos a hacer
-
-Leer, dentro de un endpoint, quién es el que llama.
-
-### Para entenderlo mejor
-
-Mirar el carnet de quien está delante de la ventanilla, sin preguntarle nada: ya lo lleva encima.
-
-### Se pega
-
-{{codigo lab=lab-09-seguridad archivo=src/main/java/cl/dgt/seguridad/controllers/ProductoController.java modo=metodo nombre=quienSoy lenguaje=java}}
-
-### Lo que vas a ver
-
-``` bash
-curl -H "Authorization: Bearer $TOKEN_LUIS" localhost:8095/productos/quien-soy
-```
-
-``` text
-{"usuario":"luis","roles":"ROLE_USUARIO"}
-```
-
-**Ese `ROLE_USUARIO` es el prefijo del que habla el paso 5**, visto desde dentro.
-
-::: vasbien
-El endpoint devuelve el nombre del usuario del token y su rol con el prefijo `ROLE_` delante.
 :::
 
 # Lo que aprendiste
@@ -457,19 +432,25 @@ no cabe nada confidencial.
 
 **4 · 401 y 403 responden preguntas distintas.**
 
-401 es «no sé quién eres»; 403 es «sé quién eres y esto no es para ti». Y `hasRole("ADMIN")` busca
-`ROLE_ADMIN`, porque el prefijo lo pone Spring — la causa número uno de un 403 inexplicable.
+401 es «no sé quién eres»; 403 es «sé quién eres y esto no es para ti». Y la autoridad que hay que
+pedir se llama `SCOPE_ROLE_ADMIN`, no `ROLE_ADMIN`: el prefijo lo pone el lector de tokens — la
+causa número uno de un 403 inexplicable.
 
 # Para profundizar
 
 - **Pega el trozo del medio de tu token** en cualquier decodificador de base64 y léelo. ¿Qué hay
   dentro? ¿Meterías ahí un número de cuenta?
 - **Cambia una letra del token** y vuelve a pedir. ¿401 o 403? ¿Por qué?
-- **Reduce la vigencia del token** a un minuto y espera. Mira qué código sale.
+- **Reduce la vigencia del token**: pon `lab09.jwt.vigencia-segundos: 40` en el `application.yml`,
+  reinicia, pide un token y vuelve a usarlo al cabo de un rato. Sale 401 — y no tocaste una línea
+  de Java. **Ojo al reloj:** no caduca a los 40 segundos sino a los ~100, porque el verificador
+  acepta de fábrica un token vencido hace menos de 60 segundos. Es la tolerancia de reloj entre
+  el que emite y el que verifica, y sin ella dos máquinas mal sincronizadas se rechazarían tokens
+  buenos.
 - **Añade `@PreAuthorize`** a un método y compara con la regla de la cadena. ¿Cuál usarías para
   «sólo el dueño del trámite»?
-- **Ponle `hasRole("ROLE_ADMIN")`** a propósito y comprueba que ana recibe 403. Es el error que
-  vas a ver en tu equipo algún día.
+- **Ponle `hasRole("ADMIN")`** a propósito y comprueba que ana recibe 403. Es el error del prefijo,
+  y lo vas a ver en tu equipo algún día.
 
 # Antes de cerrar
 

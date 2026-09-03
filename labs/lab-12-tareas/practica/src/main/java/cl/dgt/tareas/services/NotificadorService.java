@@ -13,7 +13,7 @@ public class NotificadorService {
         trabajar(destinatario, "SINCRONO");
     }
 
-    // Paso 3 · el mismo trabajo, pero sin que el usuario espere.
+    // Paso 2 · el mismo trabajo, pero sin que el usuario espere.
     // escribe aquí
 
     private void trabajar(String destinatario, String modo) {

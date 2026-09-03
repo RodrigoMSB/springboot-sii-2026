@@ -20,7 +20,7 @@ public class ClienteTesoreria {
     private final RestClient http;
     private final AtomicInteger llamadas = new AtomicInteger();
 
-    public ClienteTesoreria(@Value("${lab09.tesoreria.puerto}") int puerto) {
+    public ClienteTesoreria(@Value("${lab10.tesoreria.puerto}") int puerto) {
         // Transporte FIJADO a propósito: WireMock arrastra Apache HttpClient 5, Spring lo
         // preferiría por classpath, y Apache reintenta solo. Este lab mide llamadas y tiempos
         // (D-025-3).

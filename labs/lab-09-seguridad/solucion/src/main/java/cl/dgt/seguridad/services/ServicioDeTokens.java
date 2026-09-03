@@ -1,5 +1,6 @@
 package cl.dgt.seguridad.services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -13,12 +14,16 @@ import java.util.stream.Collectors;
 @Service
 public class ServicioDeTokens {
 
-    private static final Duration VIGENCIA = Duration.ofMinutes(30);
+    // Media hora por defecto. El instructor la baja a 40 segundos desde el yml para
+    // enseñar el token vencido, sin tocar una línea de código.
+    private final Duration vigencia;
 
     private final JwtEncoder codificador;
 
-    public ServicioDeTokens(JwtEncoder codificador) {
+    public ServicioDeTokens(JwtEncoder codificador,
+                            @Value("${lab09.jwt.vigencia-segundos:1800}") long vigenciaSegundos) {
         this.codificador = codificador;
+        this.vigencia = Duration.ofSeconds(vigenciaSegundos);
     }
 
     public String emitir(Authentication autenticacion) {
@@ -32,9 +37,9 @@ public class ServicioDeTokens {
                 .collect(Collectors.joining(" "));
 
         JwtClaimsSet cuerpo = JwtClaimsSet.builder()
-                .issuer("lab08")
+                .issuer("lab09")
                 .issuedAt(ahora)
-                .expiresAt(ahora.plus(VIGENCIA))
+                .expiresAt(ahora.plus(vigencia))
                 .subject(autenticacion.getName())
                 .claim("scope", roles)
                 .build();

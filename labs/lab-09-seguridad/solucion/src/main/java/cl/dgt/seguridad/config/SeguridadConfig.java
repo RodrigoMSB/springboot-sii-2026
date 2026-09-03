@@ -14,8 +14,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -25,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 public class SeguridadConfig {
 
     // Clave simétrica: la misma firma y verifica. En producción va fuera del código.
-    @Value("${lab08.jwt.secreto}")
+    @Value("${lab09.jwt.secreto}")
     private String secreto;
 
     @Bean
@@ -37,7 +35,9 @@ public class SeguridadConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/productos/administracion").hasRole("ADMIN")
+                        // El conversor por defecto lee el claim `scope` y le antepone `SCOPE_`:
+                        // el token dice ROLE_ADMIN y la autoridad se llama SCOPE_ROLE_ADMIN.
+                        .requestMatchers("/productos/administracion").hasAuthority("SCOPE_ROLE_ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
@@ -67,17 +67,5 @@ public class SeguridadConfig {
     @Bean
     JwtDecoder decodificadorDeTokens() {
         return NimbusJwtDecoder.withSecretKey(clave()).build();
-    }
-
-    // Sin esto los roles llegarían como `SCOPE_ROLE_ADMIN`; con esto, como `ROLE_ADMIN`.
-    @Bean
-    JwtAuthenticationConverter conversorDeRoles() {
-        JwtGrantedAuthoritiesConverter autoridades = new JwtGrantedAuthoritiesConverter();
-        autoridades.setAuthorityPrefix("");
-        autoridades.setAuthoritiesClaimName("scope");
-
-        JwtAuthenticationConverter conversor = new JwtAuthenticationConverter();
-        conversor.setJwtGrantedAuthoritiesConverter(autoridades);
-        return conversor;
     }
 }

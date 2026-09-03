@@ -19,13 +19,14 @@ public class SembradorDeUsuarios implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (repositorio.count() > 0) {
-            return;
+        if (repositorio.count() == 0) {
+            // ana y luis tienen LA MISMA clave a propósito: el paso 3 muestra que sus hashes difieren.
+            repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
+            repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
         }
-        // ana y luis tienen LA MISMA clave a propósito: el paso 3 muestra que sus hashes difieren.
-        repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
-        repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
 
+        // Se imprime siempre, se haya sembrado o no: los hashes son la demostración del
+        // paso 3 y tienen que salir también en la segunda corrida.
         System.out.println("[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)");
         repositorio.findAll().forEach(u ->
                 System.out.printf("[semilla] %-5s %-8s %s%n", u.getNombre(), u.getRol(), u.getClaveHash()));

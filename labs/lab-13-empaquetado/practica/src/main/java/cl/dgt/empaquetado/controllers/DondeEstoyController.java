@@ -16,8 +16,8 @@ public class DondeEstoyController {
     private final String urlTesoreria;
 
     public DondeEstoyController(Environment entorno,
-                                @Value("${lab12.saludo}") String saludo,
-                                @Value("${lab12.tesoreria-url}") String urlTesoreria) {
+                                @Value("${lab13.saludo}") String saludo,
+                                @Value("${lab13.tesoreria-url}") String urlTesoreria) {
         this.entorno = entorno;
         this.saludo = saludo;
         this.urlTesoreria = urlTesoreria;
@@ -29,7 +29,6 @@ public class DondeEstoyController {
                 "perfilesActivos", Arrays.asList(entorno.getActiveProfiles()),
                 "saludo", saludo,
                 "tesoreriaUrl", urlTesoreria,
-                "javaVersion", System.getProperty("java.version"),
-                "enContenedor", System.getenv("LAB12_EN_CONTENEDOR") != null);
+                "javaVersion", System.getProperty("java.version"));
     }
 }
