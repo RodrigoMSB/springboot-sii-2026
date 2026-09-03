@@ -14,7 +14,11 @@
 | **036** | 09 Seguridad | BCrypt → **Argon2id**; el token de 40 s vence **a los 40** |
 | **037** | demo Docker | bloque nuevo: **el traceId cruzando cuatro contenedores** |
 
-**Todo lo medible está medido.** Las salidas reales van en §1 a §4.
+**Todo lo medible está medido, con una excepción declarada:** el `grep DEMO-1` de la SPEC-037 no
+se pudo ejecutar porque la imagen base de Docker (233 MB) no llegó a bajar en este entorno. Lo que
+sí se verificó de ese bloque —el reenvío de la cabecera en los tres clientes, que es de lo que
+depende— está en §4.1, y el detalle de lo que falta, en §4.4. Las demás salidas reales van en §1
+a §3.
 
 **Cuatro puntos de la spec resultaron falsos o incompletos al medir**, y los cuatro están
 corregidos y declarados en §5:
@@ -347,6 +351,44 @@ del `@Async` del Lab 12. Se aprovecha en el bloque.
 
 `guia-demo-lab-14-docker.pdf` regenerada desde su fuente: **11 páginas**, con el bloque 6 y una
 entrada nueva en «Lo que aprendiste».
+
+### 4.4 · La validación que NO se pudo ejecutar
+
+La spec pide: *«El grep DEMO-1 devuelve al menos una línea de cada uno de los cuatro servicios,
+pegada en el informe.»*
+
+**No se pudo ejecutar, y el bloque va al material sin esa comprobación.** Qué se intentó y dónde se
+paró:
+
+```
+docker info                        → Docker disponible
+./construir.sh                     → OK, los cuatro jar construidos
+docker compose up -d               → se queda esperando la imagen base
+docker pull eclipse-temurin:25-jre-alpine
+                                   → ~20 minutos, log vacío, sin progreso.
+                                     Abortado.
+docker compose down -v             → sin residuos
+```
+
+La imagen base (233 MB) no llegó a bajar en este entorno. Sin ella los cuatro contenedores de
+aplicación no arrancan, así que el `grep` no tiene sobre qué correr.
+
+**Lo que SÍ está verificado del bloque, y no es poco:**
+
+- **Los tres clientes reenvían la cabecera** — comprobado leyendo el código, con línea y archivo
+  (§4.1). Es la condición que la spec pedía verificar *antes* de escribir el bloque, y es de donde
+  depende que el `grep` encuentre las cuatro líneas.
+- **`ClienteAuditoria` copia el `traceId` del MDC antes de saltar de hilo**, que es el detalle fino
+  que el bloque explica.
+- **Los tres archivos son idénticos** entre `labs/lab-14-microservicios/solucion/` y
+  `demos-instructor/lab-14-docker/sistema/`, y el job `demo-docker` del CI lo confirma.
+- **Los cuatro jar de la demo se construyen** con `./construir.sh`, offline.
+
+**Lo que queda por comprobar en una máquina con la imagen ya bajada** —el propio README dice que
+hay que bajarla antes de la clase— es la **salida literal** del `grep`: el bloque la muestra con el
+formato de `docker compose logs` (`servicio-1 | ... [DEMO-1] ...`) y los nombres de logger reales de
+cada servicio. Es lo primero que hay que correr al preparar la demostración; si algún nombre de
+logger no cuadra exactamente, se ajusta el bloque de salida esperada del README y de la guía.
 
 ---
 
