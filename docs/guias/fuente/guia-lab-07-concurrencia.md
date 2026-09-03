@@ -5,8 +5,8 @@ date: "75 minutos · Spring Boot 4.1.0 · Java 25 (Temurin) · PostgreSQL 16 emb
 abstract-title: "Lo que se demuestra"
 abstract: |
   Que un código correcto para un usuario puede ser incorrecto para veinte a la vez. Se emiten
-  veinte folios simultáneos: **sin candado sobreviven 10 y la base rechaza 11; con candado,
-  21 de 21**.
+  veinte folios simultáneos: **sin turno sobreviven 10 y la base rechaza 11; con un turno con
+  nombre, 21 de 21**.
 lang: es
 ---
 
@@ -20,7 +20,7 @@ cuando lo usan **veinte a la vez**, y no es lo que parece.
 Vas a escribir un emisor de folios correlativos, vas a verlo funcionar perfectamente en
 secuencial, y después vas a lanzarle veinte peticiones simultáneas y a contar cuántas sobreviven.
 Vas a aprender por qué `synchronized` **no** lo arregla, y a poner las dos defensas que sí: un
-candado en la base y una restricción que actúa de cinturón.
+turno con nombre en la base y una restricción que actúa de cinturón.
 
 ## Qué necesitas tener listo
 
@@ -102,7 +102,7 @@ suma uno, guarda. Es lo que escribiría cualquiera.
 
 ``` text
 === 1 · DE UNO EN UNO · secuencial ===
-  año 2026 reiniciado: solo el folio de apertura 2026-0001
+  año 2026 reiniciado: solo el folio 2026-0001
   folios en la tabla : 11
   números distintos  : 11
   REPETIDOS          : ninguno
@@ -155,8 +155,8 @@ propósito.
 ### Lo que vas a ver
 
 ``` text
-=== 2 · EL CRIMEN · 20 emisiones a la vez, sin candado ===
-  año 2026 reiniciado: solo el folio de apertura 2026-0001
+=== 2 · EL CRIMEN · 20 emisiones a la vez, sin protección ===
+  año 2026 reiniciado: solo el folio 2026-0001
   Detail: Key (anio, numero)=(2026, 4) already exists.
   Detail: Key (anio, numero)=(2026, 3) already exists.
   Detail: Key (anio, numero)=(2026, 2) already exists.
@@ -184,13 +184,13 @@ legal.
 
 ::: vasbien
 `rechazados por la base` es un número **mayor que cero**, y `folios en la tabla` es **menor que
-21**. Si te salieran 21 limpios, el candado del paso 3 ya está puesto.
+21**. Si te salieran 21 limpios, el turno del paso 4 ya está puesto.
 :::
 
 ::: atasco
 **1 · Salen 21 folios y cero rechazos.**
 
-Estás corriendo la demo del paso 3 por error, o le pusiste ya el candado al método ingenuo.
+Estás corriendo la demo del paso 4 por error, o le pusiste ya el turno al método ingenuo.
 
 **2 · La aplicación revienta entera.**
 
@@ -222,27 +222,27 @@ hay dos o tres instancias detrás de un balanceador, precisamente para aguantar 
   hace que el problema no se reproduzca en pruebas y sí en producción.
 - **Un `Lock` distribuido** (Redis, Zookeeper): funciona, y trae una pieza de infraestructura más
   que hay que operar y que puede caerse.
-- **Un candado en la base de datos**, que es lo del paso siguiente: la base **ya está compartida
+- **Un turno pedido a la base de datos**, que es lo del paso siguiente: la base **ya está compartida
   por todas las instancias**, así que es el único sitio donde todos coinciden. No hay que instalar
   nada.
 - **Una secuencia de la base** (`SEQUENCE`): es la respuesta correcta cuando basta con «un número
   único creciente». Aquí no basta, porque el requisito es **correlativo por año y sin saltos**, y
   una secuencia deja huecos cuando una transacción falla.
 
-## Paso 4 · El candado que sí sirve
+## Paso 4 · El turno con nombre
 
 ### Qué vamos a hacer
 
-Cerrar el cajón con llave: bloquear una fila en la base mientras se calcula el número.
+Pedirle a la base **un turno**, con nombre, mientras se calcula el número.
 
 ### Para entenderlo mejor
 
-El que va a arrancar la hoja **cierra el cajón con llave**. Los demás esperan en la puerta. Cuando
-termina, abre, y entra el siguiente — que ahora sí ve el número actualizado.
+El número que se reparte en la puerta de una oficina. No hay ninguna ventanilla cerrada con llave:
+hay **un turno que se pide**, y el que lo tiene pasa mientras los demás esperan. Cuando termina,
+lo suelta y entra el siguiente — que ahora sí ve el mostrador actualizado.
 
-Fíjate en un detalle que importa: **se cierra el cajón, no la hoja que vas a arrancar**. La hoja
-todavía no existe. Por eso el candado se pide sobre una fila que **ya está ahí**: el folio de
-apertura del año.
+Aquí el turno se llama **2026**, que es el año. Y fíjate en lo que **no** hace falta: ninguna fila
+que represente ese turno. El nombre basta.
 
 ### El problema
 
@@ -254,34 +254,41 @@ segunda **espere** a que la primera termine.
 - **Bloqueo optimista** (`@Version`): no bloquea; deja que los dos escriban y **el segundo falla**,
   y tú reintentas. Es mejor cuando los choques son **raros** — le ahorras la espera a todo el
   mundo. Aquí los choques son la norma, así que reintentar veinte veces sería peor.
-- **Bloqueo pesimista** (`PESSIMISTIC_WRITE`), que es lo de aquí: el primero cierra y los demás
-  esperan. Cuesta que se hace cola, y es lo correcto cuando la colisión es **segura**.
-- **`PESSIMISTIC_READ`**: deja leer a otros a la vez. No sirve: aquí el problema **es** que leen a
-  la vez.
+- **Bloqueo pesimista sobre una fila** (`@Lock(PESSIMISTIC_WRITE)`): el primero se lleva la fila y
+  los demás esperan. Es lo correcto cuando **lo que se protege es esa fila** — un saldo, un stock.
+  Aquí no lo es: lo que se protege es el cálculo `max(numero) + 1` sobre toda la tabla, y para usar
+  este mecanismo habría que inventarse una fila cuyo único trabajo fuera ser bloqueada.
+- **Un advisory lock**, que es lo de aquí: un turno **con nombre**, no atado a ninguna fila.
+  PostgreSQL se lo da al primero que lo pide y hace esperar al resto.
+- **Una secuencia** (`nextval`): atómica, rapidísima, y **deja huecos** cuando una transacción
+  aborta. Un folio tributario saltado hay que explicarlo.
 
 ### Se pega
 
 En `practica/src/main/java/cl/dgt/concurrencia/repositories/FolioRepository.java`:
 
-{{codigo lab=lab-07-concurrencia archivo=src/main/java/cl/dgt/concurrencia/repositories/FolioRepository.java modo=metodo nombre=bloquearLaApertura lenguaje=java}}
+{{codigo lab=lab-07-concurrencia archivo=src/main/java/cl/dgt/concurrencia/repositories/FolioRepository.java modo=metodo nombre=tomarElTurnoDelAnio lenguaje=java}}
 
 Y el método que lo usa, en el servicio:
 
-{{codigo lab=lab-07-concurrencia archivo=src/main/java/cl/dgt/concurrencia/services/EmisorDeFolios.java modo=metodo nombre=emitirConCandado lenguaje=java}}
+{{codigo lab=lab-07-concurrencia archivo=src/main/java/cl/dgt/concurrencia/services/EmisorDeFolios.java modo=metodo nombre=emitirConTurno lenguaje=java}}
 
-**Compáralo con el del paso 1.** La diferencia es **una línea**: la que pide el candado antes de
-mirar el máximo.
+**Compáralo con el del paso 1.** La diferencia es **una línea**: la que pide el turno antes de
+mirar el máximo. (La del `log` es sólo para que lo veas en pantalla una vez.)
 
 :::  nota
-**El candado sólo dura lo que dure la transacción.** Por eso el método es `@Transactional`: sin
-transacción no hay nada que sostenga el bloqueo, y la llave se suelta al instante.
+**El turno dura exactamente lo que dure la transacción**, y por eso la función se llama
+`pg_advisory_xact_**lock**` con ese `xact` en medio: se suelta solo al confirmar o al abortar, sin
+que nadie tenga que acordarse. Por eso el método es `@Transactional`: sin transacción no hay nada
+que lo sostenga, y se soltaría al instante.
 :::
 
 ### Lo que vas a ver
 
 ``` text
-=== 3 · CON CANDADO · 20 a la vez, con bloqueo pesimista ===
-  año 2026 reiniciado: solo el folio de apertura 2026-0001
+=== 3 · CON TURNO · 20 a la vez, con un lock con nombre ===
+  año 2026 reiniciado: solo el folio 2026-0001
+  [TURNO] pg_advisory_xact_lock(2026) · el turno vive en la base, no en Java
   folios en la tabla : 21
   números distintos  : 21
   REPETIDOS          : ninguno
@@ -291,6 +298,17 @@ transacción no hay nada que sostenga el bloqueo, y la llave se suelta al instan
 
 **21 de 21. Cero rechazos.** Las mismas veinte peticiones simultáneas que antes perdían la mitad.
 
+Y el SQL, que en este laboratorio está encendido:
+
+``` text
+Hibernate:
+    select
+        pg_advisory_xact_lock(?)
+```
+
+Una línea, ninguna tabla, ningún `for update`. Si buscas `for update` en la consola **no vas a
+encontrar nada**: no se está bloqueando ninguna fila.
+
 ::: vasbien
 `folios en la tabla: 21`, `números distintos: 21` y `rechazados por la base: 0`. Los tres a la vez.
 :::
@@ -298,18 +316,18 @@ transacción no hay nada que sostenga el bloqueo, y la llave se suelta al instan
 ::: atasco
 **1 · Siguen saliendo rechazos.**
 
-Tres causas, por frecuencia: falta el `@Transactional` en el método del servicio; el `@Lock` está
-sobre la consulta equivocada; o pediste el candado **después** de leer el máximo — el orden es lo
-único que importa aquí.
+Dos causas, por frecuencia: falta el `@Transactional` en el método del servicio, o pediste el turno
+**después** de leer el máximo — el orden es lo único que importa aquí.
 
 **2 · La demo se queda colgada y no termina.**
 
-Es lo que pasa cuando el candado no se suelta: alguien lo tiene y no cierra su transacción. Corta
-con `Ctrl+C` y comprueba que el método sea `@Transactional` y termine.
+Es lo que pasa cuando el turno no se suelta: alguien lo tiene y no cierra su transacción. Corta con
+`Ctrl+C` y comprueba que el método sea `@Transactional` y termine.
 
-**3 · `cannot find symbol: LockModeType`**
+**3 · `Could not determine recommended JdbcType` o un error de tipos en el parámetro.**
 
-Falta `import jakarta.persistence.LockModeType;`.
+El parámetro tiene que ser `long`, no `int`: `pg_advisory_xact_lock` tiene una forma que toma un
+`bigint` y otra que toma dos `int`, y con `long` no hay ambigüedad.
 :::
 
 ## Paso 5 · El cinturón
@@ -321,13 +339,13 @@ dos** cosas.
 
 ### Para entenderlo mejor
 
-El candado es **el procedimiento**: si todo el mundo lo sigue, no hay duplicados. La restricción
+El turno es **el procedimiento**: si todo el mundo lo pide, no hay duplicados. La restricción
 `UNIQUE` es **la propiedad del talonario**: aunque alguien se salte el procedimiento, el talonario
 no admite dos hojas iguales.
 
 ### El problema
 
-El candado protege el código que lo usa. No protege de un método nuevo que alguien escriba el año
+El turno protege el código que lo pide. No protege de un método nuevo que alguien escriba el año
 que viene sin acordarse, ni de una carga de datos hecha a mano, ni de un script de migración.
 
 ### La alternativa, y por qué no
@@ -336,8 +354,8 @@ No son dos opciones entre las que elegir: **son dos capas**, y hacen falta las d
 
 - **Sólo la restricción**: la base rechaza los duplicados, sí — y tu aplicación pierde la mitad de
   las peticiones, como viste en el paso 2. Una restricción no coordina: sólo dice que no.
-- **Sólo el candado**: coordina bien, y no protege de quien no pase por ahí.
-- **Las dos**: el candado hace que las cosas salgan bien, y la restricción garantiza que, si algo
+- **Sólo el turno**: coordina bien, y no protege de quien no pase por ahí.
+- **Las dos**: el turno hace que las cosas salgan bien, y la restricción garantiza que, si algo
   sale mal, **falla en vez de corromper**.
 
 ### Lo que vas a ver
@@ -367,21 +385,22 @@ paso 2. La concurrencia no se ve leyendo: hay que provocarla.
 Sincroniza los hilos de una JVM, y en producción hay varias. Es peor que no hacer nada, porque el
 problema deja de reproducirse en tu máquina y sigue vivo donde importa.
 
-**3 · El candado va en el sitio compartido: la base.**
+**3 · El turno va en el sitio compartido: la base.**
 
-Es lo único que todas las instancias ven igual. Y se pide sobre una fila **que ya existe** —la de
-apertura—, porque la que vas a crear todavía no está ahí para bloquearla.
+Es lo único que todas las instancias ven igual. Y se pide **con un nombre**, no sobre una fila:
+la fila que vas a crear todavía no existe, y ninguna otra representa «el derecho a emitir folios
+de 2026». Un `synchronized` sólo coordina hilos de una JVM; esto coordina procesos y máquinas.
 
-**4 · Candado y restricción son dos capas, no dos opciones.**
+**4 · Turno y restricción son dos capas, no dos opciones.**
 
-El candado hace que salga bien. La restricción hace que, si sale mal, **falle** en vez de guardar
+El turno hace que salga bien. La restricción hace que, si sale mal, **falle** en vez de guardar
 un dato corrupto. En material tributario, esa diferencia es la que importa.
 
 # Para profundizar
 
-- **Cambia el bloqueo a `PESSIMISTIC_READ`** y vuelve a correr la demo 3. ¿Sigue saliendo 21?
+- **Quita la línea del turno** y vuelve a correr la demo 3. ¿Cuántos rechazos salen ahora?
 - **Sube las emisiones simultáneas de 20 a 100** en la demo y mira cuánto tarda la versión con
-  candado. Ése es el precio de hacer cola.
+  turno. Ése es el precio de hacer cola.
 - **Quita la restricción `UNIQUE`** de la migración —en una base de pruebas— y corre la demo 2.
   Cuenta los duplicados que quedan guardados. Es lo que pasa sin cinturón.
 - **Investiga `@Version`** y escribe una versión optimista del emisor. ¿Cuántos reintentos hacen
@@ -397,9 +416,9 @@ un dato corrupto. En material tributario, esa diferencia es la que importa.
 
 **Lo que te llevas:**
 
-> Entre leer y escribir hay un hueco, y con varios usuarios a la vez ahí caben los demás. El
-> candado va en la base, sobre una fila que ya existe, y dura lo que dure la transacción. Y encima
-> del candado va una restricción, porque el procedimiento sólo protege a quien lo sigue.
+> Entre leer y escribir hay un hueco, y con varios usuarios a la vez ahí caben los demás. El turno
+> se le pide a la base, tiene nombre propio y dura lo que dure la transacción. Y encima del turno
+> va una restricción, porque el procedimiento sólo protege a quien lo sigue.
 
 **Lo que queda pendiente, y abre el Lab 08:** todo lo que llevas comprobado lo has comprobado
 **mirando la consola**. Eso no escala y no se puede repetir. En el Lab 08 se escribe el primer

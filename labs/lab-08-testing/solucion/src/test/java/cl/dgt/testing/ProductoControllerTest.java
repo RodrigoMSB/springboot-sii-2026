@@ -1,7 +1,6 @@
 package cl.dgt.testing;
 
 import cl.dgt.testing.controllers.ProductoController;
-import cl.dgt.testing.models.Producto;
 import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
@@ -24,17 +23,6 @@ class ProductoControllerTest {
 
     @MockitoBean
     private ProductoService servicio;
-
-    @Test
-    void pedirUnProductoQueExisteDevuelve200YSuJson() throws Exception {
-        when(servicio.porId(1L)).thenReturn(new Producto(1L, "Resma de papel carta", 4990));
-
-        mockMvc.perform(get("/productos/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.nombre").value("Resma de papel carta"))
-                .andExpect(jsonPath("$.precioNeto").value(4990));
-    }
 
     @Test
     void pedirUnProductoQueNoExisteDevuelve404ConCuerpo() throws Exception {

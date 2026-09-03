@@ -25,7 +25,7 @@ public class Lab07Application {
         return args -> {
             demos.deUnoEnUno();
             demos.elCrimen();
-            demos.conCandado();
+            demos.conTurno();
         };
     }
 

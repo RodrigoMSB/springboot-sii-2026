@@ -9,6 +9,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    # Encendido: hoy hay UNA línea de SQL que hay que leer con los propios ojos,
+    # la del paso 4. Dice `select pg_advisory_xact_lock(?)`.
     show-sql: true
     properties:
       hibernate:
@@ -20,3 +22,8 @@ logging:
     root: WARN
     cl.dgt: INFO
     org.springframework.boot.tomcat: INFO
+
+    # La demo 2 choca contra la restricción única y Hibernate lo avisa dos veces
+    # por hilo: treinta líneas que tapan el informe. El mensaje de la base no se
+    # pierde — la demo lo imprime una vez, sacado de la excepción.
+    org.hibernate.orm.jdbc.error: ERROR

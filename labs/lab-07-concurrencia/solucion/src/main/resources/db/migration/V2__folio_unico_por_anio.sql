@@ -1,6 +1,6 @@
 -- El cinturón, del paso 5.
 --
--- El candado del paso 4 vive en el código: protege mientras TODAS las emisiones
+-- El turno del paso 4 vive en el código: protege mientras TODAS las emisiones
 -- pasen por ese método. Esto vive en la base y protege siempre, venga de donde
 -- venga — de otra aplicación, de un script, de alguien con un cliente SQL.
 -- Dos defensas para el mismo invariante. No sobra ninguna.

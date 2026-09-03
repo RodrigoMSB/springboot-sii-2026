@@ -5,6 +5,7 @@ import cl.dgt.testing.services.ProductoService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,13 +26,15 @@ public class ProductoController {
         return servicio.todos();
     }
 
-    @GetMapping("/valor-total")
-    public Map<String, Integer> valorTotal() {
-        return Map.of("valorConIva", servicio.valorDelCatalogo());
-    }
-
     @GetMapping("/{id}")
     public Producto porId(@PathVariable Long id) {
         return servicio.porId(id);
+    }
+
+    // La cotización con descuento por volumen. Es el método que se prueba en el paso 1.
+    @GetMapping("/{id}/total")
+    public Map<String, Integer> total(@PathVariable Long id,
+                                      @RequestParam(defaultValue = "1") int cantidad) {
+        return Map.of("total", servicio.totalConDescuento(id, cantidad));
     }
 }
