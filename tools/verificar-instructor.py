@@ -11,7 +11,7 @@
 #  `instructor/pom.xml` de los labs 08 a 13 llevaban una regla decorativa de
 #  guiones DENTRO de un comentario XML, y eso es ilegal:
 #
-#      Non-parseable POM .../lab-13-empaquetado/instructor/pom.xml:
+#      Non-parseable POM .../lab-09-seguridad/instructor/pom.xml:
 #      in comment after two dashes (--) next character must be > not -
 #
 #  Un `pom.xml` que no es XML válido lo marca en rojo cualquier editor, y quien
@@ -68,8 +68,7 @@ def paquete_esperado(java):
 
 def main():
     raices = sorted([p for p in RAIZ.glob('labs/*/instructor') if p.is_dir()] +
-                    [p for p in RAIZ.glob('proyecto-final/instructor') if p.is_dir()] +
-                    [p for p in RAIZ.glob('examen-huecos/instructor') if p.is_dir()])
+                    [p for p in RAIZ.glob('proyecto-final/instructor') if p.is_dir()])
 
     if not raices:
         print('No hay ninguna carpeta `instructor/` en este clon.')

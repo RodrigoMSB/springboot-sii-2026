@@ -32,6 +32,10 @@ public class SeguridadConfig {
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // La documentación de la API es pública: describe QUÉ endpoints hay, no
+                        // devuelve ni un dato. Y sin esto `/swagger-ui.html` daría 401, que es la
+                        // primera pantalla que alguien abre para entender el servicio.
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Las reglas del encargo van aquí.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
