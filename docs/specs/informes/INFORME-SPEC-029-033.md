@@ -3,6 +3,7 @@
 **Ejecuta:** mocito · **Rama:** `spec-029-033-simplificacion` · **Fecha:** 3 de septiembre de 2026
 **Origen:** SPEC-029 a SPEC-033 del PO, con la **enmienda urgente a la SPEC-033** recibida durante
 la ejecución (`tools/jib-base/` no se borra).
+**Cierre:** PR #61 mergeado a `main` (`ba242fb`), etiquetado **`material-v1.11.0`** — ver §9.
 
 ---
 
@@ -687,3 +688,59 @@ después de recibir este informe**. Lo que este informe deja hecho de su parte:
   que ahora necesita el circuito (lab 10), la del paso 5 que ya no se corre (lab 11), la del
   problema de las dos instancias (lab 12) y la de qué se fue con Jib (lab 13).
 - El **dibujo de las dos instancias** del lab 12 se mantiene, como pide la spec.
+
+
+---
+
+## 9 · El cierre, y el tag que no se pudo poner
+
+**PR #61 mergeado a `main`** el 3 de septiembre de 2026 (`ba242fb`), con **los ocho checks del CI
+en verde**:
+
+```
+temario · coherencia .md <-> .docx                            pass   19s
+siembra · toda TEORIA.md con sucesor siembra el módulo N+1     pass   15s
+pasos · el código del guion coincide con solucion/             pass   15s
+guion-practica · el guion dice la verdad sobre practica/       pass   20s
+labs · los proyectos del curso compilan offline                pass  2m22s
+labs-sh · andamiaje (ubuntu-latest)                            pass   16s
+labs-sh · andamiaje (windows-latest)                           pass   20s
+demo-docker · la copia no se separa del lab 14                 pass   17s
+```
+
+El job `labs` es el que importaba tras sacar `resilience4j-retry` de la maleta: compila los
+proyectos del curso offline contra `repo-maven/` y comprueba que nadie salió a la red. Verde.
+
+### El tag
+
+La spec pedía cerrar con **`material-v0.6.0`**. **Ese tag ya existe**, y no es un descuido de
+nomenclatura:
+
+```
+material-v0.6.0  ->  4b547b6  2026-08-15  Merge pull request #31 from RodrigoMSB/spec-025-fase-2-labs-08-11
+```
+
+Pertenece a la serie **v0.4.0–v0.8.0**, que es el archivo del **arco antiguo** — el que la SPEC-033
+retiró de `main`. `ESTADO.md` §1.a y `docs/CONTEXTO-MOCITO.md` citan esa serie precisamente para
+recuperar material de allí:
+
+```bash
+git show material-v0.8.0:labs/lab-13-capsula-y-egreso/README.md
+git checkout material-v0.8.0 -- dgt-tramites-api/
+```
+
+Mover `material-v0.6.0` a este commit habría exigido un push forzado y habría dejado esas dos
+referencias apuntando a algo que no es lo que dicen. Además, el repositorio va por
+**`material-v1.10.0`**: un `v0.6.0` nuevo se leería como anterior a todo lo vivo.
+
+**Se etiquetó `material-v1.11.0`**, consultado y aprobado por el PO. Es la siguiente en la serie
+viva, va justo por encima de `material-v1.10.0` (SPEC-047, el último cierre real) y no toca nada
+histórico.
+
+```
+material-v1.11.0  ->  ba242fb  Merge pull request #61 from RodrigoMSB/spec-029-033-simplificacion
+```
+
+**Nota para la próxima spec:** el número de tag que traiga la cabecera conviene contrastarlo con
+`git tag -l 'material-v*' --sort=-v:refname | head -1` antes de empezar. La serie v0.x está
+congelada y es el archivo del arco antiguo; los cierres nuevos van en v1.x.
