@@ -3,7 +3,7 @@
 Hoy no se arregla nada. Hoy se **protege** lo que ya funciona.
 
 El proyecto de este laboratorio llega **entero y andando**: un catálogo de productos con su
-repositorio, su servicio y su controller, los cuatro endpoints respondiendo. No hay ningún error
+repositorio, su servicio y su controller, sus tres endpoints respondiendo. No hay ningún error
 que buscar. Lo que no hay es **ni un solo test**.
 
 Doce de los dieciocho alumnos de este curso nunca escribió un test automatizado. Este lab
@@ -12,13 +12,14 @@ existe para eso.
 ## Qué se aprende
 
 - Que un test es **código normal** que llama a tu código y comprueba el resultado. Nada más.
-- La estructura de los tres tiempos: **preparar, ejecutar, comprobar**.
-- Que el nombre de un test es **una frase que se lee**, no un identificador.
 - Que un test sirve el día que se pone **rojo**: avisa antes que el usuario.
+- **Qué merece un test y qué no**: se prueban reglas y **bordes**, no que una lista tenga cuatro
+  elementos.
+- Un test **parametrizado** (`@CsvSource`): cuatro casos de la misma regla en una tabla.
 - Que probar el fallo (`assertThrows`) vale tanto como probar el éxito.
-- Cómo **aislar** una pieza sustituyendo sus dependencias por dobles (Mockito).
+- Cómo **aislar** una pieza con un doble (Mockito) — y **cuándo un doble estorba**.
 - Cómo probar un endpoint **sin levantar el servidor** (`@WebMvcTest` + `MockMvc`).
-- Cuándo sí hay que levantar Spring entero (`@SpringBootTest`) — y por qué casi nunca.
+- Cómo se lee **la consola de un test rojo**, que es donde está la información.
 
 ## Las tres carpetas
 
@@ -26,7 +27,7 @@ Este laboratorio estrena la estructura que rige de aquí en adelante:
 
 | | |
 |---|---|
-| **`practica/`** | Donde trabajas. El código de producción está completo; `src/test/` llega **vacío** |
+| **`practica/`** | Donde trabajas. El código de producción está completo; los tres archivos de test llegan **declarados y vacíos**, y `ContextoDeSpringTest` llega resuelto |
 | **`solucion/`** | El mismo proyecto con los cuatro archivos de test escritos, comentados al mínimo |
 | **`instructor/`** | Los mismos archivos, explicados línea por línea. **No viaja en el repositorio** |
 
@@ -59,9 +60,9 @@ consola.
 ## Los endpoints, que ya funcionan
 
 ```
-GET /productos               el catálogo
-GET /productos/{id}          uno, o 404 con cuerpo
-GET /productos/valor-total   la suma del catálogo con IVA
+GET /productos                      el catálogo
+GET /productos/{id}                 uno, o 404 con cuerpo
+GET /productos/{id}/total?cantidad= la cotización con descuento por volumen
 ```
 
 ```bash
@@ -71,7 +72,19 @@ curl http://localhost:8093/productos/2
 curl -i http://localhost:8093/productos/99
 HTTP/1.1 404
 {"mensaje":"No existe el producto 99"}
+
+curl "http://localhost:8093/productos/1/total?cantidad=3"
+{"total":16033}
 ```
+
+## La regla que se protege hoy
+
+Cabe en una línea, y es lo único del proyecto que puede romperse de forma interesante:
+
+> **Descuento por volumen: 3 o más unidades, 10 %. 10 o más, 20 %.**
+
+Cuatro cosas pueden salir mal ahí —los bordes, el orden de los tramos, el redondeo y la cantidad
+inválida— y de eso van los cuatro casos del primer test.
 
 ## Sin base de datos, a propósito
 
@@ -81,19 +94,23 @@ persistencia.
 
 ## El paso que hay que llegar a hacer
 
-El **paso 2**. Ahí se rompe el código de producción a propósito y se corre la suite otra vez. El
-test se pone **rojo** y dice en pantalla qué esperaba y qué obtuvo:
+El **paso 1**, su segunda mitad. Ahí se cambia el IVA de `0.19` a `0.10` a propósito y se corre la
+suite otra vez. Tres de los cuatro casos se ponen **rojos** —el de cero unidades no, porque no
+depende del IVA— y el informe de Surefire dice, en dos líneas:
 
 ```
-expected: <5938> but was: <5489>
+org.opentest4j.AssertionFailedError: expected: <5938> but was: <5489>
+	at cl.dgt.testing.ProductoServiceTest...(ProductoServiceTest.java:30)
 ```
+
+**Dos líneas, no sesenta.** Eso se lo debe el laboratorio a `<trimStackTrace>true</trimStackTrace>`
+en el `pom.xml`: sin él, ese mismo fallo entierra la información útil bajo la pila entera de JUnit
+y Spring.
 
 Después se deshace y vuelve el verde. Ese ida y vuelta es el laboratorio entero: **un test que
 nunca se ha puesto rojo no ha demostrado nada.**
 
 ## Lo que no vimos hoy
-
-Tres cosas quedan fuera. No caben en tres horas y no se fingen:
 
 - **Tests de persistencia** (`@DataJpaTest`, bases de datos de test, rollback por transacción).
   Se apoya en el Lab 04 y da para una sesión propia.
@@ -101,8 +118,11 @@ Tres cosas quedan fuera. No caben en tres horas y no se fingen:
   cobertura no significa que el código esté probado.
 - **TDD**: escribir el test antes que el código. Es una forma de trabajar, no una herramienta, y
   aprenderla exige más tiempo del que hay hoy.
+- **`verify` y los tests de interacción**: comprobar que algo se *llamó*, no lo que devolvió. Tiene
+  su sitio —un correo que se envía, un pago que se registra— y no es ninguno de los cuatro tests
+  de hoy. Se nombra en el paso 2 y se explica por qué no está.
 
 ## El guion
 
-`PASOS.md` — los seis pasos de la sesión, con qué escribir en cada uno y qué debe salir en la
-consola.
+`PASOS.md` — el paso 0 y los tres pasos de la sesión, con qué escribir en cada uno y qué debe
+salir en la consola.

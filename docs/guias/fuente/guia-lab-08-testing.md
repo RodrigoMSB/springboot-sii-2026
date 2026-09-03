@@ -5,7 +5,7 @@ date: "90 minutos · Spring Boot 4.1.0 · Java 25 (Temurin)"
 abstract-title: "Lo que se demuestra"
 abstract: |
   Que un test que nunca se ha puesto rojo no demuestra nada — se rompe la producción a propósito
-  para verlo—, y que probar con Spring cuesta: **0,040 s los cuatro tests sin Spring, 1,453 s uno
+  para verlo—, y que probar con Spring cuesta: **0,089 s los cuatro casos sin Spring, 1,26 s uno
   solo con el contexto entero**.
 lang: es
 ---
@@ -76,27 +76,46 @@ ver los cuatro y cuánto cuesta cada uno, con el reloj delante.
 
 # Los pasos
 
-## Paso 1 · El primer test
+## Paso 1 · El primer test, sobre una regla de verdad
 
 ### Qué vamos a hacer
 
-Escribir un test de una clase, sin Spring por ninguna parte.
+Escribir un test de una clase, sin Spring por ninguna parte, sobre el único método del proyecto que
+tiene una **regla** que alguien puede romper.
 
 ### Para entenderlo mejor
 
-La mesa suelta: la calculadora del IVA, dos números, un resultado.
+La mesa suelta: la calculadora de la cotización. Le das un producto y una cantidad, y compruebas el
+total.
 
 ### El problema
 
 Comprobar un cálculo arrancando la aplicación y mirando la consola tarda segundos, hay que hacerlo
 a mano, y **no queda constancia**. Mañana nadie sabe si se comprobó.
 
+Y hay un problema anterior, que es el que decide qué se prueba: **no todo merece un test**. Probar
+que el catálogo tiene cuatro productos, o que el producto 2 se llama «Tóner negro», no protege
+nada: son datos de una lista de mentira, y el día que alguien añada un producto ese test se pone
+rojo sin que nada esté mal.
+
+Lo que sí merece un test es la regla del descuento:
+
+> **3 o más unidades, 10 %. 10 o más, 20 %.**
+
+Ahí hay cuatro cosas que pueden salir mal: los **bordes** (¿3 entra en el 10 %?), el **orden** de
+los tramos (si se pregunta por `>= 3` antes que por `>= 10`, diez unidades se llevan el 10 %), el
+**redondeo**, y la **entrada inválida**.
+
 ### La alternativa, y por qué no
 
 - **Un `main` que imprima el resultado** y mirarlo. Es lo que se hace sin saber que existen los
   tests, y no falla solo: hay que estar delante.
-- **Un test**, que es lo de aquí: se corre solo, dice sí o no, y **se vuelve a correr gratis** cada
-  vez que alguien toca el código.
+- **Cuatro `@Test` copiados y pegados**, uno por caso: el mismo cuerpo cuatro veces, y cuando
+  cambie la regla hay que acordarse de cambiarlo en cuatro sitios.
+- **Un `@Test` con cuatro `assertEquals` seguidos**: peor que las dos, porque **el primero que
+  falla corta el método** y nunca llegas a saber si los otros tres también estaban mal.
+- **Un `@ParameterizedTest`**, que es lo de aquí: un cuerpo, los datos en una tabla, y JUnit los
+  cuenta como cuatro ejecuciones independientes.
 
 Y una decisión de forma que conviene entender: **esto es Java y JUnit, sin Spring**. Mucha gente
 cree que testear una aplicación Spring exige levantar Spring. No: la clase que vas a probar es una
@@ -104,13 +123,17 @@ clase normal con un constructor, y se prueba como cualquier otra.
 
 ### Se pega
 
-Archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java` — fíjate en que
-va bajo **`src/test/java`**, no bajo `src/main/java`:
+En `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, que llega **declarado y
+vacío** — fíjate en que va bajo **`src/test/java`**, no bajo `src/main/java`:
 
-{{codigo lab=lab-08-testing archivo=src/test/java/cl/dgt/testing/ProductoServiceTest.java modo=metodo nombre=elPrecioConIvaSeRedondeaAlPesoMasCercano lenguaje=java}}
+{{codigo lab=lab-08-testing archivo=src/test/java/cl/dgt/testing/ProductoServiceTest.java modo=metodo nombre=elTotalAplicaElDescuentoPorVolumen lenguaje=java}}
 
 `assertEquals(esperado, obtenido)`: **el primero es lo que esperas**. Al revés, el mensaje de fallo
 miente.
+
+**Y fíjate en que el repositorio es el de verdad**, no un doble: `ProductoRepositoryLista` es una
+lista en memoria, así que no hay nada lento que aislar. El doble llega en el paso 2, cuando tenga
+algo que demostrar.
 
 ### Se corre
 
@@ -122,14 +145,17 @@ miente.
 
 ``` text
 [INFO] Running cl.dgt.testing.ProductoServiceTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.040 s
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s
 [INFO] BUILD SUCCESS
 ```
 
-**0,040 segundos.** Guarda ese número: vuelve en el paso 5.
+**Un método, cuatro ejecuciones, 0,089 segundos.** Guarda ese número: vuelve en el paso 4.
+
+Los números salen de una cuenta que puedes rehacer en un papel: `4990 × 1,19 = 5938`; por tres,
+`17.814`; menos un 10 %, **16.033**.
 
 ::: vasbien
-`BUILD SUCCESS` y una línea `Tests run:` con `Failures: 0`.
+`BUILD SUCCESS` y una línea `Tests run: 4` con `Failures: 0`.
 :::
 
 ::: atasco
@@ -138,14 +164,15 @@ miente.
 El archivo está en `src/main/java` en vez de `src/test/java`, o el nombre de la clase no acaba en
 `Test`. Maven busca por convención.
 
-**2 · `cannot find symbol: class Test`**
+**2 · `cannot find symbol: class ParameterizedTest`**
 
-Falta `import org.junit.jupiter.api.Test;`. Ojo: es `jupiter`, que es el nombre real de JUnit 5.
+Falta `import org.junit.jupiter.params.ParameterizedTest;`. Ojo al `params` en medio: es otro
+paquete que el de `@Test`.
 
 **3 · El test pasa pero no comprueba nada.**
 
-Si escribiste el `assertEquals` con los dos argumentos iguales, siempre pasará. El paso 2 está
-justo para descubrir eso.
+Si escribiste el `assertEquals` con los dos argumentos iguales, siempre pasará. El paso siguiente
+está justo para descubrir eso.
 :::
 
 ## Paso 2 · El test que avisa — el momento del laboratorio
@@ -179,23 +206,42 @@ IVA** de `0.19` a `0.10`. Es una mentira evidente, y ésa es la gracia.
 ### Lo que vas a ver
 
 ``` text
-[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0 <<< FAILURE!
-[ERROR] cl.dgt.testing.ProductoServiceTest.elPrecioConIvaSeRedondeaAlPesoMasCercano <<< FAILURE!
+[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0 <<< FAILURE!
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[1] <<< FAILURE!
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[2] <<< FAILURE!
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[3] <<< FAILURE!
+```
+
+**Tres de cuatro.** El cuarto —el de cero unidades— sigue verde: no depende del IVA. Eso es lo que
+gana un test parametrizado sobre cuatro `assertEquals` seguidos.
+
+Y el detalle está en el informe que Surefire deja escrito:
+
+``` bash
+cat target/surefire-reports/cl.dgt.testing.ProductoServiceTest.txt
+```
+
+``` text
 org.opentest4j.AssertionFailedError: expected: <5938> but was: <5489>
-	at cl.dgt.testing.ProductoServiceTest.elPrecioConIvaSeRedondeaAlPesoMasCercano(ProductoServiceTest.java:20)
+	at cl.dgt.testing.ProductoServiceTest.elTotalAplicaElDescuentoPorVolumen(ProductoServiceTest.java:30)
 ```
 
 **Lee el mensaje entero, porque un buen fallo es media reparación:**
 
 - **Qué esperaba** (`5938`) y **qué salió** (`5489`).
-- **Qué test** falló, por su nombre.
+- **Qué test** falló, y **qué caso** de los cuatro.
 - **En qué línea**.
+
+**Dos líneas, no sesenta**, y eso se lo debe este laboratorio a una línea del `pom.xml`:
+`<trimStackTrace>true</trimStackTrace>`. Sin ella, ese mismo fallo entierra la información útil
+bajo la pila entera de JUnit y Spring.
 
 Nadie tuvo que arrancar nada ni mirar ninguna consola. **Ahora vuelve a poner `0.19`** y corre otra
 vez: verde. El test está probado.
 
 ::: vasbien
-Viste el rojo con `expected: <5938> but was: <5489>`, y al deshacer el cambio volvió a verde.
+Viste el rojo con `expected: <5938> but was: <5489>` en tres de los cuatro casos, y al deshacer el
+cambio volvió a verde.
 :::
 
 ::: atasco
@@ -204,51 +250,12 @@ Viste el rojo con `expected: <5938> but was: <5489>`, y al deshacer el cambio vo
 **Éste es el hallazgo importante, no un problema tuyo:** significa que tu test no comprueba lo que
 crees. Míralo otra vez — probablemente no llama al método que cambiaste.
 
-**2 · Falla más de un test.**
+**2 · Falla más de un archivo.**
 
-Es normal: el del paso 4 también usa el IVA. Los dos te están avisando de lo mismo.
+Es normal: el del paso 2 también usa el IVA. Los dos te están avisando de lo mismo.
 :::
 
-## Paso 3 · El camino triste
-
-### Qué vamos a hacer
-
-Comprobar que, cuando algo **no** existe, se lanza la excepción que toca.
-
-### Para entenderlo mejor
-
-Inspeccionar qué pasa cuando alguien pide un expediente que no existe. Una oficina bien montada no
-se limita a funcionar cuando todo va bien.
-
-### El problema
-
-Casi todo el mundo prueba sólo el camino feliz. Los errores en producción **están casi siempre en
-el otro**: el dato que falta, la lista vacía, el id que no está.
-
-### La alternativa, y por qué no
-
-- **Un `try/catch` con `fail()`** en la línea siguiente: seis líneas, y una trampa clásica — si te
-  olvidas del `fail()`, el test **pasa cuando NO se lanza la excepción**, justo al revés de lo que
-  querías.
-- **`assertThrows`**, que es lo de aquí: dice lo mismo en una línea y **devuelve la excepción**,
-  así que puedes seguir comprobando lo que lleva dentro.
-
-### Se pega
-
-{{codigo lab=lab-08-testing archivo=src/test/java/cl/dgt/testing/ProductoServiceTest.java modo=metodo nombre=unIdQueNoExisteLanzaProductoNoEncontrado lenguaje=java}}
-
-::: vasbien
-El test pasa, y comprueba **además** que el id que viaja dentro de la excepción es el que pediste.
-:::
-
-::: atasco
-**1 · `Expected ... to be thrown, but nothing was thrown`**
-
-El método no lanza la excepción: probablemente devuelve `null` o un `Optional` vacío. El test te
-está diciendo la verdad.
-:::
-
-## Paso 4 · Aislar con un doble
+## Paso 3 · Aislar con un doble
 
 ### Qué vamos a hacer
 
@@ -263,15 +270,24 @@ añada un producto tu inspección deja de cuadrar.
 
 ### El problema
 
-Hasta ahora el test usaba el repositorio de verdad, y pasaba **por los datos que ese repositorio
-trae dentro**. Si mañana alguien añade un producto a la lista, el test se pone rojo — y no porque
-el cálculo esté mal.
+El test del paso 1 usa el repositorio de verdad, y por eso arrastra los números que ese repositorio
+trae dentro: **5938, 16033, 47504**. Son correctos, y nadie los puede verificar de cabeza.
 
-**Un test que se rompe cuando el comportamiento no ha cambiado es un impuesto, no una red.**
+Con un doble se **elige el precio**: se dice «este producto vale 1000» y la cuenta sale en la
+pizarra — 1190 con IVA, por tres, menos 10 %, **3213**.
+
+Y ahí está la regla que hay que llevarse, que es la mitad del paso:
+
+> Un doble **no** se usa «porque hay una dependencia». Se usa cuando la dependencia real es
+> **lenta**, **frágil**, o **no se puede controlar**.
+
+Aquí el motivo es el tercero. En el paso 1 no se daba ninguno de los tres, y por eso allí **no hay
+doble** — la comparación entre los dos archivos es el contenido.
 
 ### La alternativa, y por qué no
 
-- **La implementación real**: gratis y estable **si** los datos no cambian. Aquí cambian.
+- **La implementación real**, como en el paso 1: es la que de verdad prueba que las piezas encajan,
+  y no deja elegir los datos.
 - **Un doble escrito a mano** (una clase de test que implementa la interfaz): funciona igual de
   bien, y son treinta líneas más que mantener.
 - **Mockito con `@Mock`**, que es lo de aquí: el doble se declara en dos líneas y **los datos los
@@ -286,16 +302,25 @@ llega a usar, que es la forma más común de que un test verde no esté probando
 
 Archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java`:
 
-{{codigo lab=lab-08-testing archivo=src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java modo=metodo nombre=elValorDelCatalogoSumaLosPreciosConIva lenguaje=java}}
+{{codigo lab=lab-08-testing archivo=src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java modo=metodo nombre=elDescuentoSeCalculaSobreLoQueDevuelveElRepositorio lenguaje=java}}
 
-**Fíjate en que el test elige los datos.** El `3570` que afirma sale de los productos que él mismo
-puso, no de lo que hubiera en el repositorio.
+**Fíjate en que el test elige el dato.** El `3213` que afirma sale del producto de 1000 pesos que
+él mismo puso, no de lo que hubiera en el repositorio.
+
+Y fíjate en lo que **no** tiene: ni un `verify(...)`. Lo que importa es el número que sale, no si
+el método llamó al repositorio una vez o dos. `verify` ata el test a **cómo** está escrito el
+método, y el día que alguien lo reorganice sin cambiar su comportamiento, el test se pone rojo sin
+que nada esté mal. Tiene su sitio —un correo que se envía, un pago que se registra: efectos que no
+devuelven nada— y no es éste.
+
+`new ProductoService(repositorio)` se construye **a mano**, con `new`. Eso sólo se puede hacer
+porque la dependencia entra por el **constructor**: es el Lab 02 cobrando.
 
 ### Lo que vas a ver
 
 ``` text
 [INFO] Running cl.dgt.testing.ProductoServiceConDobleTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Time elapsed: 0.082 s
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 0.073 s
 ```
 
 ::: vasbien
@@ -318,7 +343,7 @@ El doble devuelve `null` por defecto para todo lo que no hayas preparado. Te fal
 Falta `@ExtendWith(MockitoExtension.class)` sobre la clase.
 :::
 
-## Paso 5 · Los cuatro niveles, y lo que cuesta cada uno
+## Paso 4 · Los cuatro niveles, y lo que cuesta cada uno
 
 ### Qué vamos a hacer
 
@@ -357,22 +382,24 @@ ninguna parte**.
 
 ``` text
 [INFO] Running cl.dgt.testing.ProductoServiceTest
-[INFO] Tests run: 4 ... Time elapsed: 0.040 s
+[INFO] Tests run: 4 ... Time elapsed: 0.089 s
 
 [INFO] Running cl.dgt.testing.ContextoDeSpringTest
-[INFO] Tests run: 1 ... Time elapsed: 1.453 s
+[INFO] Tests run: 1 ... Time elapsed: 1.261 s
 
 [INFO] Running cl.dgt.testing.ProductoServiceConDobleTest
-[INFO] Tests run: 2 ... Time elapsed: 0.082 s
+[INFO] Tests run: 1 ... Time elapsed: 0.073 s
 
 [INFO] Running cl.dgt.testing.ProductoControllerTest
-[INFO] Tests run: 2 ... Time elapsed: 0.388 s
+[INFO] Tests run: 1 ... Time elapsed: 0.359 s
 
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-**Míralo bien: cuatro tests sin Spring tardan 0,040 s. UNO con el contexto entero tarda 1,453 s.**
-Treinta y seis veces más, por un test.
+(Siete ejecuciones y cuatro métodos de test: el parametrizado cuenta sus cuatro casos.)
+
+**Míralo bien: cuatro casos sin Spring tardan 0,089 s. UNO con el contexto entero tarda 1,261 s.**
+Catorce veces más, por un solo test.
 
 **Y aun así el caro hace falta**, porque es el único que responde a «¿arranca esto?». Si falta un
 bean, si dos se pelean por el mismo nombre, si una propiedad no resuelve — ninguno de los rápidos
@@ -384,8 +411,8 @@ de Spring cuesta un orden de magnitud más que no levantarlo.
 :::
 
 ::: vasbien
-`Tests run: 9, Failures: 0` y puedes señalar en la salida cuál de los cuatro tarda mucho más que
-los otros tres juntos.
+`Tests run: 7, Failures: 0` y puedes señalar en la salida cuál de los cuatro archivos tarda mucho
+más que los otros tres juntos.
 :::
 
 ::: atasco
@@ -412,23 +439,30 @@ minutos, y es lo que separa una red de seguridad de un adorno.
 La mayoría de lo que escribes son clases normales con un constructor. Se prueban como cualquier
 clase Java, y tardan milésimas.
 
-**3 · Un doble sirve para elegir los datos.**
+**3 · Se prueban reglas y bordes, no cualquier cosa.**
 
-No es «evitar la base de datos»: es que el número que afirmas sea el que tú pusiste, y no el que
-hubiera. Así el test no se rompe cuando alguien añade una fila.
+Que el catálogo tenga cuatro productos no merece un test: no es una regla, es el contenido de una
+lista, y el día que alguien añada uno el test se pone rojo sin que nada esté mal. Lo que merece un
+test es el descuento por volumen, y los casos que valen son los **bordes**.
 
-**4 · Cada nivel cuesta, y hay que elegirlo.**
+**4 · Un doble sirve cuando la dependencia real es lenta, frágil o no se puede controlar.**
 
-0,040 s los cuatro sin Spring; 1,453 s uno solo con el contexto entero. Se prueba al nivel más
-barato que responda la pregunta — y se paga el caro sólo donde hace falta.
+No «siempre que haya una dependencia». Aquí sirvió para elegir el precio y poder comprobar el
+número de cabeza. Y `verify` no se usó: ata el test a cómo está escrito el método, no a lo que hace.
+
+**5 · Cada nivel cuesta, y hay que elegirlo.**
+
+0,089 s los cuatro casos sin Spring; 1,261 s uno solo con el contexto entero. Se prueba al nivel
+más barato que responda la pregunta — y se paga el caro sólo donde hace falta.
 
 # Para profundizar
 
-- **Escribe un `@ParameterizedTest`** para el IVA con cinco importes de borde: 0, 1, y un número
-  muy grande.
-- **Rompe el controlador** —cambia la ruta— y mira cuál de los cuatro tipos de test se entera.
-- **Añade un `@MockitoBean` distinto** a un segundo test con `@SpringBootTest` y mira si la suite
-  tarda el doble. Ahí se ve la caché de contextos.
+- **Invierte los dos `if`** de `totalConDescuento` —pregunta por `>= 3` antes que por `>= 10`— y
+  corre la suite. ¿Cuál de los cuatro casos se pone rojo, y por qué sólo ése?
+- **Añade un caso de 5 unidades** al `@CsvSource`. ¿Qué error habría cazado que no cacen los otros
+  cuatro? (Pista: ninguno. Los bordes son donde viven los errores.)
+- **Quita `<trimStackTrace>`** del `pom.xml`, rompe el IVA y cuenta las líneas de la traza.
+- **Rompe el controlador** —cambia la ruta— y mira cuál de los cuatro archivos de test se entera.
 - **Quita el `@ExtendWith`** del test con doble y mira qué error da.
 
 # Antes de cerrar
@@ -441,9 +475,9 @@ Este lab **no deja nada corriendo**: no hay servidor ni base que apagar.
 
 **Lo que te llevas:**
 
-> Un test se escribe, se ve fallar a propósito, y se corre solo. Se prueba al nivel más barato que
-> responda la pregunta, y el contexto entero se levanta sólo para comprobar que la aplicación
-> arranca.
+> Un test se escribe, se ve fallar a propósito, y se corre solo. Se prueban reglas y bordes, no
+> cualquier cosa. Un doble sirve cuando la dependencia real estorba, no siempre. Y se prueba al
+> nivel más barato que responda la pregunta.
 
 **Lo que queda pendiente, y abre el Lab 09:** todos los endpoints que llevas escritos **los puede
 llamar cualquiera**. En el Lab 09 se cierra la puerta, y se aprende la diferencia entre «no te

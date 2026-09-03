@@ -92,6 +92,13 @@ Levantarlo delante de la sala la primera vez es construir cuatro imágenes en di
 arriba, y para el momento del arranque se hace `docker compose down` y `up` otra vez —eso sí son
 21 segundos y se ve bien—.
 
+> **Y una cosa que muerde si se proyecta desde otra máquina:** las imágenes se construyen para la
+> **arquitectura de la máquina donde se ejecuta `docker compose build`**. Una imagen construida en
+> un Mac con Apple Silicon es `arm64`; en un portátil Intel o en un servidor, `amd64`. Si la
+> demostración se prepara en una máquina y se proyecta desde otra, **hay que reconstruir allí** —
+> `./construir.sh && docker compose build`—. No es un problema de Docker: es lo mismo que dice el
+> Lab 13 sobre la arquitectura de destino, ahora en la práctica.
+
 ---
 
 ### 1 · Que funciona igual (2 min)
@@ -277,7 +284,67 @@ Tres cosas que señalar, y las tres importan:
 
 ---
 
-### 6 · El cierre (2 min)
+### 6 · Seguir una petición por cuatro contenedores (3 min) ⭐
+
+Éste es el bloque que **paga el Lab 11**. Allí se puso un `traceId` por petición y se dijo que
+servía para cruzar de un servicio a otro; aquí se ve cruzando.
+
+**Tiene que ser un `POST`**, no un `GET`: auditoría sólo se entera cuando se **crea** un trámite.
+Un `GET /tramites/1` cruza tres servicios; el `POST` cruza los cuatro.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "X-Trace-Id: DEMO-1" \
+     -H 'Content-Type: application/json' \
+     -d '{"rutContribuyente":"11111111-1","tipo":"DECLARACION_F29"}' \
+     http://localhost:8220/tramites > /dev/null
+
+docker compose logs --no-color | grep DEMO-1
+```
+
+**Qué se ve, y hay que leerlo despacio:**
+
+```
+gateway-1        | 22:33:16.305 INFO  [DEMO-1] GATEWAY - [GATEWAY] POST /tramites -> tramites
+tramites-1       | 22:33:16.339 INFO  [DEMO-1] TRAMITES - [TRAMITES] trámite 3 creado para 11111111-1
+tramites-1       | 22:33:16.342 INFO  [DEMO-1] TRAMITES - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+contribuyentes-1 | 22:33:16.345 INFO  [DEMO-1] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
+auditoria-1      | 22:33:16.371 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] llega el evento TRAMITE_CREADO del trámite 3 — procesando...
+auditoria-1      | 22:33:17.959 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] REGISTRADO id=1 del trámite 3
+tramites-1       | 22:33:17.965 INFO  [DEMO-1] TRAMITES - [TRAMITES] auditoría acusó recibo del trámite 3
+```
+
+**Cuatro contenedores, siete líneas, una sola historia** — y en orden de reloj, aunque cada línea
+la escribió un proceso distinto.
+
+Qué señalar, en este orden:
+
+1. **El id lo puso el que llamó**, con `-H "X-Trace-Id: DEMO-1"`. El gateway lo respetó en vez de
+   inventarse uno: es el `if` de tres líneas del `FiltroDeCorrelacion` del Lab 11.
+2. **Cruzó de proceso a proceso** porque cada cliente HTTP lo reenvía —`ClienteContribuyentes` y
+   `ClienteAuditoria` en trámites, `Enrutador` en el gateway— y el filtro del otro extremo lo
+   recoge. Nadie lo pasa por parámetro en ningún método de negocio.
+3. **Y en `ClienteAuditoria` hay un detalle que vale la pena abrir**, porque está a la vista en la
+   salida: fíjate en el **segundo y medio** entre `llega el evento` (22:33:16.371) y `REGISTRADO`
+   (22:33:17.959), y en que `tramites` no dice `auditoría acusó recibo` hasta después. Esa llamada
+   es asíncrona, así que el `traceId` se copia del MDC **antes** de saltar al otro hilo — el MDC va
+   atado al hilo, y en el nuevo está vacío. Es la trampa que el Lab 12 dejó anunciada, resuelta.
+
+**Y el contraste, que es por qué este bloque está aquí:**
+
+> En el laboratorio esto son **cuatro terminales** que hay que mirar a la vez, buscando el mismo
+> id a ojo en cuatro consolas que scrollean.
+>
+> Aquí es **un `grep`**.
+
+Eso es lo que hace un recolector de logs, y es la mitad de la respuesta a la pregunta que quedó
+abierta en el Lab 11: «contarlo, ¿a quién?». Compose junta las salidas de los siete contenedores
+en un solo flujo; en producción ese trabajo lo hace Loki, Elasticsearch o el recolector del
+proveedor, y entonces el `grep` es una barra de búsqueda sobre semanas de tráfico y cientos de
+máquinas.
+
+---
+
+### 7 · El cierre (2 min)
 
 ```bash
 docker compose down -v

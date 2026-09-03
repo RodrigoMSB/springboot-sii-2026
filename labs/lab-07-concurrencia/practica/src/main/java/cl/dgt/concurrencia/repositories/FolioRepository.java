@@ -19,6 +19,6 @@ public interface FolioRepository extends JpaRepository<Folio, Long> {
     @Transactional
     void deleteByAnio(int anio);
 
-    // Paso 4 · declara la búsqueda que toma el candado al leer.
+    // Paso 4 · declara la consulta nativa que pide el turno del año.
     // escribe aquí
 }

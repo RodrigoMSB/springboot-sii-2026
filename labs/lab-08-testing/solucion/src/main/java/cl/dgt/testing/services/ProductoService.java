@@ -33,9 +33,21 @@ public class ProductoService {
                 .orElseThrow(() -> new ProductoNoEncontradoException(id));
     }
 
-    public int valorDelCatalogo() {
-        return repositorio.todos().stream()
-                .mapToInt(p -> precioConIva(p.precioNeto()))
-                .sum();
+    /** Descuento por volumen. 3 o más unidades, 10 %. 10 o más, 20 %. */
+    public int totalConDescuento(Long id, int cantidad) {
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad tiene que ser mayor que cero: " + cantidad);
+        }
+
+        int bruto = precioConIva(porId(id).precioNeto()) * cantidad;
+
+        double descuento = 0.0;
+        if (cantidad >= 10) {
+            descuento = 0.20;
+        } else if (cantidad >= 3) {
+            descuento = 0.10;
+        }
+
+        return (int) Math.round(bruto * (1 - descuento));
     }
 }

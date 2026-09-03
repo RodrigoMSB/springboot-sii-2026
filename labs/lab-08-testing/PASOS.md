@@ -1,7 +1,7 @@
 # Pasos · Lab 08 · Testing
 
-Seis pasos. Se trabaja en `practica/`, en vivo, uno a la vez. Después de cada paso se corre
-`./mvnw test` y se mira la consola antes de seguir.
+Tres pasos y el cierre. Se trabaja en `practica/`, en vivo, uno a la vez. Después de cada paso se
+corre `./mvnw test` y se mira la consola antes de seguir.
 
 ```bash
 cd practica
@@ -11,21 +11,15 @@ cd practica
 Hoy **no se levanta el servidor** salvo para mirarlo una vez al principio. Los tests no necesitan
 puerto.
 
-El código de producción llega **completo**. Lo que llega vacío es esto:
+El código de producción llega **completo**. Lo que se escribe hoy son tres archivos de test:
 
 ```
-src/test/java/cl/dgt/testing/     ←  hoy se llena entero
+ProductoServiceTest         →  paso 1   la regla de negocio, y el rojo en vivo
+ProductoServiceConDobleTest →  paso 2   el mismo método con un doble
+ProductoControllerTest      →  paso 3   la capa web, sin servidor
 ```
 
-y se llena en este orden:
-
-```
-ProductoServiceTest  →  (romperlo)  →  assertThrows  →  ProductoServiceConDobleTest
-     paso 1              paso 2         paso 3               paso 4
-
-     →  ProductoControllerTest  →  ContextoDeSpringTest
-              paso 5                     paso 6
-```
+`ContextoDeSpringTest` **llega resuelto**: es el único que ya está escrito, y se mira en el cierre.
 
 ---
 
@@ -54,284 +48,198 @@ $ curl -i http://localhost:8093/productos/99
 HTTP/1.1 404
 {"mensaje":"No existe el producto 99"}
 
-$ curl http://localhost:8093/productos/valor-total
-{"valorConIva":420891}
+$ curl "http://localhost:8093/productos/1/total?cantidad=3"
+{"total":16033}
 ```
+
+**Esa última línea es la del día.** Tres resmas de papel a 4990 el neto: 5938 con IVA, por tres,
+menos un 10 % por volumen. **16.033 pesos.**
 
 **Ctrl+C**, y ahora la pregunta con la que se abre el día:
 
 > Todo esto funciona. **¿Cómo lo sabemos?** Porque lo acabamos de mirar. Mañana, cuando alguien
-> toque el IVA, ¿quién lo mira?
+> toque el IVA o mueva un tramo del descuento, ¿quién lo mira?
 
 Y la comprobación que cierra la pregunta:
 
 ```bash
 $ ./mvnw test
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 ```
 
-**Verde. Con cero tests.** Un `BUILD SUCCESS` sobre una suite vacía no dice que el código esté
-bien: dice que nadie preguntó.
+**Verde, y el único test que corre es el que comprueba que Spring arranca.** De la regla del
+descuento no hay nadie preguntando.
 
 ---
 
-## Paso 1 · El primer test
+## Paso 1 · El primer test, y las tres franjas
 
-**Se explica:** el método más fácil de testear del proyecto es `precioConIva`: entra un número,
-sale otro, no depende de nada. Un test es una clase normal, con métodos normales, y una anotación
-que le dice a JUnit «esto es un test».
-
-Tres tiempos, siempre los mismos:
-
-1. **preparar** — construir lo que hace falta
-2. **ejecutar** — llamar al método
-3. **comprobar** — decir qué resultado se esperaba
-
-Y el nombre del método **no es un identificador, es una frase**. Se va a leer en un informe de
-fallos a las tres de la mañana: `test1` no sirve de nada.
-
-**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java` — el archivo entero.
+**Se explica:** el método que vale la pena proteger es `totalConDescuento`, porque es el único que
+tiene una **regla** que alguien puede romper:
 
 ```java
-package cl.dgt.testing;
-
-import cl.dgt.testing.repositories.ProductoRepositoryLista;
-import cl.dgt.testing.services.ProductoService;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-class ProductoServiceTest {
-
-    private final ProductoService servicio = new ProductoService(new ProductoRepositoryLista());
-
-    @Test
-    void elPrecioConIvaSeRedondeaAlPesoMasCercano() {
-        int conIva = servicio.precioConIva(4990);
-
-        assertEquals(5938, conIva);
-    }
-
-}
+    /** Descuento por volumen. 3 o más unidades, 10 %. 10 o más, 20 %. */
+    public int totalConDescuento(Long id, int cantidad)
 ```
 
-Nótese lo que **no** hay: ni `@SpringBootTest`, ni anotaciones de Spring, ni contexto. El
-servicio se construye con `new`, como cualquier objeto.
-
-**Se corre:** `./mvnw test`
-
-**En consola:**
-
-```
-[INFO] Running cl.dgt.testing.ProductoServiceTest
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s
-[INFO] BUILD SUCCESS
-```
-
-**Cinco milésimas de segundo.** Ese número va a importar en el paso 6.
-
-Y ahora dos más, del mismo tamaño, para tener con qué trabajar.
-
-**Se pega:** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **antes de la llave que cierra la clase**.
-
-```java
-    @Test
-    void elCatalogoTraeLosCuatroProductos() {
-        assertEquals(4, servicio.todos().size());
-    }
-
-    @Test
-    void unIdQueExisteDevuelveElProducto() {
-        assertEquals("Tóner negro", servicio.porId(2L).nombre());
-    }
-```
-
-```
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-```
-
----
-
-## Paso 2 · El test que avisa
-
-**Este es el momento del laboratorio.** Si de las tres horas hay que salvar cinco minutos, son
-estos.
-
-**Se explica:** el verde de arriba no ha demostrado todavía nada. Un test que nunca se ha puesto
-rojo podría estar comprobando el aire. Así que se rompe el código de producción **a propósito**,
-y se mira qué pasa.
-
-**Se pega:** en `practica/src/main/java/cl/dgt/testing/services/ProductoService.java`,
-**reemplazando la línea de `TASA_IVA`**. Una sola cifra.
-
-<!-- pasos:intermedio · se deshace en cuanto se ve el rojo: la solución lleva 0.19 -->
-
-```java
-    private static final double TASA_IVA = 0.10;   // era 0.19
-```
-
-**Se corre:** `./mvnw test`
-
-**En consola:**
-
-```
-[ERROR] Tests run: 3, Failures: 1, Errors: 0, Skipped: 0 <<< FAILURE!
-[ERROR] cl.dgt.testing.ProductoServiceTest.elPrecioConIvaSeRedondeaAlPesoMasCercano <<< FAILURE!
-org.opentest4j.AssertionFailedError: expected: <5938> but was: <5489>
-	at cl.dgt.testing.ProductoServiceTest.elPrecioConIvaSeRedondeaAlPesoMasCercano(ProductoServiceTest.java:17)
-
-[INFO] BUILD FAILURE
-```
-
-Se lee en voz alta, entera:
-
-- **qué** falló: el nombre del test, que es una frase
-- **qué esperaba**: `5938`
-- **qué obtuvo**: `5489`
-- **dónde**: archivo y línea
-
-Nadie tuvo que abrir el navegador, ni levantar el servidor, ni acordarse de que el IVA es 19 %.
-
-**Se deshace:** devolver `0.19`.
-
-```
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-[INFO] BUILD SUCCESS
-```
-
-**Lo que hay que notar:** el rojo llegó **cero segundos** después del cambio, en la máquina de
-quien lo hizo. Sin test, ese `0.10` viaja a producción y lo descubre un contribuyente al que le
-cobraron de menos.
-
-> Un test no sirve cuando está verde. Sirve **el día que se pone rojo**.
-
----
-
-## Paso 3 · El camino triste
-
-**Se explica:** hasta aquí se ha probado que el código hace lo que debe cuando todo va bien. Falta
-la otra mitad, que en producción es la que se rompe: **qué pasa cuando el dato no está**.
-
-`servicio.porId(99L)` no devuelve `null` ni un `Optional` vacío: **lanza** una excepción. Un test
-normal no puede comprobar eso —la excepción lo tumbaría a él también—, así que JUnit trae
-`assertThrows`: recibe el tipo de excepción esperado y un trozo de código, lo ejecuta, y falla si
-**no** explota.
-
-**Se pega (1 de 2):** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **arriba**, con los imports.
-
-```java
-import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-```
-
-**Se pega (2 de 2):** en el mismo archivo, **antes de la llave que cierra la clase**.
-
-```java
-    @Test
-    void unIdQueNoExisteLanzaProductoNoEncontrado() {
-        ProductoNoEncontradoException e =
-                assertThrows(ProductoNoEncontradoException.class, () -> servicio.porId(99L));
-
-        assertEquals(99L, e.getId());
-    }
-```
-
-`assertThrows` **devuelve** la excepción capturada, y por eso la segunda línea puede seguir
-comprobando: no basta con que explote, tiene que explotar diciendo **cuál** es el producto que
-falta.
-
-**Se corre:** `./mvnw test`
-
-**En consola:**
-
-```
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s
-```
-
-**Lo que hay que notar:** este test también hay que verlo rojo para creerlo. Cámbiese `99L` por
-`2L` —un id que sí existe— y JUnit dirá que esperaba una excepción y no hubo ninguna. Devolver
-`99L` y seguir.
-
----
-
-## Paso 4 · Aislar con Mockito
-
-**Se explica:** los cuatro tests de arriba construyen el servicio con el repositorio **de verdad**:
-
-```java
-new ProductoService(new ProductoRepositoryLista())
-```
-
-Funciona, y hoy es barato porque el repositorio es una lista. Pero ahí se están probando **dos
-piezas a la vez**, y eso trae dos problemas:
-
-1. Si el test falla, no se sabe cuál de las dos tiene la culpa.
-2. El día que el repositorio hable con una base de datos, este test necesitará una base de datos.
-
-La salida es sustituir la dependencia por un **doble**: un objeto que cumple la interfaz
-`ProductoRepository` y que **hace lo que el test le diga**. Mockito lo fabrica solo.
-
-Tres verbos:
+Y ahí hay cuatro cosas que pueden salir mal, no una:
 
 | | |
 |---|---|
-| `@Mock` | fabrica el doble |
-| `when(...).thenReturn(...)` | le dice qué contestar |
-| `verify(...)` | comprueba **que se le llamó** |
+| los **bordes** | ¿3 unidades entran en el 10 %, o hace falta 4? |
+| el **orden** de los tramos | si se pregunta por `>= 3` antes que por `>= 10`, diez unidades se llevan el 10 % y nadie se entera |
+| el **redondeo** | ¿se redondea por unidad o sobre el total? |
+| la **entrada inválida** | ¿qué pasa con cero unidades? |
 
-El tercero es distinto de los otros dos: no mira el resultado, mira **la conversación**.
+Un test por cada caso sería el mismo cuerpo cuatro veces. Se escribe **uno solo, parametrizado**.
 
-**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java` — el archivo entero.
+**Se pega:** en `practica/src/test/java/cl/dgt/testing/ProductoServiceTest.java`, **arriba**, con
+los imports.
 
 ```java
-package cl.dgt.testing;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+```
+
+**Se pega:** en el mismo archivo, **dentro de la clase**, donde dice `// escribe aquí`.
+
+```java
+    @ParameterizedTest(name = "{0} unidades -> {1}")
+    @CsvSource({
+            " 1,  5938",     // sin descuento
+            " 3, 16033",     // 10 %
+            "10, 47504",     // 20 %
+            " 0,     0"      // cantidad inválida: lanza
+    })
+    void elTotalAplicaElDescuentoPorVolumen(int cantidad, int esperado) {
+        if (cantidad <= 0) {
+            assertThrows(IllegalArgumentException.class, () -> servicio.totalConDescuento(1L, cantidad));
+            return;
+        }
+
+        assertEquals(esperado, servicio.totalConDescuento(1L, cantidad));
+    }
+```
+
+**Se corre:** `./mvnw test`
+
+**En consola:**
+
+```
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s -- in cl.dgt.testing.ProductoServiceTest
+[INFO] BUILD SUCCESS
+```
+
+**Un método, cuatro ejecuciones.** JUnit las cuenta por separado: si se rompe la del 10 %, las
+otras tres siguen verdes y se sabe exactamente cuál falló.
+
+**Lo que hay que notar:**
+
+- **Se usa el repositorio de verdad**, no un doble. `ProductoRepositoryLista` es una lista en
+  memoria: no hay base, no hay red, no hay nada lento. Un mock aquí no ahorraría un milisegundo y
+  añadiría tres líneas que no prueban nada. El doble llega en el paso 2, cuando tenga algo que
+  demostrar.
+- **Los cuatro casos son bordes**, no números al azar. `3` es el primer valor del 10 % y `10` el
+  primero del 20 %: si alguien escribe `>` en vez de `>=`, esos dos casos se ponen rojos y ninguno
+  más. Probar 5 unidades no habría añadido nada — cae en medio de una franja.
+- **Los números se calculan de cabeza**, y conviene hacerlo en la pizarra: `4990 × 1,19 = 5938`;
+  `5938 × 3 = 17.814`, menos 10 % = `16.033`.
+
+### Y ahora se rompe a propósito
+
+**Se cambia** en `practica/src/main/java/cl/dgt/testing/services/ProductoService.java`:
+
+```java
+    private static final double TASA_IVA = 0.10;
+```
+
+**Se corre:** `./mvnw test`
+
+**En consola:**
+
+```
+[ERROR] Tests run: 4, Failures: 3, Errors: 0, Skipped: 0 <<< FAILURE! -- in cl.dgt.testing.ProductoServiceTest
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[1] <<< FAILURE!
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[2] <<< FAILURE!
+[ERROR] elTotalAplicaElDescuentoPorVolumen(int, int)[3] <<< FAILURE!
+```
+
+**Tres de cuatro.** El cuarto —el de cero unidades— sigue verde, porque no depende del IVA.
+
+**Y aquí está lo que hay que proyectar.** El detalle no se lee en esa lista: se lee en el archivo
+que Surefire deja escrito.
+
+```bash
+cat target/surefire-reports/cl.dgt.testing.ProductoServiceTest.txt
+```
+
+```
+cl.dgt.testing.ProductoServiceTest.elTotalAplicaElDescuentoPorVolumen(int, int)[1] <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <5938> but was: <5489>
+	at cl.dgt.testing.ProductoServiceTest.elTotalAplicaElDescuentoPorVolumen(ProductoServiceTest.java:30)
+```
+
+**Dos líneas.** El test no dice «algo se rompió»: dice **qué número esperaba y cuál llegó**, y en
+qué línea. Eso se lo debe el laboratorio a una línea del `pom.xml`:
+
+```xml
+    <trimStackTrace>true</trimStackTrace>
+```
+
+Sin ella, ese mismo fallo imprime **sesenta líneas** de `org.junit.platform`,
+`org.springframework` y `sun.reflect`, y la única que importa queda enterrada.
+
+**Se deja el IVA en `0.19` otra vez** y se comprueba que vuelve el verde.
+
+> **La frase del paso:** un test no sirve por estar verde. Sirve por **ponerse rojo cuando alguien
+> rompe algo**, y por decir qué.
+
+---
+
+## Paso 2 · El doble, y cuándo estorba
+
+**Se explica:** antes de escribir nada, se mira otra vez el método real:
+
+```java
+        int bruto = precioConIva(porId(id).precioNeto()) * cantidad;
+```
+
+Ahí hay una dependencia: `porId` va al repositorio. En el paso 1 eso no molestaba —la lista en
+memoria devuelve 4990 y ya está—, pero tiene un precio: **los números esperados del test son
+5938, 16033 y 47504**, que nadie puede verificar de cabeza.
+
+Con un doble se elige el precio. Se dice «este producto vale 1000» y la cuenta sale en la pizarra.
+
+**Se pega:** en `practica/src/test/java/cl/dgt/testing/ProductoServiceConDobleTest.java`,
+**arriba**, con los imports.
+
+```java
 import cl.dgt.testing.models.Producto;
-import cl.dgt.testing.repositories.ProductoRepository;
-import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
 import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+```
 
-@ExtendWith(MockitoExtension.class)
-class ProductoServiceConDobleTest {
+**Se pega:** en el mismo archivo, **dentro de la clase**, donde dice `// escribe aquí`.
 
-    @Mock
-    private ProductoRepository repositorio;
-
+```java
     @Test
-    void elValorDelCatalogoSumaLosPreciosConIva() {
-        when(repositorio.todos()).thenReturn(List.of(
-                new Producto(1L, "Uno", 1000),
-                new Producto(2L, "Dos", 2000)));
+    void elDescuentoSeCalculaSobreLoQueDevuelveElRepositorio() {
+        when(repositorio.porId(1L)).thenReturn(Optional.of(new Producto(1L, "Inventado", 1000)));
 
         ProductoService servicio = new ProductoService(repositorio);
 
-        assertEquals(3570, servicio.valorDelCatalogo());
-        verify(repositorio).todos();
+        // 1000 neto -> 1190 con IVA -> x3 = 3570 -> 10 % menos = 3213
+        assertEquals(3213, servicio.totalConDescuento(1L, 3));
     }
-
-    @Test
-    void siElRepositorioNoTraeNadaSeLanzaLaExcepcion() {
-        when(repositorio.porId(7L)).thenReturn(Optional.empty());
-
-        ProductoService servicio = new ProductoService(repositorio);
-
-        assertThrows(ProductoNoEncontradoException.class, () -> servicio.porId(7L));
-        verify(repositorio).porId(7L);
-    }
-}
 ```
 
 **Se corre:** `./mvnw test`
@@ -339,78 +247,57 @@ class ProductoServiceConDobleTest {
 **En consola:**
 
 ```
-[INFO] Running cl.dgt.testing.ProductoServiceConDobleTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.077 s
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.073 s -- in cl.dgt.testing.ProductoServiceConDobleTest
 [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
 ```
 
-**Lo que hay que notar:** sigue sin haber Spring en ninguna parte. Mockito es una librería normal.
+**Lo que hay que notar, y es toda la lección del paso:**
+
+> Un doble **no** se usa «porque hay una dependencia». Se usa cuando la dependencia real es
+> **lenta**, **frágil**, o **no se puede controlar**.
+
+Aquí el motivo es el tercero: hacía falta fijar el precio para que el número esperado se pudiera
+comprobar a mano. En el paso 1 no se daba ninguno de los tres, y por eso allí **no hay doble**.
+La comparación entre los dos archivos es el contenido.
+
+Y dos detalles:
+
+- **`new ProductoService(repositorio)`**, construido a mano. Eso sólo se puede hacer porque la
+  dependencia entra por el **constructor**. Es el Lab 02 cobrando: con un `@Autowired` sobre un
+  campo, habría que levantar Spring para poder probarlo.
+- **Ni un `verify`.** Lo que importa es el número que sale, no si el método llamó al repositorio
+  una vez o dos. `verify` ata el test a **cómo** está escrito el método, y el día que alguien lo
+  reorganice sin cambiar su comportamiento, el test se pone rojo sin que nada esté mal. Tiene su
+  sitio —comprobar que un correo se envió, que un pago se registró: efectos que no devuelven
+  nada— y no es éste.
 
 ---
 
-## Paso 5 · Probar el endpoint sin levantar el servidor
+## Paso 3 · El endpoint, sin levantar el servidor
 
-**Se explica:** falta la capa de arriba. `/productos/99` tiene que devolver **404**, y eso no lo
-decide el servicio: lo deciden el controller y el manejador de errores.
+**Se explica:** falta la capa de arriba. Y lo interesante no es que pedir un producto devuelva su
+JSON —eso lo hace Spring—, sino **el camino triste**: que una excepción del servicio se convierta
+en un 404 con cuerpo.
 
-Se podría levantar la aplicación y llamar con `curl`. Pero eso necesita un puerto libre, un
-proceso vivo, y una persona mirando. `@WebMvcTest` hace otra cosa: levanta **solo la capa web** —
-el enrutado, la conversión a JSON, el manejador de errores— y nada más. Sin Tomcat y sin puerto.
+Ese código no está en el controller. Está en el `@RestControllerAdvice` del **Lab 03**, cuatro
+sesiones atrás. Este test comprueba que aquello sigue funcionando.
 
-Dos piezas nuevas:
-
-| | |
-|---|---|
-| `MockMvc` | manda peticiones falsas y deja comprobar la respuesta |
-| `@MockitoBean` | pone un doble de Mockito **dentro del contexto de Spring** |
-
-El segundo hace falta porque `@WebMvcTest` **no** carga el servicio: solo la capa web. Si no se le
-da un `ProductoService`, el controller no se puede construir.
-
-> En Spring Boot 4, `@WebMvcTest` vive fuera de `spring-boot-starter-test`: hace falta la
-> dependencia `spring-boot-webmvc-test`, y en `practica/` ya viene en el `pom.xml`.
-> `@MockitoBean` reemplazó al viejo `@MockBean`.
-
-**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ProductoControllerTest.java` — el archivo entero.
+**Se pega:** en `practica/src/test/java/cl/dgt/testing/ProductoControllerTest.java`, **arriba**,
+con los imports.
 
 ```java
-package cl.dgt.testing;
-
-import cl.dgt.testing.controllers.ProductoController;
-import cl.dgt.testing.models.Producto;
 import cl.dgt.testing.exceptions.ProductoNoEncontradoException;
-import cl.dgt.testing.services.ProductoService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+```
 
-@WebMvcTest(ProductoController.class)
-class ProductoControllerTest {
+**Se pega:** en el mismo archivo, **dentro de la clase**, donde dice `// escribe aquí`.
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
-    private ProductoService servicio;
-
-    @Test
-    void pedirUnProductoQueExisteDevuelve200YSuJson() throws Exception {
-        when(servicio.porId(1L)).thenReturn(new Producto(1L, "Resma de papel carta", 4990));
-
-        mockMvc.perform(get("/productos/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.nombre").value("Resma de papel carta"))
-                .andExpect(jsonPath("$.precioNeto").value(4990));
-    }
-
+```java
     @Test
     void pedirUnProductoQueNoExisteDevuelve404ConCuerpo() throws Exception {
         when(servicio.porId(99L)).thenThrow(new ProductoNoEncontradoException(99L));
@@ -419,7 +306,6 @@ class ProductoControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensaje").value("No existe el producto 99"));
     }
-}
 ```
 
 **Se corre:** `./mvnw test`
@@ -427,146 +313,71 @@ class ProductoControllerTest {
 **En consola:**
 
 ```
-[INFO] Running cl.dgt.testing.ProductoControllerTest
-2026-08-18T00:26:08.908-04:00  INFO --- ProductoControllerTest : Started ProductoControllerTest in 0.245 seconds
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.384 s
-[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
-```
-
-**Lo que hay que notar:** apareció una línea que no había salido en todo el día — `Started
-ProductoControllerTest in 0.245 seconds`. Spring arrancó. Esos 245 ms no estaban en los pasos 1 a
-4, y ese es el tema del paso 6.
-
----
-
-## Paso 6 · Cuándo levantar Spring entero
-
-**Se explica:** queda una anotación más, la más conocida y la que se usa mal más a menudo.
-`@SpringBootTest` levanta **el contexto completo**: todos los beans, todas las autoconfiguraciones,
-todo lo que arrancaría la aplicación de verdad. Sirve para probar exactamente una cosa: **que el
-cableado funciona**.
-
-**Se pega:** archivo **nuevo** `practica/src/test/java/cl/dgt/testing/ContextoDeSpringTest.java` — el archivo entero.
-
-```java
-package cl.dgt.testing;
-
-import cl.dgt.testing.controllers.ProductoController;
-import cl.dgt.testing.services.ProductoService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-@SpringBootTest
-class ContextoDeSpringTest {
-
-    @Autowired
-    private ApplicationContext contexto;
-
-    @Test
-    void elCableadoDeSpringEsCorrecto() {
-        assertNotNull(contexto.getBean(ProductoService.class));
-        assertNotNull(contexto.getBean(ProductoController.class));
-    }
-}
-```
-
-**Se corre:** `./mvnw test`
-
-**En consola:**
-
-```
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s -- in ProductoServiceTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.077 s -- in ProductoServiceConDobleTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.369 s -- in ProductoControllerTest
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.242 s -- in ContextoDeSpringTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.359 s -- in cl.dgt.testing.ProductoControllerTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 ```
 
-### Los números, y lo que de verdad dicen
+**Sin puerto, sin Tomcat, sin `curl`.** `MockMvc` recorre la cadena de Spring MVC en memoria; por
+eso tarda cuatro décimas y no varios segundos.
 
-Medido en la máquina donde se preparó el material (Mac Studio, JDK 25 de la maleta):
+**Las dos comprobaciones son el paso, y se señalan por separado:**
 
-| | qué levanta | 4 tests / 2 / 2 / 1 |
-|---|---|---|
-| `ProductoServiceTest` | nada | **0,034 s** |
-| `ProductoServiceConDobleTest` | Mockito | **0,077 s** |
-| `ProductoControllerTest` (`@WebMvcTest`) | la capa web | **0,369 s** |
-| `ContextoDeSpringTest` (`@SpringBootTest`) | el contexto entero | **1,242 s** |
+| | qué prueba |
+|---|---|
+| `status().isNotFound()` | el **404**: que la excepción no se escapó como un 500 |
+| `jsonPath("$.mensaje")` | el **cuerpo**: que el error trae algo legible dentro |
 
-Y aquí hay que decir **la verdad completa**, porque la tabla sola engaña. Corriendo la suite al
-revés, con `@SpringBootTest` de último, los números cambian:
+**Ninguna de las dos la escribió nadie en el controller.** Las produce el manejador del Lab 03. Y
+eso es lo que hace una suite: **avisar cuando algo viejo se rompe**.
 
-```
-ProductoControllerTest   (@WebMvcTest)     1,033 s
-ContextoDeSpringTest     (@SpringBootTest) 0,221 s
-```
-
-**Se dieron vuelta.** Lo caro no es la anotación: es **el primer arranque de Spring**, unos 0,7 s
-que paga quien llegue primero. En esta aplicación —nueve clases, sin base de datos, sin
-seguridad— el contexto completo no cuesta prácticamente nada más que la capa web.
-
-Lo que **no** cambia con el orden es el salto de escalón:
-
-> de **0,03 s** sin Spring a **0,7 s** con Spring. **Veinte veces.**
-
-Y ese 0,7 s de hoy es el suelo. En una aplicación real, ese mismo contexto trae un pool de
-conexiones, Hibernate leyendo las entidades, la seguridad, los cachés: son **segundos**, y se
-pagan por cada configuración de contexto distinta que tenga la suite.
-
-### La regla que se llevan
-
-> **El 90 % de los tests no necesita levantar Spring.**
->
-> Si lo que se prueba es una regla de negocio, se prueba con `new`. Si es la capa web, con
-> `@WebMvcTest`. `@SpringBootTest` se reserva para cuando lo que se prueba **es precisamente el
-> cableado** — y por eso en este proyecto hay uno, y uno solo.
-
-Una suite de mil tests con `@SpringBootTest` en todos tarda veinte minutos, y una suite que tarda
-veinte minutos **no se corre**. Un test que no se corre no protege nada.
-
-### Un aviso sobre la consola
-
-Al correr los tests con Mockito, la JVM escupe unas líneas que asustan y no son un problema:
-
-```
-Mockito is currently self-attaching to enable the inline-mock-maker...
-WARNING: A Java agent has been loaded dynamically...
-OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes...
-```
-
-Es el JDK 25 avisando de cómo Mockito se instala para poder fabricar los dobles. Los tests pasan
-igual. Lo que importa sigue siendo la línea de abajo: `Tests run: 9, Failures: 0`.
+> **Dos renombres de Boot 4 que muerden aquí**, y que ya venían escritos en el archivo:
+> `@WebMvcTest` cambió de paquete (ahora `org.springframework.boot.webmvc.test.autoconfigure`), y
+> `@MockBean` **ya no existe**: es `@MockitoBean`, en `org.springframework.test.context.bean.override.mockito`.
+> Cualquier ejemplo de internet trae los viejos, y el síntoma es un `cannot find symbol`.
 
 ---
 
 ## Al terminar
 
-`practica/` tiene los mismos cuatro archivos de test que `solucion/`, y `./mvnw test` da
-**9 tests, 0 fallos** en los dos. Si algo no cuadra, `solucion/` está ahí para comparar archivo
-por archivo.
+Cuatro archivos, cuatro métodos de test, y `./mvnw test` en verde:
+
+```
+[INFO] Tests run: 4, Failures: 0, ... -- in cl.dgt.testing.ProductoServiceTest
+[INFO] Tests run: 1, Failures: 0, ... -- in cl.dgt.testing.ContextoDeSpringTest
+[INFO] Tests run: 1, Failures: 0, ... -- in cl.dgt.testing.ProductoServiceConDobleTest
+[INFO] Tests run: 1, Failures: 0, ... -- in cl.dgt.testing.ProductoControllerTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+```
+
+(Siete ejecuciones y cuatro métodos: el parametrizado cuenta sus cuatro casos.)
+
+**Y el cuarto archivo, `ContextoDeSpringTest`, llegó resuelto.** Es el único que levanta el
+contexto entero, tarda más que los otros tres juntos, y su trabajo cabe en una frase:
+
+> Comprueba que **Spring arranca** y que los beans se cablean. No prueba ninguna regla: prueba que
+> el proyecto es un proyecto. Por eso hay **uno**, y por eso es el más caro.
 
 Lo que hay que poder decir con las propias palabras:
 
-> Un test es código que llama a mi código y comprueba el resultado. Sirve el día que se pone rojo.
-> Se prueba una pieza a la vez, sustituyendo lo que hay debajo por un doble, y casi nunca hace
-> falta levantar Spring para hacerlo.
+> Un test no sirve por estar verde: sirve por ponerse rojo cuando alguien rompe algo, y por decir
+> qué esperaba y qué llegó. Se prueban reglas y bordes, no que una lista tenga cuatro elementos.
+> Un doble se usa cuando la dependencia real es lenta, frágil o no se puede controlar — no
+> siempre. Y `verify` ata el test a cómo está escrito el método, no a lo que hace.
 
 ### Lo que siembra este lab
 
-Hasta hoy, cada laboratorio de este curso se comprobó **mirando**: el navegador, el `curl`, el
-contador en pantalla, los veinte folios del Lab 07. Funciona mientras haya una persona mirando.
+Hoy los tests corrieron **porque alguien escribió `./mvnw test`**. Esa persona se puede olvidar, o
+puede tener prisa, o puede estar de vacaciones el día que llegue el cambio que rompe el IVA.
 
-Lo que se siembra aquí es que esa persona ya no hace falta:
+> **Lo que queda planteado:** una suite que hay que acordarse de correr protege exactamente igual
+> que una que no existe.
 
-> **Todo lo que se comprobó a ojo en los seis labs anteriores se puede escribir como un test que
-> lo comprueba solo, en milésimas de segundo, cada vez que alguien toca el código.**
+Lo que falta es que corra **sola**: en cada cambio, antes de que nadie pueda mezclarlo. Eso es
+integración continua, y este repositorio tiene una —`.github/workflows/material-ci.yml`— que hace
+justo eso con los cuarenta y un proyectos del curso.
 
-El 404 con cuerpo del Lab 03, la implementación que Spring eligió en el Lab 02, el número de
-consultas del Lab 06: los tres son `assertEquals`. De aquí en adelante, cada pieza nueva que se
-construya puede llegar con su red debajo, y la pregunta al terminar un laboratorio deja de ser
-«¿funcionó?» para ser **«¿qué test lo demuestra?»**.
+Y hay una segunda cosa. Los cuatro tests de hoy comprueban que el código **hace lo que dice**.
+Ninguno comprueba que **siga en pie cuando lo usan veinte a la vez**, ni qué pasa cuando el
+servicio de al lado no contesta, ni si alguien que no debería puede llamarlo. Eso son los
+laboratorios que vienen.

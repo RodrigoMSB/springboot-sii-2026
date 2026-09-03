@@ -8,16 +8,19 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Configuration
 public class SeguridadConfig {
@@ -43,9 +46,11 @@ public class SeguridadConfig {
                 .build();
     }
 
+    // Argon2id, que es lo que recomienda OWASP hoy. Los parámetros salen de la fábrica de
+    // Spring Security en vez de escribirse a mano: elegirlos mal deja el hash peor que BCrypt.
     @Bean
     PasswordEncoder codificadorDeClaves() {
-        return new BCryptPasswordEncoder();
+        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
     }
 
     @Bean
@@ -66,6 +71,15 @@ public class SeguridadConfig {
 
     @Bean
     JwtDecoder decodificadorDeTokens() {
-        return NimbusJwtDecoder.withSecretKey(clave()).build();
+        NimbusJwtDecoder decodificador = NimbusJwtDecoder.withSecretKey(clave()).build();
+
+        // Tolerancia de reloj a CERO, sólo para el laboratorio: de fábrica son 60 segundos, y un
+        // token de 40 viviría 100 — la demo del paso 4 no cuadraría con lo que dice el yml.
+        // En producción esta tolerancia se deja: los relojes de dos servidores nunca coinciden al
+        // segundo, y rechazar un token por medio segundo de deriva es peor que aceptarlo por medio
+        // minuto.
+        decodificador.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                new JwtTimestampValidator(Duration.ZERO)));
+        return decodificador;
     }
 }

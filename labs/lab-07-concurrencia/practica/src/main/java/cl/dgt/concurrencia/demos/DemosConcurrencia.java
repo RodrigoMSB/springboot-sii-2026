@@ -36,27 +36,29 @@ public class DemosConcurrencia {
     }
 
     public void elCrimen() {
-        seccion(2, "EL CRIMEN · " + EN_PARALELO + " emisiones a la vez, sin candado");
-        // Lanza las mismas emisiones a la vez, sin candado, y vuelve a contar.
+        seccion(2, "EL CRIMEN · " + EN_PARALELO + " emisiones a la vez, sin protección");
+        // Lanza las mismas emisiones a la vez, sin protección, y vuelve a contar.
         // escribe aquí
     }
 
-    public void conCandado() {
-        seccion(3, "CON CANDADO · " + EN_PARALELO + " a la vez, con bloqueo pesimista");
-        // Repite en paralelo, ahora con la emisión que toma el candado.
+    public void conTurno() {
+        seccion(3, "CON TURNO · " + EN_PARALELO + " a la vez, con un lock con nombre");
+        // Repite en paralelo, ahora con la emisión que pide el turno.
         // escribe aquí
     }
 
     private int rechazadas;
+    private String porQueRechazo;
 
     public void prepararElAnio() {
         folios.deleteByAnio(ANIO);
         folios.save(new Folio(ANIO, 1));
-        System.out.println("  año " + ANIO + " reiniciado: solo el folio de apertura 2026-0001");
+        System.out.println("  año " + ANIO + " reiniciado: solo el folio 2026-0001");
     }
 
     private void enParalelo(IntFunction<Folio> emision) {
         rechazadas = 0;
+        porQueRechazo = null;
         CountDownLatch salida = new CountDownLatch(1);
         List<Exception> fallos = new ArrayList<>();
 
@@ -79,6 +81,17 @@ public class DemosConcurrencia {
             salida.countDown();                  // ¡ya!
         }
         rechazadas = fallos.size();
+        if (!fallos.isEmpty()) {
+            porQueRechazo = causaRaiz(fallos.get(0));
+        }
+    }
+
+    private static String causaRaiz(Throwable e) {
+        Throwable causa = e;
+        while (causa.getCause() != null) {
+            causa = causa.getCause();
+        }
+        return causa.getMessage().lines().findFirst().orElse(causa.toString()).trim();
     }
 
     private void informe() {
@@ -98,6 +111,9 @@ public class DemosConcurrencia {
         System.out.println("  números distintos  : " + distintos);
         System.out.println("  REPETIDOS          : " + (repetidos.isEmpty() ? "ninguno" : repetidos));
         System.out.println("  rechazados por la base : " + rechazadas);
+        if (porQueRechazo != null) {
+            System.out.println("  y los rechazó diciendo : " + porQueRechazo);
+        }
         System.out.println("  emitidos: " + emitidos);
     }
 

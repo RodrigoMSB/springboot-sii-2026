@@ -1,9 +1,7 @@
 package cl.dgt.concurrencia.repositories;
 
 import cl.dgt.concurrencia.entities.Folio;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +19,12 @@ public interface FolioRepository extends JpaRepository<Folio, Long> {
     @Transactional
     void deleteByAnio(int anio);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select f from Folio f where f.anio = :anio and f.numero = 1")
-    Optional<Folio> bloquearLaApertura(@Param("anio") int anio);
+    // Un lock CON NOMBRE, dentro de la transacción. PostgreSQL se lo entrega al primero que lo
+    // pide y deja esperando a los demás hasta que esa transacción termina. No hay ninguna fila
+    // que bloquear: el nombre del turno es el número del año.
+    //
+    // Devuelve Object y no void a propósito: es un `select`, así que no lleva @Modifying, y
+    // Spring Data necesita un tipo de retorno para ejecutarlo como consulta. El valor se ignora.
+    @Query(value = "select pg_advisory_xact_lock(:anio)", nativeQuery = true)
+    Object tomarElTurnoDelAnio(@Param("anio") long anio);
 }

@@ -54,6 +54,22 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- La consola de un test rojo tiene que poder LEERSE, y de fábrica no se puede:
+           una traza de Spring son sesenta líneas de la que sólo importa una. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Corta la traza a los fotogramas del propio test. La línea que dice
+               «esperaba 5938 y llegó 4990» queda arriba, no enterrada. -->
+          <trimStackTrace>true</trimStackTrace>
+          <!-- Mockito carga su agente en caliente y Java 25 avisa con cuatro
+               WARNING. Decirlo aquí es aceptar el aviso una vez, en el pom, en
+               vez de en cada corrida. -->
+          <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

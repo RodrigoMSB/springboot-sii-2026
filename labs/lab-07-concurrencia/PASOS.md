@@ -105,7 +105,7 @@ Dos líneas. **Léanse buscándoles el error, porque no lo tienen.**
 
 ```
 === 1 · DE UNO EN UNO · secuencial ===
-  año 2026 reiniciado: solo el folio de apertura 2026-0001
+  año 2026 reiniciado: solo el folio 2026-0001
   folios en la tabla : 11
   números distintos  : 11
   REPETIDOS          : ninguno
@@ -129,7 +129,7 @@ diferencia: las diez emisiones salen **a la vez**.
 
 ```java
     public void elCrimen() {
-        seccion(2, "EL CRIMEN · " + EN_PARALELO + " emisiones a la vez, sin candado");
+        seccion(2, "EL CRIMEN · " + EN_PARALELO + " emisiones a la vez, sin protección");
 
         prepararElAnio();
         enParalelo(i -> emisor.emitirIngenuo(ANIO));
@@ -146,8 +146,8 @@ diferencia: las diez emisiones salen **a la vez**.
 **En consola:**
 
 ```
-=== 2 · EL CRIMEN · 20 emisiones a la vez, sin candado ===
-  año 2026 reiniciado: solo el folio de apertura 2026-0001
+=== 2 · EL CRIMEN · 20 emisiones a la vez, sin protección ===
+  año 2026 reiniciado: solo el folio 2026-0001
   folios en la tabla : 21
   números distintos  : 9
   REPETIDOS          : [2026-0002 (x4), 2026-0003 (x3), 2026-0004 (x2), 2026-0005 (x2),
@@ -202,74 +202,101 @@ difícil de reproducir.
 
 ---
 
-## Paso 4 · El candado que sí sirve
+## Paso 4 · El turno con nombre
 
-**Se explica:** se le pide a PostgreSQL que bloquee una fila: el primero que llega se la lleva, y
-los demás **esperan ahí** hasta que la suelte. Se hace con `@Lock(LockModeType.PESSIMISTIC_WRITE)`.
+**Se explica:** hace falta que los veinte hilos hagan **cola**, y que la cola la gestione la base,
+no Java. PostgreSQL tiene justo eso: un **lock con nombre**, que se pide con
+`pg_advisory_xact_lock(n)`.
 
-¿Qué fila? La del **folio de apertura del año**, el número 1, que siempre existe. Y esto no es un
-detalle: **un bloqueo pesimista bloquea filas**. Si la fila no existe, no hay nada que bloquear y
-no protege nada.
+Lo que hay que entender del mecanismo cabe en tres frases:
 
-**El orden importa:** primero el candado, **después** leer el máximo. Al revés no serviría de
-nada, porque se leería antes de tener el turno.
+- Se pide **un nombre**, no una fila. Aquí el nombre es el número del año: `2026`.
+- El primero que lo pide se lo lleva; **los demás esperan ahí** hasta que él termine.
+- Se suelta **solo**, cuando la transacción confirma o aborta — eso es el `xact` de su nombre.
+  Nadie tiene que acordarse de soltarlo.
 
-**Se pega (1 de 4):** en `repositories/FolioRepository.java`, **arriba**, con los imports.
+**Lo importante, y es lo que distingue este paso:** **no hay ninguna fila que bloquear.** El turno
+existe porque alguien lo pide, no porque haya un dato que lo represente.
+
+**El orden importa:** primero el turno, **después** leer el máximo. Al revés no serviría de nada,
+porque se leería antes de tener el turno.
+
+**Se pega (1 de 3):** en `practica/src/main/java/cl/dgt/concurrencia/repositories/FolioRepository.java`, **dentro de la interfaz**.
 
 ```java
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
+    @Query(value = "select pg_advisory_xact_lock(:anio)", nativeQuery = true)
+    Object tomarElTurnoDelAnio(@Param("anio") long anio);
 ```
 
-**Se pega (2 de 4):** en el mismo archivo, **dentro de la interfaz**.
+> **Dos rarezas de esa firma, y las dos tienen respuesta.** Devuelve `Object` y no `void` porque es
+> un `select` —no lleva `@Modifying`, que es para `update` y `delete`— y Spring Data necesita un
+> tipo de retorno para ejecutarlo como consulta; el valor se ignora. Y el parámetro es `long` y no
+> `int` porque `pg_advisory_xact_lock` tiene dos formas —una que toma un `bigint` y otra que toma
+> dos `int`—, y con `long` se elige la primera sin ambigüedad.
+
+**Se pega (2 de 3):** en `practica/src/main/java/cl/dgt/concurrencia/services/EmisorDeFolios.java`, **arriba**, con los imports.
 
 ```java
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select f from Folio f where f.anio = :anio and f.numero = 1")
-    Optional<Folio> bloquearLaApertura(@Param("anio") int anio);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 ```
 
-**Se pega (3 de 4):** en `services/EmisorDeFolios.java`, **antes de la llave que cierra la clase**
-— es un método nuevo, no reemplaza a ninguno.
+**Se pega:** en el mismo archivo, **entre los campos**, encima de `private final FolioRepository folios;`.
+
+```java
+    private static final Logger log = LoggerFactory.getLogger(EmisorDeFolios.class);
+
+    // Una sola línea por proceso: con veinte hilos, veinte líneas iguales no enseñan nada.
+    private final AtomicBoolean turnoAnunciado = new AtomicBoolean();
+```
+
+**Se pega:** en el mismo archivo, **antes de la llave que cierra la clase** — es un método nuevo,
+no reemplaza a ninguno.
 
 ```java
     @Transactional
-    public Folio emitirConCandado(int anio) {
-        folios.bloquearLaApertura(anio)
-                .orElseThrow(() -> new IllegalStateException(
-                        "El año " + anio + " no tiene folio de apertura: no hay nada que bloquear."));
+    public Folio emitirConTurno(int anio) {
+        folios.tomarElTurnoDelAnio(anio);
+
+        if (turnoAnunciado.compareAndSet(false, true)) {
+            log.info("[TURNO] pg_advisory_xact_lock({}) · el turno vive en la base, no en Java", anio);
+        }
 
         int ultimo = folios.maxNumeroDe(anio).orElse(0);
         return folios.save(new Folio(anio, ultimo + 1));
     }
 ```
 
-**Se pega (4 de 4):** en `practica/src/main/java/cl/dgt/concurrencia/demos/DemosConcurrencia.java`, **reemplazando el método `conCandado()` entero**. Es la demo 2
-llamando a `emitirConCandado` en vez de a `emitirIngenuo`.
+> **El `AtomicBoolean` es sólo para la demo**, y conviene decirlo: sin él, los veinte hilos
+> imprimirían la misma línea veinte veces y taparían el informe. `compareAndSet` es atómico, así
+> que con veinte hilos entrando a la vez la línea sale **exactamente una**.
+
+**Se pega (3 de 3):** en `practica/src/main/java/cl/dgt/concurrencia/demos/DemosConcurrencia.java`, **dentro del método `conTurno()`**, donde
+dice `// escribe aquí`. Es la demo 2 llamando a `emitirConTurno` en vez de a `emitirIngenuo`.
 
 ```java
-    public void conCandado() {
-        seccion(3, "CON CANDADO · " + EN_PARALELO + " a la vez, con bloqueo pesimista");
-
         prepararElAnio();
-        enParalelo(i -> emisor.emitirConCandado(ANIO));
+        enParalelo(i -> emisor.emitirConTurno(ANIO));
         informe();
-    }
 ```
 
-**Se agrega al runner:** en `Lab07Application.java`, dentro de `return args -> {`:
+**Se agrega al runner:** en `practica/src/main/java/cl/dgt/concurrencia/Lab07Application.java`, dentro de `return args -> {`:
 
 ```java
-            demos.conCandado();
+            demos.conTurno();
 ```
 
 **En consola:**
 
 ```
-=== 3 · CON CANDADO · 20 a la vez, con bloqueo pesimista ===
+=== 3 · CON TURNO · 20 a la vez, con un lock con nombre ===
+  año 2026 reiniciado: solo el folio 2026-0001
   folios en la tabla : 21
   números distintos  : 21
   REPETIDOS          : ninguno
+  rechazados por la base : 0
   emitidos: [2026-0001, 2026-0002, ... , 2026-0021]
 ```
 
@@ -281,23 +308,17 @@ hacen cola dentro de la base.
 ```
 Hibernate:
     select
-        f1_0.id, f1_0.anio, f1_0.numero
-    from
-        folio f1_0
-    where
-        f1_0.anio=?
-        and f1_0.numero=1
-    for
-        no key update of f1_0
+        pg_advisory_xact_lock(?)
 ```
 
-Esas dos últimas líneas son el candado.
+**Eso es todo.** Una línea, ninguna tabla nombrada, ningún `for update`. Buscar `for update` en la
+consola de este laboratorio **no encuentra nada**, y no es que falle: es que no se está bloqueando
+ninguna fila.
 
-> **Ojo con el nombre.** Este bloqueo se conoce en todas partes como `SELECT ... FOR UPDATE`, y
-> así se llama en la documentación de JPA. **PostgreSQL lo escribe `for no key update`**, que es
-> una variante más fina —bloquea la fila para actualizarla sin tocar sus claves—. Buscando `for
-> update` en la consola **no se encuentra nada**, y no es que falle: es que se llama de otra
-> manera.
+> **La frase del paso, y conviene decirla despacio:** este turno **no es un `synchronized`**. Vive
+> en la base, así que la cola funciona igual entre veinte hilos de una JVM, entre dos procesos y
+> entre dos máquinas. Es exactamente lo que le va a faltar al Lab 12 cuando descubra que
+> `@Scheduled` se dispara en las dos instancias a la vez.
 
 **La pregunta del paso:** ¿esto es más lento? Sí, los hilos hacen cola. ¿Comparado con repartir el
 mismo folio a cuatro contribuyentes?
@@ -306,7 +327,7 @@ mismo folio a cuatro contribuyentes?
 
 ## Paso 5 · El cinturón
 
-**Se explica:** el candado del paso 4 vive **en el código**, y protege mientras todas las
+**Se explica:** el turno del paso 4 vive **en el código**, y protege mientras todas las
 emisiones pasen por ese método. ¿Y si mañana alguien escribe otro método? ¿O un script de carga?
 ¿O alguien con un cliente SQL abierto?
 
@@ -336,14 +357,19 @@ Así es exactamente como duele en un sistema real, donde esas filas no son de me
 **En consola:** reiniciar y mirar la demo 2, que **no se ha tocado**:
 
 ```
-=== 2 · EL CRIMEN · 20 emisiones a la vez, sin candado ===
+=== 2 · EL CRIMEN · 20 emisiones a la vez, sin protección ===
   folios en la tabla : 11
   números distintos  : 11
   REPETIDOS          : ninguno
   rechazados por la base : 10
+  y los rechazó diciendo : ERROR: duplicate key value violates unique constraint "folio_anio_numero_unico"
 ```
 
-**Cambió el síntoma.** Ya no hay folios repetidos: ahora hay **diez peticiones que fallaron**.
+**Cambió el síntoma.** Ya no hay folios repetidos: ahora hay **diez peticiones que fallaron**, y la
+base dice exactamente por qué.
+
+> Ésa es también la salida que da `solucion/` desde el primer arranque, porque allí la V2 ya está
+> puesta. Si alguien compara las dos carpetas y ve números distintos en la demo 2, es esto.
 
 Y esto hay que dejarlo claro para que nadie se lleve la idea equivocada: **la restricción no
 arregla la carrera**. La carrera sigue ocurriendo exactamente igual — diez hilos calcularon un
@@ -352,11 +378,11 @@ tabla**, convirtiendo un dato corrupto silencioso en un error ruidoso.
 
 | | qué hace | qué NO hace |
 |---|---|---|
-| **El candado** (paso 4) | Evita la carrera: nadie calcula un número tomado | No protege de código que no lo use |
+| **El turno** (paso 4) | Evita la carrera: nadie calcula un número tomado | No protege de código que no lo use |
 | **La restricción** (paso 5) | Impide que un duplicado entre, venga de donde venga | No evita que la petición falle |
 
-**Hacen falta las dos.** Y en la demo 3, con el candado puesto, no hay ni repetidos ni rechazos:
-es el candado el que hace que la restricción nunca tenga que intervenir.
+**Hacen falta las dos.** Y en la demo 3, con el turno puesto, no hay ni repetidos ni rechazos: es
+el turno el que hace que la restricción nunca tenga que intervenir.
 
 ---
 
@@ -371,6 +397,22 @@ Lo que hay que poder decir con las propias palabras:
 > leyéndolo. Si el dato está en la base, el cerrojo va en la base. Y una restricción no arregla la
 > carrera: solo evita que el daño se guarde.
 
+### Lo que queda fuera
+
+Tres defensas más para el mismo invariante. Se nombran porque el día que haga falta una de ellas,
+lo primero es saber que existe:
+
+- **`@Lock(PESSIMISTIC_WRITE)`**, el bloqueo pesimista sobre una fila. Es lo correcto cuando **lo
+  que se protege es esa fila**: el saldo de una cuenta, el stock de un producto. Hoy no se usó
+  porque lo que hay que proteger es un **cálculo sobre toda la tabla** (`max(numero) + 1`), y no
+  hay una fila natural que lo represente.
+- **`@Version`**, el bloqueo optimista. No hace esperar a nadie: deja pasar a todos y, al
+  confirmar, el segundo se encuentra con que la versión cambió y tiene que reintentar. Es mejor
+  **cuando los choques son raros**, y peor cuando son la norma — que es el caso de hoy.
+- **Secuencias** de PostgreSQL (`nextval`). Atómicas por construcción, no hacen cola y son las más
+  rápidas de todas. Su precio: **dejan huecos**, porque una transacción que aborta se lleva su
+  número. Se usan cuando esos huecos se toleran; un folio tributario saltado hay que explicarlo.
+
 ### Lo que siembra este lab
 
 El que se lleva de aquí es un método de trabajo, no una anotación:
@@ -384,3 +426,43 @@ algo que lo hiciera a propósito.
 
 Ese es el hilo del que tira el resto del curso: cada laboratorio que viene tiene un arnés que
 provoca el fallo antes de que lo provoque un usuario.
+
+
+---
+
+## Anexo · ver los folios repetidos en vivo
+
+**Esto es destructivo y opcional.** Borra la base del laboratorio y deshace el paso 5. No hace
+falta para nada de la sesión: está aquí por si alguien quiere ver con sus ojos los duplicados que
+el README describe, después de haber puesto la restricción.
+
+Se hace **en `practica/`** y con la aplicación parada:
+
+```bash
+# 1. quitar la restricción: se borra la migración del paso 5
+rm src/main/resources/db/migration/V2__folio_unico_por_anio.sql
+
+# 2. borrar la base entera, porque Flyway ya anotó esa migración como aplicada
+#    y no la puede "desaplicar"
+rm -rf .datos-pg
+
+# 3. arrancar de nuevo
+./mvnw spring-boot:run
+```
+
+Ahora la demo 2 vuelve a su forma original:
+
+```
+=== 2 · EL CRIMEN · 20 emisiones a la vez, sin protección ===
+  folios en la tabla : 21
+  números distintos  : 9
+  REPETIDOS          : [2026-0002 (x4), 2026-0003 (x3), 2026-0004 (x2), ...]
+  rechazados por la base : 0
+```
+
+**Ahí está el daño de verdad**: nadie falló, nadie se quejó, y cuatro contribuyentes tienen el
+folio `2026-0002`. Es el argumento entero del paso 5 en una pantalla — un dato corrupto en
+silencio es peor que un error ruidoso.
+
+Para volver atrás: recuperar la migración con `git checkout -- src/main/resources/db/migration/`
+y borrar `.datos-pg` otra vez.

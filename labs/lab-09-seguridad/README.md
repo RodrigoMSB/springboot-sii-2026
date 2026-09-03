@@ -11,7 +11,7 @@ dentro. Al terminar, las mismas rutas de siempre responden **401** al que no se 
 - Que Spring Security, al entrar, **cierra todo por defecto** — y por qué ese default es el
   correcto.
 - Qué es una **cadena de filtros** y cómo se declara qué ruta es pública y cuál no.
-- Por qué una contraseña **nunca** se guarda, y qué guarda **BCrypt** en su lugar.
+- Por qué una contraseña **nunca** se guarda, y qué guarda **Argon2id** en su lugar.
 - Qué hay dentro de un **JWT**, por qué **cualquiera puede leerlo**, y qué garantiza entonces
   la firma.
 - Cómo se valida un token en cada petición, qué pasa con uno manipulado y qué pasa con uno
@@ -53,7 +53,8 @@ ana   / secreta   ADMIN
 luis  / secreta   USUARIO
 ```
 
-**La misma clave a propósito.** El paso 3 mira la tabla y encuentra dos hashes distintos.
+**La misma clave a propósito.** El paso 3 mira la tabla y encuentra dos hashes distintos —los dos
+empiezan por `$argon2id$` y no se parecen en nada.
 
 ## La matriz al terminar
 

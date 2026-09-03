@@ -20,6 +20,6 @@ public class EmisorDeFolios {
         return folios.save(new Folio(anio, ultimo + 1));
     }
 
-    // Paso 4 · emite usando la búsqueda con candado.
+    // Paso 4 · emite pidiendo primero el turno del año.
     // escribe aquí
 }
