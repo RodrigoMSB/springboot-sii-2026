@@ -30,8 +30,11 @@ moviéndose y `jib:buildTar` produciendo **286 MB** en los tres.
    `main`, recuperable desde el tag.
 2. **`labs/README.md` no existía.** Se creó.
 3. **Swagger daba 401**: la cadena de seguridad exigía token en todo. Hubo que abrir sus rutas.
-4. **Argon2 no; BCrypt sigue** en el proyecto final — y hay una **inconsistencia con el lab 09**
-   que dejo señalada para decisión del PO (§6.4).
+4. **El proyecto final seguía en BCrypt** mientras el lab 09 ya enseñaba Argon2id. Señalado, y
+   **alineado después a petición del PO** — §8.1.
+
+**Y tres agregados del PO sobre este mismo PR**, en §8: Argon2id en el proyecto final, el plazo de
+entrega y la nota del mapa de módulos.
 
 **El tag.** La cabecera pide `material-v1.12.0`, y **esta vez sí está libre**: es la primera spec
 de la serie cuyo número de tag no colisiona.
@@ -326,22 +329,13 @@ alguien abre para entender el servicio. Después:
   endpoints:  ['/auth/login']
 ```
 
-### 6.4 · BCrypt frente a Argon2 · **decisión pendiente del PO**
+### 6.4 · BCrypt frente a Argon2 · **resuelto: alineado con el lab 09**
 
-La spec **no menciona** el codificador de contraseñas del proyecto final, y **no se tocó**: sigue en
-`BCryptPasswordEncoder`, con los hashes BCrypt sembrados en la migración.
+La spec original no mencionaba el codificador, así que la primera versión de este trabajo dejó el
+proyecto final en `BCryptPasswordEncoder` y señaló la inconsistencia: el **lab 09 pasó a Argon2id
+con la SPEC-036**, y el proyecto final seguía en BCrypt.
 
-**Pero el lab 09 pasó a Argon2id con la SPEC-036**, hace dos specs. Así que hoy el curso enseña
-Argon2 y su proyecto final usa BCrypt.
-
-**No lo cambié por mi cuenta** porque tocar el codificador obliga a regenerar los hashes sembrados,
-a ampliar `clave_hash` de 60 a 120 y a declarar BouncyCastle en tres poms más — y nada de eso está
-en el alcance de esta spec. **Es una inconsistencia real del material**, y la decisión es del PO:
-
-- **Dejarlo en BCrypt** y decir en el brief que el proyecto final usa el codificador anterior a
-  propósito, porque la seguridad no es lo que se evalúa ahí.
-- **Alinearlo con Argon2**, que son los cuatro cambios de arriba en `base/`, `ejemplo/` y
-  `solucion-referencia/`. Media hora, y lo puedo hacer en cuanto se decida.
+**El PO decidió alinearlo**, y está hecho — ver §9.1.
 
 ### 6.5 · Dos cosas menores que la spec no anticipaba
 
@@ -356,18 +350,85 @@ en el alcance de esta spec. **Es una inconsistencia real del material**, y la de
 
 ---
 
-## 7 · Lo que queda para el PO
-
-1. **Fijar el plazo de entrega** del proyecto final. Es lo único que el material deja en blanco a
-   propósito: el README dice «el plazo lo fija el relator».
-2. **Decidir sobre BCrypt / Argon2** en el proyecto final (§6.4).
-3. **`docs/temario/MAPA-LAB-MODULO.md` sigue citando lab-12 y lab-13** en sus filas de módulos. No
-   se tocó: la spec limitaba el grep a «ningún lab vivo ni `proyecto-final/`», y ese mapa refleja el
-   **contrato adjudicado**, cuyos módulos no cambian porque el material se reordene. Si el PO quiere
-   que refleje lo que hoy se dicta, es un cambio aparte y hay que revisar que
-   `verificar-temario.py` siga verde.
-
-## 8 · El tag
+## 7 · El tag
 
 La cabecera pide **`material-v1.12.0`**, y **por primera vez en esta serie el número está libre**:
 no colisiona con la serie histórica v0.x. Se cierra con ése.
+
+---
+
+## 8 · Los tres agregados del PO
+
+Pedidos sobre este mismo PR, después de la primera revisión.
+
+### 8.1 · Argon2id en el proyecto final
+
+Alineado con el lab 09. Los cuatro cambios, en **`base/`, `ejemplo/` y
+`instructor/solucion-referencia/`**:
+
+1. **`Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()`** en `SeguridadConfig`, con el motivo
+   comentado: lento en tiempo **y en memoria**, que es lo que deja fuera a las tarjetas gráficas, y
+   los parámetros de la fábrica porque elegirlos mal deja Argon2 peor que BCrypt.
+2. **`clave_hash` de 60 a 120**, con la razón en la propia migración: un hash Argon2 mide unos 95 y
+   su largo **depende de los parámetros** — no es fijo como el de BCrypt.
+3. **`bcprov-jdk18on` declarado en los tres poms.** Ya estaba en la maleta: lo capturó la SPEC-036
+   para el lab 09, así que `repo-maven/` **no cambió** y los 36 proyectos siguen compilando offline.
+4. **Hashes regenerados**, con el propio `Argon2PasswordEncoder` del proyecto:
+
+```
+ana   $argon2id$v=19$m=16384,t=2,p=1$2WZREBTpf3Q2qNoiFbO1cg$u9NGi9Dj2pW98+bSI50H9FvsCqrlqbckQQ6xEx8MvnI
+luis  $argon2id$v=19$m=16384,t=2,p=1$k2zUdDw7e1DQxTSf86+LyQ$qhEPAHw2vBCgP/1R/9xW/R3IbyoRFn/7ubipO5JVWr4
+```
+
+Los dos son de la palabra `secreta` y **no se parecen**: es la sal, y sirve como demostración
+adicional del lab 09 dentro del propio proyecto final.
+
+**Medido después del cambio:**
+
+```
+base                             Tests run: 1, Failures: 0, Errors: 0
+ejemplo                          Tests run: 4, Failures: 0, Errors: 0
+instructor/solucion-referencia   Tests run: 4, Failures: 0, Errors: 0
+
+login ana        200          ← con el hash Argon2 sembrado
+login luis       200
+clave mala       401
+
+1 sin token       401
+2 CONTRIBUYENTE   403
+3 RUT inexistente 404
+4 el bueno        200  ·  total = 6.330.000
+
+36 proyectos compilan offline · repo-maven sin cambios
+```
+
+### 8.2 · El plazo de entrega
+
+**Viernes 25 de septiembre de 2026, 23:59**, en el `README.md` de `proyecto-final/` y en el cierre
+del brief.
+
+**Por qué esa fecha y no el 18**, que era el viernes de las tres semanas naturales: el **18 y el 19
+de septiembre son feriados en Chile**. Una entrega el viernes 18 habría sido, en la práctica, una
+entrega el jueves 17 para todo el mundo — y con la semana de Fiestas Patrias por delante. El 25 da
+las tres semanas completas de trabajo útil. **Está escrito en el README con esa razón**, para que
+si el PO la mueve sepa qué está moviendo.
+
+### 8.3 · La nota del mapa de módulos
+
+Tres líneas al inicio de `docs/temario/MAPA-LAB-MODULO.md`, sin tocar la matriz —que es lo que
+`verificar-temario.py` comprueba, y sigue verde—:
+
+> Los labs **12** y **13** se retiraron del curso, junto con `examen-huecos/`: siguen enteros en el
+> tag `material-v1.11.1`. El **módulo 15** lo cubre ahora la **demostración con Docker del lab 14**
+> más el empaquetado que entrega el proyecto final. Los temas que sólo tocaban esos dos labs pasan
+> de **cubiertos** a **mencionados**.
+
+---
+
+## 9 · Lo que queda para el PO
+
+**`docs/temario/MAPA-LAB-MODULO.md` sigue citando lab-12 y lab-13 en las filas de su matriz.** La
+nota del §8.3 lo advierte al principio del documento, pero las filas no se reescribieron: esa matriz
+refleja el **contrato adjudicado**, cuyos módulos no cambian porque el material se reordene, y
+tocarla obliga a revisar `verificar-temario.py` y la coherencia con el `.docx` que se le entrega al
+SII. Si el PO quiere que la matriz refleje lo que hoy se dicta, es un cambio aparte.

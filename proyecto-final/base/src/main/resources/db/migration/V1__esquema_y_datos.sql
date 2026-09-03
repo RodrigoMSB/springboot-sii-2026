@@ -31,18 +31,19 @@ create table tramite (
 create table usuario (
     id         bigserial   primary key,
     nombre     varchar(60) not null unique,
-    clave_hash varchar(60) not null,
+    clave_hash varchar(120) not null,   -- 120: un hash Argon2 mide ~95 y su largo depende de los parámetros
     rol        varchar(20) not null
 );
 
 -- ---------------------------------------------------------------------------
---  Usuarios. Las dos claves son `secreta`, con hash BCrypt.
+--  Usuarios. Las dos claves son `secreta`, con hash Argon2id — el mismo
+--  algoritmo que enseña el Lab 09. Los dos hashes son distintos: es la sal.
 --     ana   FISCALIZADOR
 --     luis  CONTRIBUYENTE
 -- ---------------------------------------------------------------------------
 insert into usuario (nombre, clave_hash, rol) values
-  ('ana',  '$2a$10$z2RuZ6YymqMEOa9haqcN2.m1B31q1pL1oGfPzUUaYNbi43Lor3Lsy', 'FISCALIZADOR'),
-  ('luis', '$2a$10$RBxoDtr9qH5oevKTWzwRaeKxD0Oc2pXrQtT07ayvBXO2h09HtqiN2', 'CONTRIBUYENTE');
+  ('ana',  '$argon2id$v=19$m=16384,t=2,p=1$2WZREBTpf3Q2qNoiFbO1cg$u9NGi9Dj2pW98+bSI50H9FvsCqrlqbckQQ6xEx8MvnI', 'FISCALIZADOR'),
+  ('luis', '$argon2id$v=19$m=16384,t=2,p=1$k2zUdDw7e1DQxTSf86+LyQ$qhEPAHw2vBCgP/1R/9xW/R3IbyoRFn/7ubipO5JVWr4', 'CONTRIBUYENTE');
 
 -- ---------------------------------------------------------------------------
 --  Tres oficinas. La tercera NO tiene trámites: es el borde del ejemplo, igual

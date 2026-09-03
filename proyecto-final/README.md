@@ -70,7 +70,13 @@ ni los dos tests.
 
 ## La entrega
 
-**Un zip de tu carpeta `base/`, con el encargo hecho, por correo.** El plazo lo fija el relator.
+**Un zip de tu carpeta `base/`, con el encargo hecho, por correo.**
+
+> ## Plazo · viernes 25 de septiembre de 2026, 23:59
+>
+> Tres semanas desde que se entrega el encargo. La fecha esquiva a propósito la semana de Fiestas
+> Patrias: el 18 y el 19 son feriados, y una entrega el viernes 18 habría sido una entrega el
+> jueves 17 para todo el mundo.
 
 Antes de mandarlo, comprueba tú mismo lo que se va a comprobar al corregir:
 

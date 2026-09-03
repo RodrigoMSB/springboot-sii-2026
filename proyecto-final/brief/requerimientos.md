@@ -159,5 +159,6 @@ cd ejemplo
 
 ## Cómo se entrega
 
-En el `README.md` de `proyecto-final/`. Un zip de tu `base/`, por correo, con el plazo que fije el
-relator.
+En el `README.md` de `proyecto-final/`. Un zip de tu `base/`, por correo.
+
+**Plazo: viernes 25 de septiembre de 2026, 23:59.**
