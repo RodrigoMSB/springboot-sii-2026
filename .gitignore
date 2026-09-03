@@ -58,6 +58,12 @@ labs/**/.respaldo-*/
 # dicta, y si estuviera versionada el alumno la tendría en el clon.
 labs/*/instructor/
 
+# Y la de los labs archivados, por lo mismo: `archivo/` guarda material retirado
+# completo, y «completo» incluye su chuleta — pero la regla D-031-2 no cambia
+# porque el lab deje de dictarse. Quien tenga el respaldo privado las tiene en su
+# sitio; el clon del alumno, no.
+archivo/*/instructor/
+
 # Y la del proyecto final, por lo mismo: dentro va la solución de referencia y la
 # guía de defensa con las respuestas calibradas. Si viajara en el clon, el examen
 # vendría con las respuestas.

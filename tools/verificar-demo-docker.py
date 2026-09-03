@@ -2,8 +2,8 @@
 # =============================================================================
 #  verificar-demo-docker.py — que la demostración con Docker no se separe del lab
 # -----------------------------------------------------------------------------
-#  `demos-instructor/lab-14-docker/sistema/` es una COPIA de
-#  `labs/lab-14-microservicios/solucion/`. Copiar código es aceptar que se
+#  `demos-instructor/microservicios-docker/sistema/` es una COPIA de
+#  `labs/lab-microservicios/solucion/`. Copiar código es aceptar que se
 #  separe, y la separación no avisa: el día que alguien arregle un defecto en el
 #  laboratorio, la demostración se queda con el defecto y nadie se entera hasta
 #  que el PO lo proyecta en una sala.
@@ -37,8 +37,8 @@ import pathlib
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-LAB = RAIZ / 'labs' / 'lab-14-microservicios' / 'solucion'
-DEMO = RAIZ / 'demos-instructor' / 'lab-14-docker' / 'sistema'
+LAB = RAIZ / 'labs' / 'lab-microservicios' / 'solucion'
+DEMO = RAIZ / 'demos-instructor' / 'microservicios-docker' / 'sistema'
 
 SERVICIOS = ('gateway', 'contribuyentes', 'tramites', 'auditoria')
 

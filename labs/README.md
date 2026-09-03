@@ -18,7 +18,7 @@ sesión— y su guía en PDF.
 | `lab-09-seguridad` | Seguridad |
 | `lab-10-resiliencia` | Resiliencia |
 | `lab-11-observabilidad` | Observabilidad |
-| `lab-14-microservicios` | Microservicios |
+| `lab-microservicios` | Microservicios |
 
 ## Los números 12 y 13 no están, y no es un error
 

@@ -20,7 +20,7 @@
 #   5. `guion-practica` — el guion tampoco miente sobre el PUNTO DE PARTIDA:
 #      lo que promete de `practica/` —carpetas vacías, archivos que ya están,
 #      archivos por crear— es lo que `practica/` trae (SPEC-FIX-10).
-#   6. `demo-docker` — la copia del lab 14 que vive en `demos-instructor/` no se
+#   6. `demo-docker` — la copia del lab de microservicios que vive en `demos-instructor/` no se
 #      separa del laboratorio del que salió (SPEC-047). Compara archivos, así que
 #      NO necesita Docker: es lo único de esa demostración que este CI puede
 #      mirar, y en el bloque del job está dicho por qué.
@@ -150,7 +150,7 @@ jobs:
             #
             # Hasta la SPEC-020 este caso lo cubría por accidente la regla del
             # ÚLTIMO lab: el examen era el último y quedaba exento sin decirlo. Al
-            # nacer el Lab 14, el examen dejó de ser el último y esa exención se
+            # nacer el Lab de Microservicios, el examen dejó de ser el último y esa exención se
             # evaporó en silencio. Sobrevivía solo porque su TEORIA.md contiene la
             # frase «este laboratorio NO siembra», que el `grep` de abajo da por
             # buena — un verde por casualidad, que es la peor clase de verde.
@@ -381,9 +381,9 @@ jobs:
           fi
           echo "[OK] 0 descargas: la maleta está completa."
   # ---------------------------------------------------------------------------
-  #  demo-docker · la copia del lab 14 no se separa del laboratorio.
+  #  demo-docker · la copia del lab de microservicios no se separa del laboratorio.
   #
-  #  `demos-instructor/lab-14-docker/` es material de DEMOSTRACION del instructor
+  #  `demos-instructor/microservicios-docker/` es material de DEMOSTRACION del instructor
   #  (SPEC-047): el PO lo levanta con Docker en su Mac, proyectando. Los alumnos
   #  no lo corren, y por eso vive fuera de `labs/`.
   #
@@ -395,18 +395,18 @@ jobs:
   #  anadir a ningun job para excluirlo; lo que habria que anadir es lo contrario.
   #
   #  Lo que SI se puede vigilar sin Docker es la deriva. La demostracion es una
-  #  COPIA del `solucion/` del lab 14, y copiar codigo es aceptar que se separe:
+  #  COPIA del `solucion/` del lab de microservicios, y copiar codigo es aceptar que se separe:
   #  el dia que alguien arregle un defecto en el laboratorio, la demostracion se
   #  queda con el defecto y nadie se entera hasta que se proyecta en una sala.
   #  `verificar-demo-docker.py` compara los dos arboles archivo a archivo y exige
   #  que sean identicos salvo en las cuatro diferencias declaradas, que son
   #  exactamente las piezas que el orquestador reemplaza.
   #
-  #  No es un gate decorativo (P-05): si alguien toca un controlador del lab 14 y
+  #  No es un gate decorativo (P-05): si alguien toca un controlador del lab de microservicios y
   #  no la copia, este job se pone rojo.
   # ---------------------------------------------------------------------------
   demo-docker:
-    name: demo-docker · la copia no se separa del lab 14
+    name: demo-docker · la copia no se separa del lab de microservicios
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,0 +1,38 @@
+server:
+  port: 8212
+
+spring:
+  application:
+    name: microservicios-tramites-solucion
+
+  datasource:
+    url: jdbc:postgresql://localhost:55461/postgres
+    username: postgres
+    hikari:
+      connection-timeout: 2000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+microservicios:
+  # Aquí es donde vive el "service discovery" de este laboratorio: una URL en
+  # configuración. Ni Eureka ni Config Server — se explican en teoría y se resuelven
+  # así, que además es lo que hacen muchos sistemas reales.
+  contribuyentes:
+    url: http://localhost:8211
+  auditoria:
+    url: http://localhost:8213
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] TRAMITES - %msg%n"

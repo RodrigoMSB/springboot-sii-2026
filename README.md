@@ -26,7 +26,7 @@ PostgreSQL y hasta la imagen base de los contenedores viajan dentro del reposito
 | [`lab-09-seguridad`](labs/lab-09-seguridad/) | Seguridad | Cerrado por defecto. BCrypt con sal, el JWT que **cualquiera lee**, y 401 frente a 403 |
 | [`lab-10-resiliencia`](labs/lab-10-resiliencia/) | Resiliencia | De **30 s a 2 ms**: timeout, reintento (que empeora la caída) y el circuito |
 | [`lab-11-observabilidad`](labs/lab-11-observabilidad/) | Observabilidad | Con la base caída: liveness **200**, readiness **503**, y el health nombra la causa |
-| [`lab-14-microservicios`](labs/lab-14-microservicios/) | Microservicios | Cuatro procesos y tres bases: el JOIN imposible, el fallo en cascada (**500 → 200 degradado**), el gateway, y cuándo **no** partir un sistema |
+| [`lab-microservicios`](labs/lab-microservicios/) | Microservicios | Cuatro procesos y tres bases: el JOIN imposible, el fallo en cascada (**500 → 200 degradado**), el gateway, y cuándo **no** partir un sistema |
 
 ### Las tres carpetas de cada lab
 

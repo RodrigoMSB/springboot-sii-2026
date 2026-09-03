@@ -1,0 +1,46 @@
+server:
+  # Ver la nota del gateway: dentro del contenedor, los cuatro en el 8080.
+  port: 8080
+
+spring:
+  application:
+    name: microservicios-tramites-docker
+
+  datasource:
+    # En el laboratorio esto era `jdbc:postgresql://localhost:554NN/postgres`, y
+    # el propio servicio levantaba esa base con Zonky antes de arrancar el
+    # contexto. Aquí `db-tramites` es OTRO CONTENEDOR, con su propio
+    # PostgreSQL de verdad, y el nombre lo resuelve la red del compose.
+    #
+    # La frontera entre servicios es ahora más fuerte que en el laboratorio: no es
+    # que `tramites` no tenga permiso para leer la base de contribuyentes, es que
+    # está en otro motor, con otra credencial y otro nombre de host.
+    url: jdbc:postgresql://db-tramites:5432/dgt_tramites
+    username: ${DB_USUARIO:svc_tramites}
+    password: ${DB_CLAVE:}
+    hikari:
+      connection-timeout: 2000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+microservicios:
+  # Los dos vecinos, por nombre. Ver la nota del gateway.
+  contribuyentes:
+    url: http://contribuyentes:8080
+  auditoria:
+    url: http://auditoria:8080
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] TRAMITES - %msg%n"

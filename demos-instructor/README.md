@@ -6,7 +6,7 @@ máquina, delante de la sala, y **nadie más lo ejecuta**.
 Existe porque hay cosas que vale la pena **enseñar** y no se pueden **poner en la maleta**. La
 regla del curso es que todo lo que el alumno necesita viaja dentro del repositorio y funciona sin
 red y sin instalar nada (`D-022-3`). Docker no cumple esa regla —las máquinas del SII no lo tienen
-y no pueden instalarlo, y ése fue el motivo de retirar el lab 14 antiguo—, así que no puede ser un
+y no pueden instalarlo, y ése fue el motivo de retirar el lab de microservicios antiguo—, así que no puede ser un
 laboratorio. Pero verlo funcionar durante quince minutos sí cabe en una sesión.
 
 ## La regla de esta carpeta
@@ -23,11 +23,11 @@ proyectos Maven no entran en la compilación offline y no hay ninguna excepción
 exclusión es estructural.
 
 Lo que sí hay es un job que **no necesita Docker**: `demo-docker` corre
-`tools/verificar-demo-docker.py`, que comprueba que la copia del lab 14 no se haya separado del
+`tools/verificar-demo-docker.py`, que comprueba que la copia del lab de microservicios no se haya separado del
 laboratorio del que salió.
 
 ## Qué hay
 
 | | |
 |---|---|
-| [`lab-14-docker/`](lab-14-docker/) | El sistema de microservicios del lab 14, **con Docker Compose** en vez de cuatro terminales. Demuestra qué aporta un orquestador |
+| [`microservicios-docker/`](microservicios-docker/) | El sistema de microservicios del lab de microservicios, **con Docker Compose** en vez de cuatro terminales. Demuestra qué aporta un orquestador |

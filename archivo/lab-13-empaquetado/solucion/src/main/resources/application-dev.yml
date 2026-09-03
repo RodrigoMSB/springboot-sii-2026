@@ -1,0 +1,3 @@
+lab13:
+  saludo: Hola desde DESARROLLO
+  tesoreria-url: http://localhost:9098/pagos

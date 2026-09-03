@@ -1,0 +1,35 @@
+server:
+  port: 8202
+
+spring:
+  application:
+    name: microservicios-tramites
+
+  datasource:
+    url: jdbc:postgresql://localhost:55451/postgres
+    username: postgres
+    hikari:
+      connection-timeout: 2000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    locations: classpath:db/migration
+
+microservicios:
+  contribuyentes:
+    url: http://localhost:8201
+  auditoria:
+    url: http://localhost:8203
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] TRAMITES - %msg%n"
