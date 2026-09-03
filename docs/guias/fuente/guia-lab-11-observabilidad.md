@@ -67,9 +67,6 @@ seguir: con doscientas personas atendidas a la vez, «se emitió un trámite» n
 Por eso cada expediente lleva **un número que se apunta en todas sus líneas** — y así se puede
 seguir uno solo entre miles. Eso es el *trace id*.
 
-**El contador de la puerta** cuenta trámites emitidos. No es un dato técnico: es un dato que le
-importa al director de la oficina.
-
 **Y el cuadro de luces** dice si la oficina puede atender. Tiene **dos luces distintas**, y
 confundirlas es el error del día:
 
@@ -120,7 +117,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
 ```
 
 ### Se corre
@@ -132,14 +129,14 @@ curl -s localhost:8101/actuator
 ### Lo que vas a ver
 
 ``` text
-['self', 'info', 'health', 'health-path', 'metrics', 'metrics-requiredMetricName']
+['self', 'info', 'health', 'health-path']
 ```
 
-**Sólo lo que nombraste.** Prueba a pedir `/actuator/env` o `/actuator/beans`: 404. Están apagados,
-y eso es lo correcto.
+**Sólo lo que nombraste.** Prueba a pedir `/actuator/env`, `/actuator/beans` o `/actuator/metrics`:
+404. Están apagados, y eso es lo correcto.
 
 ::: vasbien
-`/actuator` lista sólo `health`, `info` y `metrics`. Si vieras veinte entradas, tienes `"*"` puesto.
+`/actuator` lista sólo `health` e `info`. Si vieras veinte entradas, tienes `"*"` puesto.
 :::
 
 ::: atasco
@@ -264,82 +261,7 @@ Falta el `MDC.remove(...)` en el `finally`. Es la fuga que hace que los logs mie
 Falta el patrón en `application.yml`, o lo pegaste fuera del bloque `logging:`.
 :::
 
-## Paso 3 · Una métrica que le importa al negocio
-
-### Qué vamos a hacer
-
-Contar los trámites emitidos, y exponerlo.
-
-### Para entenderlo mejor
-
-El contador de la puerta. No cuenta peticiones HTTP ni uso de memoria: cuenta **trámites**, que es
-lo que le importa a quien dirige la oficina.
-
-### El problema
-
-Actuator ya trae métricas técnicas —memoria, hilos, peticiones por segundo— y ninguna responde a
-«¿cuántos trámites llevamos hoy?». Esa la tiene que declarar quien conoce el negocio.
-
-### La alternativa, y por qué no
-
-- **Un `Gauge`**: refleja un valor que sube y baja. Los trámites emitidos **no bajan nunca**, así
-  que sería mentir sobre la naturaleza del dato — y las herramientas de métricas tratan los dos
-  tipos de forma distinta al agregar.
-- **Un `Timer`**: mide además cuánto tarda, que muchas veces es más útil.
-- **Un `Counter`**, que es lo de aquí, **declarado una vez en el constructor**. Buscarlo en el
-  registro en cada petición funciona; con veinte métricas, se nota.
-
-### Se pega
-
-En `practica/src/main/java/cl/dgt/observabilidad/controllers/TramiteController.java`, **arriba con
-los `import`**:
-
-``` java
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-```
-
-El campo **debajo** de `private final TramiteRepository repositorio;`, y el constructor
-**reemplazando el que hay** — le entra un parámetro más:
-
-{{codigo lab=lab-11-observabilidad archivo=src/main/java/cl/dgt/observabilidad/controllers/TramiteController.java modo=entre desde="private final TramiteRepository repositorio;" hasta="public record NuevoTramite" lenguaje=java}}
-
-Y donde el controlador emite, la línea que incrementa:
-
-``` java
-        emitidos.increment();
-```
-
-### Lo que vas a ver
-
-``` bash
-curl -s localhost:8101/actuator/metrics/dgt.tramites.emitidos
-```
-
-``` json
-{
-    "name": "dgt.tramites.emitidos",
-    "description": "Trámites emitidos desde que arrancó la aplicación",
-    "measurements": [ { "statistic": "COUNT", "value": 1.0 } ]
-}
-```
-
-::: vasbien
-La métrica existe y su valor sube cada vez que emites un trámite.
-:::
-
-::: atasco
-**1 · `404` al pedir la métrica.**
-
-La métrica no existe hasta que se **registra**, y se registra al construir el controlador. Si nunca
-has emitido un trámite ni arrancado con el contador declarado, no está.
-
-**2 · El valor no sube.**
-
-Falta el `emitidos.increment()` en el método que emite.
-:::
-
-## Paso 4 · Un health que dice QUÉ se rompió
+## Paso 3 · Un health que dice QUÉ se rompió
 
 ### Qué vamos a hacer
 
@@ -418,12 +340,11 @@ del paso 1 — y entonces el archivo no es válido o una clave pisa a la otra.
 El nombre del bean no es ése. Va en la anotación: `@Component("baseDeDatos")`.
 :::
 
-## Paso 5 · Liveness no es readiness
+## Paso 4 · Liveness no es readiness
 
 ### Qué vamos a hacer
 
-Encender las dos sondas, meter la base **en la de readiness y no en la de liveness**, y tirar la
-base para ver la diferencia.
+Encender las dos sondas y meter la base **en la de readiness y no en la de liveness**.
 
 ### Para entenderlo mejor
 
@@ -454,7 +375,7 @@ La base de datos **no se arregla reiniciando tu proceso**. Va en readiness.
 **El YAML se escribe a mano: la sangría es el significado.** Al copiarlo del PDF se pierden los espacios del principio de línea y el archivo deja de decir esto, **sin dar error**. Son **dos espacios por nivel**, y ninguna tabulación.
 
 En `application.yml`, **fundido otra vez con el mismo `management:`** — esto cuelga del `health:`
-del paso 4, con seis espacios:
+de la primera mitad del paso 3, con seis espacios:
 
 ``` yaml
       probes:
@@ -475,67 +396,60 @@ curl -o /dev/null -s -w 'liveness  %{http_code}\n' localhost:8101/actuator/healt
 curl -o /dev/null -s -w 'readiness %{http_code}\n' localhost:8101/actuator/health/readiness
 ```
 
-Y ahora **se tira la base**:
-
-``` bash
-curl -X POST localhost:8101/simulador/base-caida
-```
-
 ### Lo que vas a ver
 
-Con la base viva:
+Con la base viva, los dos dan 200 — y **no dicen lo mismo**:
 
 ``` text
-liveness  200
-readiness 200
+liveness  200   {"components":{"livenessState":{"status":"UP"}},"status":"UP"}
+readiness 200   {"components":{"baseDeDatos":{...,"status":"UP"},
+                               "readinessState":{"status":"UP"}},"status":"UP"}
 ```
 
-Con la base caída:
+Liveness mira **un solo estado**, el del proceso. Readiness mira además la base. Ahí ya se ve la
+diferencia: son **dos preguntas**, no dos formas de preguntar lo mismo.
+
+Y lo que responderían **con la base caída** — esto no se corre, se lee:
 
 ``` text
 liveness  200      <- el proceso está bien. NO lo reinicies
 readiness 503      <- no puede atender. Sácalo de rotación
 ```
 
-Y el health, nombrando la causa:
-
 ``` json
 "baseDeDatos": {
   "status": "DOWN",
   "details": {
     "causa": "la base de datos no responde",
-    "detalle": "HikariPool-1 - Connection is not available, request timed out after 2010ms",
-    "milisegundos": 2010
+    "detalle": "Connection to localhost:55442 refused.",
+    "milisegundos": 2003
   }
 }
 ```
 
 **Ahí está el laboratorio entero en cinco líneas.** El proceso está sano, no puede atender, y dice
-exactamente por qué y cuánto esperó.
-
-Vuelve a levantarla:
-
-``` bash
-curl -X POST localhost:8101/simulador/base-sana
-```
+exactamente por qué y cuánto esperó. Y cuando la base vuelve, readiness pasa a 200 **sin reiniciar
+nada**: el pool se reconecta y el health vuelve a consultar.
 
 ::: vasbien
-Con la base caída obtienes **200 en liveness y 503 en readiness**, y el health nombra la causa.
+Con la base viva los dos dan 200, y el JSON de readiness incluye `baseDeDatos` mientras que el de
+liveness no. Ésa es la separación que acabas de configurar.
 :::
 
 ::: atasco
-**1 · Los dos dan 503.**
-
-Metiste `baseDeDatos` también en el grupo de liveness. Ése es exactamente el error que lleva al
-bucle de reinicios.
-
-**2 · `/actuator/health/liveness` da 404.**
+**1 · `/actuator/health/liveness` da 404.**
 
 Falta `probes: enabled: true`.
 
-**3 · Readiness sigue en 200 con la base caída.**
+**2 · El JSON de liveness incluye `baseDeDatos`.**
 
-El grupo no incluye `baseDeDatos`, o el nombre no coincide con el del `@Component`.
+Lo metiste también en el grupo de liveness. Ése es exactamente el error que lleva al bucle de
+reinicios el día que la base falle.
+
+**3 · El JSON de readiness NO incluye `baseDeDatos`.**
+
+El grupo no lo incluye, o el nombre no coincide con el del `@Component("baseDeDatos")`. Y no da
+ningún error: simplemente la sonda deja de mirar la base.
 :::
 
 # Lo que aprendiste
@@ -545,20 +459,29 @@ El grupo no incluye `baseDeDatos`, o el nombre no coincide con el del `@Componen
 El MDC lo pone una vez y lo lleva toda la petición. Y hay que quitarlo al terminar, o el siguiente
 hereda el de antes.
 
-**2 · Las métricas que importan las declara quien conoce el negocio.**
-
-Actuator cuenta memoria e hilos. «Cuántos trámites llevamos» lo tiene que contar alguien, y es un
-`Counter` porque los trámites emitidos no bajan.
-
-**3 · Un health que sólo dice DOWN obliga a alguien a ir a mirar.**
+**2 · Un health que sólo dice DOWN obliga a alguien a ir a mirar.**
 
 Uno que nombra la causa y el tiempo se arregla desde la pantalla. Y cuidado con lo que consulta: se
 ejecuta cada pocos segundos.
 
-**4 · Liveness y readiness responden preguntas distintas.**
+**3 · Liveness y readiness responden preguntas distintas.**
 
 Liveness: ¿reinicio? Readiness: ¿le mando tráfico? Meter la base en liveness produce un bucle de
 reinicios que no arregla la base y sí tira lo que estaba a medias.
+
+# Lo que no vimos hoy
+
+- **Métricas**, y quién las recoge. Declarar un contador de trámites emitidos con Micrometer son
+  tres líneas; lo que no cabe aquí es **Prometheus** preguntando cada quince segundos y un tablero
+  dibujando la curva. Sin eso, una métrica es un número que se pierde al reiniciar — y por eso
+  `metrics` ni siquiera entró en la lista de endpoints expuestos.
+- **Logs centralizados**: los de todas las instancias en un solo sitio, buscables. Spring Boot 4
+  trae logging estructurado nativo: `logging.structured.format.console: ecs` y cada línea sale como
+  JSON, sin añadir ninguna dependencia.
+- **Trazas distribuidas** (OpenTelemetry): el `traceId` de hoy, pero cruzando **solo** de un
+  servicio a otro y con el tiempo que se pasó en cada uno. El filtro del paso 2 es la versión a
+  mano de esa idea, y se hace a mano precisamente para entender qué automatiza la herramienta.
+- **Alertas**: que alguien se entere a las tres de la mañana sin estar mirando.
 
 # Para profundizar
 
@@ -567,23 +490,24 @@ reinicios que no arregla la base y sí tira lo que estaba a medias.
 - **Manda tu propia cabecera `X-Trace-Id`** en un `curl` y comprueba que el filtro la respeta en vez
   de inventar una.
 - **Quita el `MDC.remove`** y lanza dos peticiones seguidas. Mira los ids.
-- **Mete `baseDeDatos` en el grupo de liveness** y tira la base. Imagina eso en producción con un
-  orquestador delante.
+- **Mete `baseDeDatos` en el grupo de liveness**, apaga la aplicación con la base todavía viva y
+  mira el JSON de liveness. ¿Qué pasaría en producción, con un orquestador delante, el día que la
+  base se cayera?
 - **Cambia la consulta del health** a algo caro y mira los `milisegundos`.
 
 # Antes de cerrar
 
-**Deja la base sana y para la aplicación con `Ctrl+C`:**
+**Párala con `Ctrl+C`.**
 
 ``` bash
-curl -X POST localhost:8101/simulador/base-sana
 ./mvnw clean
 ```
 
 **Lo que te llevas:**
 
-> Una petición se sigue por su id; una métrica de negocio la declara quien conoce el negocio; un
-> health dice qué se rompió; y liveness y readiness no son la misma pregunta.
+> Actuator se expone por lista nominal, nunca con asterisco. Una petición se sigue por su id, y
+> ponerlo no cuesta ni una línea en el código de negocio. Un health dice **qué** se rompió. Y
+> liveness y readiness no son la misma pregunta.
 
 **Lo que queda pendiente, y abre el Lab 12:** todo lo que hace tu aplicación lo hace **porque
 alguien se lo pidió**. Hay trabajo que tiene que ocurrir solo —de madrugada, cada diez minutos— y

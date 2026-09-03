@@ -6,7 +6,7 @@ spring:
   application:
     name: lab10-resiliencia-solucion
 
-lab09:
+lab10:
   tesoreria:
     # El puerto de Tesorería simulada, que vive dentro de este mismo proceso.
     puerto: 9098

@@ -13,7 +13,7 @@ public class ClienteTesoreria {
     private final RestClient http;
     private final AtomicInteger llamadas = new AtomicInteger();
 
-    public ClienteTesoreria(@Value("${lab09.tesoreria.puerto}") int puerto) {
+    public ClienteTesoreria(@Value("${lab10.tesoreria.puerto}") int puerto) {
         // Paso 2 · fija el transporte y ponle timeout de conexión y de lectura.
         // escribe aquí
         this.http = RestClient.builder()

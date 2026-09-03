@@ -1,8 +1,8 @@
 # Pasos · Lab 13 · Empaquetado
 
-Cinco pasos, y el tercero **no se teclea**: son veinte minutos de explicación con la pantalla
-apagada. Es deliberado — en este curso nadie ha visto nunca un contenedor, y construir uno sin
-saber qué es no enseña nada.
+Cuatro pasos, y el tercero **no se teclea**: son veinte minutos de explicación con la pantalla
+apagada. Es deliberado — en este curso nadie ha visto nunca un contenedor, y hablar de imágenes sin
+saber qué son no enseña nada.
 
 ```bash
 cd practica
@@ -11,12 +11,22 @@ cd practica
 
 Escucha en el **8105** (`solucion/`, en el 8106).
 
-Lo que se escribe hoy vive casi todo en el `pom.xml`:
+Lo que se escribe hoy son tres cosas pequeñas:
 
 ```
-pom.xml                     →  pasos 2 y 4 (las capas y Jib)
-resources/application-*.yml →  paso 5 (los perfiles)
+pom.xml                     →  paso 2 (las capas)
+resources/application-*.yml →  paso 4 (los perfiles)
 ```
+
+**Los nombres de los jar son distintos en cada carpeta**, y conviene tenerlo presente al copiar
+órdenes:
+
+```
+practica/target/lab13-empaquetado-0.1.0.jar
+solucion/target/lab13-empaquetado-solucion-0.1.0.jar
+```
+
+Los comandos de abajo van escritos para `practica/`.
 
 ---
 
@@ -36,14 +46,14 @@ ls -lh target/*.jar
 **En consola:**
 
 ```
-20.9 MB   lab13-empaquetado-0.1.0.jar
+21M   lab13-empaquetado-0.1.0.jar
 ```
 
 Veintiún megas para una aplicación de dos clases. Se abre a ver qué hay dentro:
 
 ```bash
 jar tf target/lab13-empaquetado-0.1.0.jar | head
-unzip -p target/lab13-empaquetado-0.1.0.jar META-INF/MANIFEST.MF | grep Class
+unzip -p target/lab13-empaquetado-0.1.0.jar META-INF/MANIFEST.MF
 ```
 
 ```
@@ -89,21 +99,18 @@ Started Lab13Application in 1.445 seconds
 **Se explica:** el jar de arriba es un solo bloque de 21 MB. Si mañana se corrige una palabra en un
 mensaje, se construye otro jar de 21 MB **entero** y hay que moverlo entero.
 
-Y sin embargo, de esos 21 MB, **20,9 no cambiaron**: son Spring, Tomcat y Jackson, exactamente los
-mismos de ayer. Lo que cambió son unos pocos kilobytes.
+Y sin embargo, de esos 21 MB, **casi todo no cambió**: son Spring, Tomcat y Jackson, exactamente
+los mismos de ayer. Lo que cambió son unos pocos kilobytes.
 
-**Se pega:** en `practica/pom.xml`, **dentro del plugin de Spring Boot**.
+**Se pega:** en `practica/pom.xml`, **dentro del plugin de Spring Boot**, donde dice
+`<!-- escribe aquí -->`.
 
 ```xml
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <layers>
             <enabled>true</enabled>
           </layers>
         </configuration>
-      </plugin>
 ```
 
 **Se corre:**
@@ -131,9 +138,12 @@ application
 | `snapshot-dependencies` | librerías en desarrollo | rara vez |
 | `application` | **nuestro código** | **cada despliegue** |
 
-Hoy esto no cambia nada: el jar sigue pesando lo mismo. **Sirve en el paso 4**, cuando cada capa
-pase a ser una capa de la imagen — y entonces desplegar una corrección dejará de mover 21 MB para
-mover unos KB.
+**Hoy esto no cambia nada medible:** el jar pesa lo mismo y arranca igual. Conviene decirlo al
+escribirlo, para que nadie sienta que hizo algo inútil. Lo que se acaba de construir es una
+**estructura**, y su valor se entiende con el paso 3.
+
+> En Spring Boot 3 el modo se llamaba `layertools` y el subcomando `list`. Si alguien trae un
+> ejemplo viejo de internet y no le funciona, es eso.
 
 ---
 
@@ -141,8 +151,8 @@ mover unos KB.
 
 **No se teclea nada. Veinte minutos.**
 
-Es la única parte del curso donde se explica algo que el alumno no ha visto nunca, y saltársela
-para llegar antes al paso 4 lo convierte en una receta.
+Es la única parte del curso donde se explica algo que el alumno no ha visto nunca. Y hoy tiene
+además otra función: es donde el paso 2 cobra sentido.
 
 ### El problema
 
@@ -189,185 +199,102 @@ profundice: *namespaces* (qué ve) y *cgroups* (cuánto puede consumir).
 La **imagen** es la plantilla; el **contenedor** es una imagen corriendo. La misma relación que
 entre una clase y un objeto, y esa comparación funciona bien en una sala de programadores.
 
-La imagen está hecha de **capas apiladas**, cada una con los cambios sobre la anterior — de ahí el
-paso 2. Y son **de sólo lectura y compartidas**: si diez imágenes usan la misma base de Java, esa
-base se guarda **una vez**.
+La imagen está hecha de **capas apiladas**, cada una con los cambios sobre la anterior. Y son **de
+sólo lectura y compartidas**: si diez imágenes usan la misma base de Java, esa base se guarda **una
+vez**.
 
-> Ahí está el ahorro real, y es la frase del paso: al desplegar una corrección no se mueven 139 MB.
-> Se mueve **la capa que cambió**, que son unos kilobytes. Todo lo demás ya está en el servidor.
+**Aquí es donde el paso 2 cobra.** Una imagen típica de esta aplicación repartiría así sus ciento
+treinta y ocho megas:
 
-### OCI, Docker y por qué no hace falta Docker
+```
+  ~120 MB   la base: sistema mínimo + JRE 25        ┐
+   ~18 MB   las dependencias (Spring, Tomcat...)    ├─ no cambian casi nunca
+  < 0,1 MB  NUESTRO CÓDIGO                          ┘  cambia cada día
+```
+
+Esas cuatro capas del jar se convierten en capas de la imagen. Y entonces:
+
+> Al desplegar una corrección no se mueven 138 MB. Se mueve **la capa que cambió**, que son unos
+> kilobytes. Todo lo demás ya está en el servidor.
+
+Sin el `layers.enabled` del paso 2, el jar sería un solo archivo indivisible dentro de la imagen y
+cualquier cambio movería los 21 MB enteros.
+
+### OCI, Docker y por qué hoy no se construye ninguna imagen
 
 **OCI** (*Open Container Initiative*) es el **estándar** de formato de imagen. **Docker** es un
 programa que construye y ejecuta imágenes OCI — el más conocido, y no el único.
 
-Hoy se construye una imagen OCI **sin Docker**, con Jib. Y eso importa aquí más que en ningún otro
-sitio: en las máquinas del SII no hay Docker y no se puede instalar.
+Y aquí va la parte honesta: **en las máquinas de esta sala no hay Docker y no se puede instalar.**
+Así que este laboratorio explica qué es un contenedor y **no construye ninguno**. Construir un
+archivo que nadie puede ejecutar, para abrirlo con `tar` y mirar un JSON, ocupa media hora y enseña
+menos que este dibujo.
+
+Para quien quiera probarlo fuera del curso, el nombre que hay que buscar está en el cierre.
 
 ---
 
-## Paso 4 · Construir la imagen
-
-**Se explica:** Jib es un plugin de Maven que escribe una imagen OCI directamente. No necesita
-demonio de Docker, ni permisos de administrador, ni un `Dockerfile`.
-
-**Se pega:** en `practica/pom.xml`, **dentro de `<plugins>`**. La versión sale de la propiedad
-`jib.version`, que el `pom.xml` ya trae declarada arriba: el número se escribe en un solo sitio.
-
-```xml
-      <plugin>
-        <groupId>com.google.cloud.tools</groupId>
-        <artifactId>jib-maven-plugin</artifactId>
-        <version>${jib.version}</version>
-        <configuration>
-          <from>
-            <image>eclipse-temurin:25-jre</image>
-          </from>
-          <to>
-            <image>lab13-empaquetado:0.1.0</image>
-          </to>
-          <container>
-            <ports>
-              <port>8105</port>
-            </ports>
-            <environment>
-              <SPRING_PROFILES_ACTIVE>prod</SPRING_PROFILES_ACTIVE>
-            </environment>
-          </container>
-        </configuration>
-      </plugin>
-```
-
-> **La imagen base viaja en el repositorio.** `.mvn/maven.config` de este proyecto contiene
-> `-Djib.baseImageCache=../../../tools/jib-base`, y ahí están las capas de `eclipse-temurin:25-jre`
-> commiteadas, igual que el JDK y las dependencias de Maven. Sin eso, Jib intentaría bajarla de un
-> registro y en el SII esto no funcionaría. Si alguien borra esa carpeta, el error es explícito:
-> `Cannot run Jib in offline mode; eclipse-temurin:25-jre not found in local Jib cache`.
-
-**Se corre:**
-
-```bash
-./mvnw package jib:buildTar
-```
-
-**En consola:**
-
-```
-[INFO] Containerizing application to file at 'target/jib-image.tar'...
-[INFO] Built image tarball at target/jib-image.tar
-[INFO] BUILD SUCCESS
-```
-
-**Una imagen de contenedor, sin Docker y sin internet.**
-
-### Y ahora se abre
-
-Una imagen es un tar. Se puede mirar por dentro con las herramientas de siempre:
-
-```bash
-mkdir -p /tmp/img && tar -xf target/jib-image.tar -C /tmp/img
-ls /tmp/img
-cat /tmp/img/manifest.json
-```
-
-**En consola:**
-
-```json
-[{"Config":"config.json",
-  "RepoTags":["lab13-empaquetado:0.1.0"],
-  "Layers":["617772c7....tar.gz", "a7fb98a8....tar.gz", ... ]}]
-```
-
-Y las capas, con su peso:
-
-```
-  capa 1:    39.6 MB     ┐
-  capa 3:    20.4 MB     ├─ la base: sistema mínimo + JRE 25
-  capa 4:    60.1 MB     ┘
-  capa 7:    18.6 MB     ── las dependencias (Spring, Tomcat...)
-  capas 2, 5, 6, 8, 9, 10: menos de 0,1 MB cada una  ── NUESTRO CÓDIGO
-```
-
-**Aquí se para y se señala.** 120 MB son la base, 18,6 MB las dependencias, y lo nuestro no llega a
-0,1 MB. Cuando mañana se corrija un mensaje y se vuelva a construir, **las nueve primeras capas
-son idénticas** y no se mueven: se despliegan esos kilobytes. Ese es el paso 2 cobrando.
-
-Y la configuración de la imagen:
-
-```
-  arquitectura : amd64 / linux
-  Entrypoint   : java -cp @/app/jib-classpath-file cl.dgt.empaquetado.Lab13Application
-  puertos      : ['8106/tcp']
-  entorno      : ['SPRING_PROFILES_ACTIVE=prod']
-```
-
-Tres cosas que notar:
-
-1. **`linux`, aunque esto se construyó en un Mac.** La imagen es para donde va a correr, no para
-   donde se construye. (Y `amd64` es el valor por defecto de Jib; se cambia con `<platforms>`.)
-2. **No hay `java -jar`.** Jib no mete el fat jar: pone las clases y los jars sueltos, en capas
-   separadas. Por eso puede separar «dependencias» de «aplicación».
-3. **El puerto y el perfil quedaron escritos en la imagen.** Son valores por defecto — y el paso 5
-   va justamente de que se pueden cambiar sin tocarla.
-
----
-
-## Paso 5 · La misma imagen en todas partes
+## Paso 4 · La misma aplicación en todas partes
 
 **Se explica:** queda la pregunta que cierra el curso. Hay tres ambientes —desarrollo, pruebas,
 producción— y en cada uno la base de datos es otra, la URL de Tesorería es otra y los tiempos de
 espera son otros.
 
-> ¿Se construye una imagen para cada ambiente?
+> ¿Se construye un artefacto para cada ambiente?
 
 **No.** Y hay que decir por qué, porque el instinto dice que sí:
 
-> Si se construye una imagen para producción **distinta** de la que se probó, entonces **lo que se
-> probó no es lo que se despliega**. Todo el trabajo de pruebas queda en suspenso: la imagen que
-> llega al usuario nunca la ejecutó nadie.
+> Si se construye para producción algo **distinto** de lo que se probó, entonces **lo que se probó
+> no es lo que se despliega**. Todo el trabajo de pruebas queda en suspenso: lo que llega al
+> usuario nunca lo ejecutó nadie.
 
 Un artefacto, todos los ambientes. Lo que cambia va **fuera**.
 
 **Se pega:** archivo **nuevo** `practica/src/main/resources/application-dev.yml` — el archivo
-entero. (Después el otro, `application-prod.yml`.)
+entero.
 
 ```yaml
-lab12:
+lab13:
   saludo: Hola desde DESARROLLO
   tesoreria-url: http://localhost:9098/pagos
 ```
 
-y `resources/application-prod.yml`:
+**Se pega:** archivo **nuevo** `practica/src/main/resources/application-prod.yml` — el archivo
+entero.
 
 ```yaml
-lab12:
+lab13:
   saludo: Hola desde PRODUCCIÓN
   tesoreria-url: ${TESORERIA_URL:https://tesoreria.example.cl/pagos}
 ```
 
-**Se corre — el mismo jar, tres veces:**
+**Se corre — el mismo jar, tres veces.** Se construye **una vez** y no se vuelve a tocar:
 
 ```bash
+./mvnw package
+
 java -jar target/lab13-empaquetado-0.1.0.jar
 java -jar target/lab13-empaquetado-0.1.0.jar --spring.profiles.active=dev
-SPRING_PROFILES_ACTIVE=prod TESORERIA_URL=https://tesoreria.sii.cl/api/pagos \
-  java -jar target/lab13-empaquetado-0.1.0.jar
+TESORERIA_URL=https://tesoreria.sii.cl/pagos \
+  java -jar target/lab13-empaquetado-0.1.0.jar --spring.profiles.active=prod
 ```
+
+(Entre una y otra, `Ctrl+C`. Y en cada una, `curl http://localhost:8105/donde-estoy`.)
 
 **En consola:**
 
 ```json
-{"perfilesActivos":[],      "saludo":"Hola desde el entorno por defecto",
-                            "tesoreriaUrl":"http://localhost:9999/tesoreria-falsa"}
+{"perfilesActivos":[],"saludo":"Hola desde el entorno por defecto",
+ "tesoreriaUrl":"http://localhost:9999/tesoreria-falsa","javaVersion":"25.0.4"}
 
-{"perfilesActivos":["dev"], "saludo":"Hola desde DESARROLLO",
-                            "tesoreriaUrl":"http://localhost:9098/pagos"}
+{"perfilesActivos":["dev"],"saludo":"Hola desde DESARROLLO",
+ "tesoreriaUrl":"http://localhost:9098/pagos","javaVersion":"25.0.4"}
 
 {"perfilesActivos":["prod"],"saludo":"Hola desde PRODUCCIÓN",
-                            "tesoreriaUrl":"https://tesoreria.sii.cl/api/pagos"}
+ "tesoreriaUrl":"https://tesoreria.sii.cl/pagos","javaVersion":"25.0.4"}
 ```
 
-**El mismo archivo, byte por byte.** No se recompiló nada entre una ejecución y la siguiente.
+**El mismo archivo, byte por byte.** No se reconstruyó nada entre una ejecución y la siguiente.
 
 ### El orden de precedencia, que es lo que hay que saberse
 
@@ -377,46 +304,71 @@ De menos a más fuerte — **gana el último**:
 application.yml  <  application-<perfil>.yml  <  variable de entorno  <  argumento de línea de comandos
 ```
 
-Se ve en la tercera ejecución: `application-prod.yml` propone una URL de ejemplo, y
-`TESORERIA_URL` la pisa. Por eso el valor está escrito como `${TESORERIA_URL:...}`: **lo de después
-de los dos puntos es el respaldo**, no el valor.
+Se ve en la tercera ejecución: `application-prod.yml` propone
+`https://tesoreria.example.cl/pagos`, y `TESORERIA_URL` la pisa con la de verdad. Por eso el valor
+está escrito como `${TESORERIA_URL:...}`: **lo de después de los dos puntos es el respaldo**, no el
+valor.
 
 > **Y aquí va la regla que cierra el laboratorio:** los secretos —claves de base de datos, el
-> secreto de firma del Lab 09— **nunca** van en un `application-prod.yml`, porque ese archivo está
-> dentro de la imagen y dentro del repositorio. Van por variable de entorno, que las pone el
-> orquestador en el momento de arrancar y no quedan escritas en ninguna parte.
+> secreto de firma del Lab 09— **nunca** van en un `application-prod.yml`, porque ese archivo viaja
+> dentro del jar, y el jar se descomprime con `unzip` como cualquier zip. Además está en el
+> repositorio, con lo que el secreto quedaría en el historial de Git para siempre — y borrarlo
+> después no lo borra.
+>
+> Los secretos van por variable de entorno, que las pone quien despliega en el momento de arrancar
+> y no quedan escritas en ninguna parte.
+
+---
+
+## Lo que no vimos hoy
+
+**Construir la imagen.** El paso 3 explicó qué es un contenedor y no construyó ninguno, porque en
+esta sala no hay Docker. Para quien quiera probarlo fuera del curso, el nombre es **Jib**
+(`jib-maven-plugin`, de Google): construye una imagen OCI **sin demonio Docker** —escribe el
+`.tar` directamente, sin permisos de administrador y sin `Dockerfile`—, y toma el jar por capas del
+paso 2 para convertir cada capa del jar en una capa de la imagen. Se declara en el `pom.xml`, se
+ejecuta con `./mvnw package jib:buildTar`, y el resultado se abre con `tar -xf` como cualquier tar.
+Es exactamente lo que hace el proyecto final de este curso, así que hay un ejemplo funcionando al
+que mirar.
+
+Y tres cosas más, que son el paso siguiente natural y ninguna cabe hoy:
+
+- **Kubernetes** y los orquestadores: quién arranca esa imagen, cuántas copias, y qué hace cuando
+  una se cae. (Y ahí vuelven el liveness y el readiness del Lab 11.)
+- **Registries**: dónde se guardan las imágenes y cómo llegan al servidor que las va a correr.
+- **CI/CD**: que todo esto lo haga una máquina en cada cambio, en vez de una persona.
 
 ---
 
 ## Al terminar
 
-`practica/` construye lo mismo que `solucion/`: un jar de 20,9 MB por capas, una imagen OCI de
-138,9 MB, y el mismo artefacto comportándose distinto en tres ambientes.
+`practica/` construye lo mismo que `solucion/`: un jar de 21 MB en cuatro capas, y el mismo
+artefacto comportándose distinto en tres ambientes.
 
 Lo que hay que poder decir con las propias palabras:
 
 > Un fat jar lleva Tomcat dentro y arranca con `java -jar`. Las capas separan lo que cambia
 > siempre de lo que no cambia nunca, y por eso un despliegue mueve kilobytes y no megas. Un
-> contenedor es un proceso normal al que el núcleo le aisló lo que ve. Y la imagen se construye
-> **una vez**: si se recompila para producción, lo que se probó no es lo que se despliega.
+> contenedor es un proceso normal al que el núcleo le aisló lo que ve. Y el artefacto se construye
+> **una vez**: si se reconstruye para producción, lo que se probó no es lo que se despliega.
 
 ### Lo que siembra este lab
 
 En trece sesiones se armó una aplicación que arranca, expone endpoints, guarda en una base de
 datos, no se cae bajo concurrencia, está probada, cerrada con llave, sobrevive a que el vecino
-falle, hace su trabajo a tiempo, y hoy sale de la máquina donde nació.
+falle, cuenta lo que le pasa, hace su trabajo a tiempo, y hoy sale de la máquina donde nació.
 
 **Una** aplicación. Un artefacto, un puerto, una base de datos, un log.
 
 Y esa palabra es lo que siembra el **Lab 14**, que es el último: mañana esa misma DGT son **cuatro
 programas distintos con tres bases de datos separadas**, y la pregunta deja de ser cómo se
-construye y pasa a ser **qué se gana y qué se paga** al partirla. La imagen de hoy es la unidad de
-despliegue de mañana — un microservicio es, antes que nada, algo que se despliega solo.
+construye y pasa a ser **qué se gana y qué se paga** al partirla. El artefacto de hoy es la unidad
+de despliegue de mañana — un microservicio es, antes que nada, algo que se despliega solo.
 
 Lo que queda por delante —y hay que nombrarlo para que nadie se vaya creyendo que el mapa está
-completo— es **quién cuida eso una vez desplegado**: quién arranca la imagen, cuántas copias,
-qué pasa cuando una se cae, dónde se miran las métricas y los registros, y cómo llega una versión
-nueva sin cortar el servicio.
+completo— es **quién cuida eso una vez desplegado**: quién lo arranca, cuántas copias, qué pasa
+cuando una se cae, dónde se miran las métricas y los registros, y cómo llega una versión nueva sin
+cortar el servicio.
 
 > **Lo que se lleva:** hasta hoy, «funciona» quería decir «funciona en mi máquina, ahora, mientras
 > yo lo miro». Desde hoy quiere decir otra cosa: **un artefacto que alguien que no eres tú puede

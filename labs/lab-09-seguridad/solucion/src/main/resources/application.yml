@@ -10,15 +10,19 @@ spring:
     hibernate:
       # La tabla la crea Flyway (V1__usuario.sql); Hibernate sólo comprueba que cuadren.
       ddl-auto: validate
+    # Sin esto Spring avisa al arrancar. La sesión abierta hasta la vista no se usa aquí.
+    open-in-view: false
 
   flyway:
     locations: classpath:db/migration
 
-lab08:
+lab09:
   jwt:
     # El secreto de firma. Fuera del código en producción; aquí se deja a la vista
     # para poder enseñar qué pasa cuando se cambia.
-    secreto: ${LAB08_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+    secreto: ${LAB09_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+    # Media hora. Para enseñar el token vencido se baja a 40 y se arranca de nuevo.
+    vigencia-segundos: 1800
 
 logging:
   level:

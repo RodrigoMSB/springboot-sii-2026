@@ -8,13 +8,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
 
   flyway:
     locations: classpath:db/migration
 
-lab08:
+lab09:
   jwt:
-    secreto: ${LAB08_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+    secreto: ${LAB09_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+    vigencia-segundos: 1800
 
 logging:
   level:

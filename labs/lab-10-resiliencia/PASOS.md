@@ -1,7 +1,7 @@
 # Pasos · Lab 10 · Resiliencia
 
-Cinco pasos. Se trabaja en `practica/`, en vivo. Cada paso cambia un número que se mide en
-pantalla.
+Cuatro pasos y el paso 0. Se trabaja en `practica/`, en vivo. Cada paso cambia un número que se
+mide en pantalla.
 
 ```bash
 cd practica
@@ -15,7 +15,7 @@ hoy son dos archivos:
 
 ```
 tesoreria/ClienteTesoreria.java  →  paso 2 (el timeout)
-services/PagoService.java        →  pasos 3, 4 y 5
+services/PagoService.java        →  pasos 3 y 4
 ```
 
 **Un aviso antes de empezar:** los tiempos que salen abajo son los medidos al preparar el
@@ -40,10 +40,10 @@ curl -w "  (%{time_total}s)\n" http://localhost:8097/pagos/77
 **En consola:**
 
 ```
-{"estado":"PAGADO","monto":45000}  (0.197819s)
+{"estado":"PAGADO","monto":45000}  (0.134300s)
 ```
 
-Doscientas milésimas. Todo bien, y así se va a quedar exactamente un minuto.
+Trece centésimas. Todo bien, y así se va a quedar exactamente un minuto.
 
 ---
 
@@ -68,10 +68,10 @@ curl -w "  (%{time_total}s)\n" http://localhost:8097/pagos/77
 enteros, mirando la terminal:
 
 ```
-  el usuario esperó: 30.006042s
+  el usuario esperó: 30.012507s
 ```
 
-**Treinta segundos y seis milésimas.** Nuestra aplicación esperó todo lo que Tesorería quiso.
+**Treinta segundos y doce milésimas.** Nuestra aplicación esperó todo lo que Tesorería quiso.
 
 **Lo que hay que notar, y es la idea del paso:**
 
@@ -88,8 +88,8 @@ tienen nada que ver con Tesorería.
 
 ## Paso 2 · Fallar rápido
 
-**Se explica:** la primera medida no es reintentar ni nada sofisticado: es **decidir cuánto se
-está dispuesto a esperar**. Dos timeouts, que son cosas distintas:
+**Se explica:** la primera medida no es nada sofisticado: es **decidir cuánto se está dispuesto a
+esperar**. Dos timeouts, que son cosas distintas:
 
 - **de conexión** — cuánto se espera a que el otro extremo acepte la conexión
 - **de lectura** — cuánto se espera a que conteste, una vez conectado
@@ -113,7 +113,7 @@ import java.time.Duration;
     private static final Duration TIMEOUT_CONEXION = Duration.ofSeconds(2);
     private static final Duration TIMEOUT_LECTURA = Duration.ofSeconds(2);
 
-    public ClienteTesoreria(@Value("${lab09.tesoreria.puerto}") int puerto) {
+    public ClienteTesoreria(@Value("${lab10.tesoreria.puerto}") int puerto) {
         JdkClientHttpRequestFactory fabrica = new JdkClientHttpRequestFactory(
                 HttpClient.newBuilder().connectTimeout(TIMEOUT_CONEXION).build());
         fabrica.setReadTimeout(TIMEOUT_LECTURA);
@@ -133,12 +133,16 @@ import java.time.Duration;
 
 **Se corre:** mismo escenario, Tesorería a 30 segundos.
 
+```bash
+curl -X POST "http://localhost:8097/simulador/lenta?segundos=30"
+curl -w "\n  el usuario espera: %{time_total}s  (HTTP %{http_code})\n" http://localhost:8097/pagos/77
+```
+
 **En consola:**
 
 ```
-  el usuario espera: 2.040460s
-
-{"timestamp":"...","status":500,"error":"Internal Server Error","path":"/pagos/77"}
+{"timestamp":"2026-09-03T20:35:01.953Z","status":500,"error":"Internal Server Error","path":"/pagos/77"}
+  el usuario espera: 2.041250s  (HTTP 500)
 ```
 
 **De 30 segundos a 2.** El hilo se liberó y la aplicación sigue atendiendo a todos los demás.
@@ -149,94 +153,11 @@ import java.time.Duration;
 
 El usuario ya no espera medio minuto: ahora recibe un 500 en dos segundos. Es mejor —muchísimo
 mejor para el sistema— y sigue siendo un error en la cara de alguien que quería consultar su pago.
-Un timeout es la primera medida, no la última. Los tres pasos que quedan son sobre eso.
+Un timeout es la primera medida, no la última. Los dos pasos que quedan son sobre eso.
 
 ---
 
-## Paso 3 · Reintentar, y cuándo no
-
-**Se explica:** muchos fallos de red son **transitorios**: un paquete perdido, un reinicio de un
-segundo, el momento exacto en que el otro lado cerró la conexión. Reintentar cuesta poco y salva
-esos casos.
-
-**Se pega:** en `practica/src/main/java/cl/dgt/resiliencia/services/PagoService.java`,
-**arriba, con los demás `import`**:
-
-```java
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-```
-
-**Se pega:** en el mismo archivo, **entre los campos**: el `log` **encima** de
-`private final ClienteTesoreria cliente;`, y el reintento **debajo**.
-
-```java
-    private static final Logger log = LoggerFactory.getLogger(PagoService.class);
-```
-
-```java
-    private final Retry reintento;
-```
-
-**Se pega:** en el mismo archivo, **dentro del constructor**, después de `this.cliente = cliente;`.
-Ojo con esto: son sentencias, y van **dentro** del constructor — no sueltas en la clase.
-
-```java
-        this.reintento = Retry.of("tesoreria", RetryConfig.custom()
-                .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(200))
-                .build());
-
-        reintento.getEventPublisher().onRetry(e ->
-                log.info(">>> REINTENTO n.º {}", e.getNumberOfRetryAttempts()));
-```
-
-<!-- pasos:intermedio · el paso 4 envuelve esta llamada en el circuito -->
-
-```java
-    public Map<String, Object> consultar(String id) {
-        return Retry.decorateSupplier(reintento, () -> cliente.consultarPago(id)).get();
-    }
-```
-
-**Se corre:** otra vez Tesorería a 30 segundos.
-
-**En consola:**
-
-```
->>> REINTENTO n.º 1
->>> REINTENTO n.º 2
-  el usuario espera: 6.438910s      ← llamadas HTTP reales: 3
-```
-
-**Y aquí se para**, porque el número acaba de ir en la dirección equivocada:
-
-| | usuario espera | llamadas a Tesorería |
-|---|---|---|
-| paso 2, sólo timeout | 2,04 s | 1 |
-| paso 3, con 3 intentos | **6,44 s** | **3** |
-
-> **Reintentar un servicio caído lo empeora dos veces.** El usuario espera el triple, y el
-> servicio que se está muriendo recibe el triple de tráfico justo cuando menos puede con él.
-
-Eso tiene nombre —**tormenta de reintentos**— y es una de las formas más comunes de convertir una
-caída parcial en una caída total: mil clientes reintentando tres veces son tres mil peticiones
-sobre un servicio que ya no daba abasto con mil.
-
-La conclusión no es «no reintentar». Es:
-
-> Un reintento sirve cuando el fallo es **transitorio**. Contra un servicio que está caído de
-> verdad, hace falta algo que **deje de intentarlo**.
-
-Y eso es el paso 4.
-
----
-
-## Paso 4 · El circuito
+## Paso 3 · El circuito
 
 **Se explica:** el nombre viene del automático de la casa. Cuando hay un cortocircuito, el
 automático **salta y corta la corriente**: no porque el problema se arregle solo, sino para que no
@@ -254,21 +175,28 @@ Un circuit breaker de software hace lo mismo con las llamadas. Tres estados:
 **arriba, con los demás `import`**:
 
 ```java
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.function.Supplier;
 ```
 
-**Se pega:** en el mismo archivo, **entre los campos**, **encima** del reintento:
+**Se pega:** en el mismo archivo, **entre los campos**: el `log` **encima** de
+`private final ClienteTesoreria cliente;`, y el circuito **debajo**.
+
+```java
+    private static final Logger log = LoggerFactory.getLogger(PagoService.class);
+```
 
 ```java
     private final CircuitBreaker circuito;
 ```
 
-**Se pega:** en el mismo archivo, **dentro del constructor**, delante del reintento — el circuito
-se declara primero porque el reintento lo va a mencionar.
+**Se pega:** en el mismo archivo, **dentro del constructor**, después de `this.cliente = cliente;`.
+Ojo con esto: son sentencias, y van **dentro** del constructor — no sueltas en la clase.
 
 ```java
         CircuitBreakerConfig configuracion = CircuitBreakerConfig.custom()
@@ -281,38 +209,29 @@ se declara primero porque el reintento lo va a mencionar.
                 .build();
 
         this.circuito = CircuitBreaker.of("tesoreria", configuracion);
-```
 
-**Se pega:** y esto **al final del constructor**, justo **encima** del
-`reintento.getEventPublisher(...)` que pegaste en el paso 3. Los dos publicadores quedan juntos.
-
-```java
         circuito.getEventPublisher().onStateTransition(e ->
                 log.info(">>> CIRCUITO {} -> {}",
                         e.getStateTransition().getFromState(), e.getStateTransition().getToState()));
 ```
 
-y la llamada queda envuelta por los dos, con el reintento por fuera:
-
-```java
-        Supplier<Map<String, Object>> protegida =
-                Retry.decorateSupplier(reintento,
-                        CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id)));
-```
-
-Y una línea en la configuración del reintento que importa más de lo que parece:
-
-```java
-                .ignoreExceptions(CallNotPermittedException.class)
-```
-
-> Sin ella, cuando el circuito está abierto el reintento **reintenta el rechazo**: espera 400 ms
-> para volver a recibir un «no» instantáneo. Con ella, un circuito abierto responde en
-> milésimas — que es todo el sentido de abrirlo.
-
 **Los valores no son los de por defecto, y hay que decirlo:** de fábrica, el circuito pide **100
 llamadas** antes de opinar. En una sesión de tres horas no abriría nunca. Aquí se le pide una
-ventana de 5 llamadas y un 50 % de fallos.
+ventana de 5 llamadas y un 50 % de fallos, así que **abre a la quinta petición fallida** — el
+número importa para el `for` de más abajo.
+
+**Se pega:** en el mismo archivo, **reemplazando el cuerpo de `consultar`**: la llamada queda
+envuelta por el circuito.
+
+<!-- pasos:intermedio · el paso 4 le pone el try/catch alrededor -->
+
+```java
+    public Map<String, Object> consultar(String id) {
+        Supplier<Map<String, Object>> protegida =
+                CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id));
+        return protegida.get();
+    }
+```
 
 **Y hace falta poder mirarlo desde fuera**, porque el paso se demuestra con un `curl` contra el
 estado del circuito. Son dos métodos en el servicio y un endpoint en el controlador.
@@ -346,32 +265,47 @@ la clase**, debajo de `consultar`:
     }
 ```
 
-**Se corre:** Tesorería caída, y se pide varias veces mirando el contador.
+**Se corre:** el mismo escenario del paso 1 y del paso 2 —Tesorería a 30 segundos— y se pide
+**siete veces** mirando el contador. Siete y no tres: el circuito necesita cinco llamadas para
+opinar.
 
 ```bash
-curl -X POST http://localhost:8097/simulador/caida
-for i in 1 2 3; do curl -s -o /dev/null -w "%{time_total}s " http://localhost:8097/pagos/77;
-                   curl -s http://localhost:8097/pagos/estado-circuito; echo; done
+curl -X POST "http://localhost:8097/simulador/lenta?segundos=30"
+for i in 1 2 3 4 5 6 7; do
+  printf "petición %d: " $i
+  curl -s -o /dev/null -w "%{time_total}s  " http://localhost:8097/pagos/77
+  curl -s http://localhost:8097/pagos/estado-circuito; echo
+done
 ```
 
 **En consola:**
 
 ```
->>> CIRCUITO CLOSED -> OPEN
+petición 1: 2.038955s  circuito=CLOSED  httpReales=1
+petición 2: 2.015943s  circuito=CLOSED  httpReales=2
+petición 3: 2.013656s  circuito=CLOSED  httpReales=3
+petición 4: 2.008409s  circuito=CLOSED  httpReales=4
+petición 5: 2.015010s  circuito=OPEN    httpReales=5
+petición 6: 0.003290s  circuito=OPEN    httpReales=5
+petición 7: 0.003000s  circuito=OPEN    httpReales=5
 
-petición 1: 0.215079s  circuito=OPEN   httpReales=1
-petición 2: 0.002241s  circuito=OPEN   httpReales=1
-petición 3: 0.002180s  circuito=OPEN   httpReales=1
+>>> CIRCUITO CLOSED -> OPEN
 ```
 
 **Aquí se para y se señala el contador con el dedo.** `httpReales` es cuántas veces se salió de
 verdad a la red:
 
-> **No se mueve.** Se hicieron tres peticiones y sólo una tocó Tesorería. Las otras dos se
-> resolvieron aquí dentro, en dos milésimas — **cien veces más rápido** — y sin poner un gramo más
-> de peso sobre un servicio que está intentando levantarse.
+> **Deja de moverse.** Las peticiones 6 y 7 no tocaron Tesorería: se resolvieron aquí dentro, en
+> tres milésimas — **seiscientas veces más rápido que las cinco primeras** — y sin poner un gramo
+> más de peso sobre un servicio que está intentando levantarse.
 
-Ese es el doble regalo del circuito: protege a quien llama **y** a quien es llamado.
+Ese es el doble regalo del circuito: protege a quien llama **y** a quien es llamado. Y el arco de
+la sesión ya está entero, con los tres números del mismo escenario:
+
+```
+30,01 s   →   2,04 s   →   0,003 s
+sin nada      timeout       circuito abierto
+```
 
 ### Y ahora la vuelta
 
@@ -383,6 +317,7 @@ curl -X POST http://localhost:8097/simulador/sana
 sleep 11
 curl http://localhost:8097/pagos/77
 curl http://localhost:8097/pagos/77
+curl http://localhost:8097/pagos/estado-circuito
 ```
 
 **En consola:**
@@ -390,6 +325,8 @@ curl http://localhost:8097/pagos/77
 ```
 >>> CIRCUITO OPEN -> HALF_OPEN
 >>> CIRCUITO HALF_OPEN -> CLOSED
+
+{"llamadasHTTPReales":2,"estado":"CLOSED","tasaDeFallo":-1.0,"llamadasFallidas":0,"llamadasExitosas":0}
 ```
 
 **Lo que hay que notar:** nadie avisó al circuito de que Tesorería volvió. Pasados los 10 segundos
@@ -397,11 +334,13 @@ dejó pasar dos llamadas de prueba, salieron bien, y cerró solo. **Se recupera 
 humana**, que es justo lo que se quiere de un sistema a las tres de la mañana.
 
 (Detalle fino, por si alguien mira el estado justo después del `sleep`: sigue diciendo `OPEN`
-hasta que llega la siguiente llamada. La transición a `HALF_OPEN` ocurre al intentar, no por reloj.)
+hasta que llega la siguiente llamada. La transición a `HALF_OPEN` ocurre al intentar, no por reloj.
+Y `tasaDeFallo: -1.0` no es un error: es como dice Resilience4j «todavía no tengo cinco llamadas
+para opinar».)
 
 ---
 
-## Paso 5 · Qué se responde cuando no hay respuesta
+## Paso 4 · Qué se responde cuando no hay respuesta
 
 **Se explica:** queda la última pieza, y **no es técnica**. El circuito ya protege el sistema, pero
 el usuario sigue recibiendo un error. La pregunta del paso es de negocio:
@@ -423,8 +362,7 @@ seguir su curso.
 ```java
     public Map<String, Object> consultar(String id) {
         Supplier<Map<String, Object>> protegida =
-                Retry.decorateSupplier(reintento,
-                        CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id)));
+                CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id));
         try {
             return protegida.get();
         } catch (Exception e) {
@@ -437,17 +375,32 @@ seguir su curso.
 
 **Se corre:** con Tesorería caída.
 
+```bash
+curl -X POST http://localhost:8097/simulador/caida
+curl -w "\n  (HTTP %{http_code}, %{time_total}s)\n" http://localhost:8097/pagos/77
+```
+
 **En consola:**
 
 ```json
 {"estado":"DESCONOCIDO","id":"77","aviso":"Tesorería no responde; el trámite sigue su curso"}
+  (HTTP 200, 0.137039s)
 ```
 
 Y en el log del servidor:
 
 ```
+WARN  Tesorería no respondió (InternalServerError). Se degrada.
+```
+
+Con el circuito ya abierto, el mismo `curl` dice otra cosa en el log, y merece señalarse:
+
+```
 WARN  Tesorería no respondió (CallNotPermittedException). Se degrada.
 ```
+
+**No es la misma avería.** La primera es «Tesorería contestó mal»; la segunda es «ni lo intenté,
+porque mi propio circuito está abierto». Al usuario se le responde igual; al equipo, no.
 
 **Lo que hay que notar, y es el cierre del laboratorio:**
 
@@ -460,23 +413,56 @@ WARN  Tesorería no respondió (CallNotPermittedException). Se degrada.
 
 ---
 
+## Lo que no vimos hoy
+
+Cuatro piezas que van en la misma caja de herramientas y que no caben en una sesión. Se nombran,
+porque saber que existen vale más que no haberlas oído nunca.
+
+**El reintento.** Es la primera que alguien va a proponer, y tiene una regla de una línea:
+
+> Un reintento sirve cuando el fallo es **transitorio** —un paquete perdido, un reinicio de un
+> segundo, la conexión que el otro lado acababa de cerrar—. Contra un servicio que está caído de
+> verdad, **lo empeora dos veces**: el usuario espera el triple y el servicio moribundo recibe el
+> triple de tráfico.
+
+Eso último tiene nombre —**tormenta de reintentos**— y es una de las formas más comunes de
+convertir una caída parcial en una caída total: mil clientes reintentando tres veces son tres mil
+peticiones sobre un servicio que ya no daba abasto con mil. Por eso el reintento va **siempre**
+acompañado de un circuito, nunca solo.
+
+**Backoff exponencial con jitter.** Si se reintenta, no se hace a intervalo fijo: se espera 200 ms,
+luego 400, luego 800, y a cada espera se le suma un margen aleatorio. El margen es lo que impide
+que mil clientes reintenten todos en el mismo milisegundo.
+
+**Bulkheads.** Reservar un número fijo de hilos por dependencia, para que la que se cuelga no se
+lleve por delante los hilos que atienden a todo lo demás. Es el mamparo de un barco: se inunda un
+compartimento, no el casco.
+
+**Rate limiting.** Protegerse del exceso de llamadas *entrantes*, que es el problema simétrico del
+de hoy. Hoy nos defendimos de un servicio que no contesta; mañana hay que defenderse de un cliente
+que llama demasiado.
+
+---
+
 ## Al terminar
 
 `practica/` da los mismos números que `solucion/`:
 
 | situación | espera | llamadas HTTP |
 |---|---|---|
-| sana | 0,15 s | 1 |
-| lenta, 3 intentos | 6,44 s | 3 |
-| caída, primera | 0,22 s | 1 |
-| caída, circuito abierto | **0,002 s** | **0** |
+| sana | 0,13 s | 1 |
+| lenta, sin timeout | **30,01 s** | 1 |
+| lenta, con timeout | 2,04 s — y un 500 | 1 |
+| lenta, circuito abierto | **0,003 s** | **0** |
+| caída, con degradación | 0,14 s — y un 200 honesto | 1 |
 
 Lo que hay que poder decir con las propias palabras:
 
 > Un cliente HTTP sin timeout espera para siempre, y eso no es un fallo del otro: es mi
-> configuración. Un timeout convierte una espera infinita en un error rápido. Un reintento sirve
-> para fallos pasajeros y empeora las caídas de verdad. Y un circuito abierto es la forma de
-> dejar de golpear a alguien que ya está en el suelo.
+> configuración. Un timeout convierte una espera infinita en un error rápido. Un circuito abierto
+> es la forma de dejar de golpear a alguien que ya está en el suelo — y de contestar al instante
+> mientras tanto. Y la última decisión no es técnica: es qué se le dice al usuario cuando no hay
+> respuesta.
 
 ### Lo que siembra este lab
 
@@ -497,5 +483,5 @@ vuelve hoy multiplicado: **el sistema aguanta, y sigue siendo mudo.**
 > sus propios problemas mejor que uno frágil. ¿Cómo se hace para que la aplicación **diga** lo
 > que está viviendo?
 
-Esa es la materia del laboratorio de observabilidad: métricas, health checks y un log que se
-pueda seguir. Con lo de hoy, además, ya hay algo concreto que medir.
+Esa es la materia del laboratorio de observabilidad: health checks y un log que se pueda seguir.
+Con lo de hoy, además, ya hay algo concreto que contar.

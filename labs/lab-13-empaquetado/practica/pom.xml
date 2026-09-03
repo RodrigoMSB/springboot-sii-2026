@@ -19,7 +19,6 @@
 
   <properties>
     <java.version>25</java.version>
-    <jib.version>3.5.2</jib.version>
   </properties>
 
   <dependencies>
@@ -41,9 +40,6 @@
         <!-- Paso 2 · activa el jar por capas. -->
         <!-- escribe aquí -->
       </plugin>
-
-      <!-- Paso 4 · declara el plugin de Jib: imagen base, nombre de la imagen y puerto. -->
-      <!-- escribe aquí -->
     </plugins>
   </build>
 </project>

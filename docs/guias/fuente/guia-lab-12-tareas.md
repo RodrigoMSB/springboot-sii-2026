@@ -5,7 +5,7 @@ date: "60 minutos · Spring Boot 4.1.0 · Java 25 (Temurin)"
 abstract-title: "Lo que se demuestra"
 abstract: |
   Que hay trabajo que debe ocurrir sin que nadie lo pida, y trabajo que no debe hacer esperar a
-  quien está en la ventanilla: **3,011 s el envío síncrono, 0,003 s el asíncrono**. Y el problema
+  quien está en la ventanilla: **3,02 s el envío síncrono, 0,004 s el asíncrono**. Y el problema
   que nadie ve venir cuando la aplicación se despliega dos veces.
 lang: es
 ---
@@ -62,9 +62,6 @@ una decisión sobre cómo se programa que parece un detalle y no lo es:
 - *«empieza cada 5 minutos»* — si un día el cierre tarda 6, **empieza el siguiente con el anterior
   a medias**. Dos personas cuadrando las mismas cuentas a la vez.
 - *«empieza 5 minutos después de terminar el anterior»* — nunca se solapan. Es lo que se usa aquí.
-
-**El recordatorio de las nueve.** Ése no es «cada tanto»: es **a una hora**. Y una hora sin decir de
-dónde —qué huso— es media hora de diferencia el día que el servidor esté en otro sitio.
 
 **Y el correo del mostrador.** Cuando emites un trámite hay que avisar por correo. El correo tarda
 un segundo. **Multiplicado por tres destinatarios, el ciudadano espera tres segundos delante de la
@@ -132,11 +129,11 @@ Archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/CierreNoctur
 **Sin llamar a nada**, sólo esperando:
 
 ``` text
-[CIERRE] instancia-8103 · vuelta 1 · 01:16:15
-[CIERRE] instancia-8103 · vuelta 2 · 01:16:21
-[CIERRE] instancia-8103 · vuelta 3 · 01:16:27
-[CIERRE] instancia-8103 · vuelta 4 · 01:16:33
-[CIERRE] instancia-8103 · vuelta 5 · 01:16:39
+[CIERRE] vuelta 1 · 01:16:15 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 2 · 01:16:21 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 3 · 01:16:27 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 4 · 01:16:33 · hilo Thread[#63,scheduling-1,5,main]
+[CIERRE] vuelta 5 · 01:16:39 · hilo Thread[#63,scheduling-1,5,main]
 ```
 
 **Mira los segundos: 15, 21, 27, 33, 39.** Entre vuelta y vuelta pasan **6 segundos**, no 5.
@@ -168,73 +165,7 @@ lsof -ti:8103 | xargs kill -9
 ```
 :::
 
-## Paso 2 · Cron, y cómo se lee
-
-### Qué vamos a hacer
-
-Una tarea que corre **a una hora**, no cada tanto.
-
-### Para entenderlo mejor
-
-El recordatorio de las nueve. No es «cada doce horas»: es **a las nueve**.
-
-### El problema
-
-`fixedDelay` sirve para cadencias. No sirve para «todos los días a las 2 de la mañana», que es
-lo que pide casi cualquier proceso de cierre real.
-
-### La alternativa, y por qué no
-
-`fixedDelay` cuando importa **el intervalo**; `cron` cuando importa **la hora**. No son
-intercambiables: un `fixedDelay` de 24 horas se va desplazando con cada reinicio.
-
-**Y la parte que hay que escribir siempre: la zona.** Sin `zone`, la expresión se interpreta en la
-zona de la máquina — que en tu portátil es la de aquí y en el servidor suele ser UTC. Un «a las 2
-de la mañana» que en producción ocurre a las 22:00 del día anterior es un error que **no se ve
-hasta que alguien mira los datos**. Y con horario de verano, la misma expresión salta una hora dos
-veces al año.
-
-Once caracteres, y quita una clase entera de incidentes.
-
-### Se pega
-
-Archivo **nuevo** `practica/src/main/java/cl/dgt/tareas/programadas/Recordatorio.java` — entero:
-
-{{codigo lab=lab-12-tareas archivo=src/main/java/cl/dgt/tareas/programadas/Recordatorio.java modo=entero lenguaje=java}}
-
-:::  nota
-**El cron de Spring tiene SEIS campos, no cinco.** Segundo, minuto, hora, día del mes, mes, día de
-la semana. Casi todo lo que encuentres en internet es el cron de Unix, de cinco — y al pegarlo aquí
-se desplaza todo un campo.
-:::
-
-### Lo que vas a ver
-
-``` text
-[CRON] recordatorio · 01:16:20
-[CRON] recordatorio · 01:16:30
-[CRON] recordatorio · 01:16:40
-[CRON] recordatorio · 01:16:50
-```
-
-**Segundos 20, 30, 40, 50: clavados.** A diferencia del `fixedDelay`, aquí no importa cuánto tarde
-la tarea: la hora es la hora.
-
-::: vasbien
-Las líneas `[CRON]` caen en segundos exactos múltiplos de diez, y las `[CIERRE]` no.
-:::
-
-::: atasco
-**1 · `Cron expression must consist of 6 fields`**
-
-Pegaste un cron de Unix, de cinco campos. Le falta el de los segundos delante.
-
-**2 · Corre, pero a una hora que no esperabas.**
-
-Falta `zone`, y se está usando la del servidor.
-:::
-
-## Paso 3 · Que el usuario no espere
+## Paso 2 · Que el usuario no espere
 
 ### Qué vamos a hacer
 
@@ -302,8 +233,8 @@ curl -s -o /dev/null -w '%{time_total}s\n' -X POST localhost:8103/tramites/asinc
 ### Lo que vas a ver
 
 ``` text
-3.011754s     <- síncrono
-0.003141s     <- asíncrono
+3.018813s     <- síncrono
+0.004011s     <- asíncrono
 ```
 
 **Tres segundos contra tres milésimas.** Mil veces.
@@ -333,7 +264,7 @@ Mira si hubo una excepción en el hilo de fondo. Con `@Async` y `void`, **la exc
 quien llamó**: si nadie la registra, desaparece.
 :::
 
-## Paso 4 · Hilos virtuales
+## Paso 3 · Hilos virtuales
 
 ### Qué vamos a hacer
 
@@ -378,9 +309,9 @@ curl -s localhost:8103/tramites/quien
 ```
 
 ``` text
-{"esVirtual":true,
- "hiloQueAtiende":"VirtualThread[#70,tomcat-handler-2]/runnable@ForkJoinPool-1-worker-2",
- "instancia":"instancia-8103"}
+{"vueltasDelCierre":4,
+ "hiloQueAtiende":"VirtualThread[#68,tomcat-handler-0]/runnable@ForkJoinPool-1-worker-2",
+ "esVirtual":true}
 ```
 
 **Antes decía `Thread[#58,http-nio-8103-exec-1,5,main]` y `esVirtual: false`.** Una línea de
@@ -397,59 +328,6 @@ No reiniciaste, o la línea quedó mal indentada y la propiedad no se leyó. `vi
 `threads`, y `threads` bajo `spring`.
 :::
 
-## Paso 5 · El problema que nadie ve venir
-
-### Qué vamos a hacer
-
-Entender qué pasa con las tareas programadas cuando la aplicación **corre dos veces**. Este paso es
-de leer y pensar.
-
-### Para entenderlo mejor
-
-La DGT abre una segunda sede para atender más público. Las dos sedes tienen el mismo manual, y el
-manual dice *«a las 2 de la mañana se hace el cierre»*.
-
-**A las 2 de la mañana se hace el cierre dos veces.**
-
-### El problema
-
-`@Scheduled` dispara **en cada instancia**. Es exactamente lo que quieres para escalar el tráfico
-HTTP, y exactamente lo que no quieres para un proceso de cierre: dos cierres simultáneos sobre las
-mismas filas es un problema de datos.
-
-Y es un problema que **no aparece en desarrollo**, donde siempre corre una sola instancia. Aparece
-el día del segundo despliegue.
-
-### La alternativa, y por qué no
-
-- **Que sólo una instancia tenga las tareas activas** (un perfil): simple, y esa instancia pasa a
-  ser un punto único de fallo — si se cae, no hay cierre.
-- **Un candado en la base**, como el del Lab 07: la instancia que lo consigue ejecuta; las demás
-  pasan de largo. Barato, y ya tienes la base.
-- **Un planificador con estado compartido** (Quartz en modo clúster, ShedLock): resuelve esto
-  exactamente, y es otra pieza que operar.
-
-**Ninguna se implementa hoy**, y conviene saber por qué: el objetivo del paso es que reconozcas el
-problema. Lo peor que puede pasar con las tareas programadas es desplegar la segunda instancia sin
-haber pensado en esto.
-
-### Se comprueba
-
-Puedes verlo tú mismo: arranca **la solución además de tu práctica** —usan puertos distintos— y
-mira las dos consolas. Las dos imprimen `[CIERRE]`, cada una por su cuenta.
-
-``` text
-[CIERRE] instancia-8103 · vuelta 1 ...
-[CIERRE] instancia-8104 · vuelta 1 ...
-```
-
-**Dos instancias, dos cierres.** Ese `instancia-XXXX` está en la salida justo para esto.
-
-::: vasbien
-Puedes explicar por qué dos instancias hacen el cierre dos veces, y nombrar al menos dos formas de
-evitarlo.
-:::
-
 # Lo que aprendiste
 
 **1 · `fixedDelay` y `fixedRate` no son lo mismo, y el defecto correcto es `fixedDelay`.**
@@ -457,33 +335,71 @@ evitarlo.
 Lo viste en los segundos: 15, 21, 27 — seis, no cinco. Con `fixedRate`, el día que la tarea tarde
 más que el intervalo, se solapan.
 
-**2 · Un `cron` sin zona es un error esperando al despliegue.**
+**2 · `@Async` saca el trabajo del camino del usuario — y funciona por un proxy.**
 
-Seis campos, no cinco, y la zona escrita. Sin ella, la hora la decide el servidor.
+3,02 s contra 0,004 s. Y llamarlo desde la misma clase lo convierte en síncrono **sin avisar**.
 
-**3 · `@Async` saca el trabajo del camino del usuario — y funciona por un proxy.**
+**3 · Los hilos virtuales son una línea de YAML, y sirven para esperar.**
 
-3,011 s contra 0,003 s. Y llamarlo desde la misma clase lo convierte en síncrono **sin avisar**.
+`esVirtual` pasó de `false` a `true` sin tocar una línea de código. Para trabajo que calcula no
+cambian nada: los núcleos siguen siendo los que son.
 
-**4 · Las tareas programadas se disparan en todas las instancias.**
+# Lo que no vimos hoy
 
-Es el problema que no aparece en tu máquina y aparece en el segundo despliegue. Reconocerlo vale
-más que cualquiera de las tres soluciones.
+**El `cron`.** `fixedDelay` sirve para «cada tanto»; para «todos los días a las 3 de la mañana»
+hace falta `@Scheduled(cron = "0 0 3 * * *", zone = "America/Santiago")`. Dos advertencias sobre
+esa línea:
+
+- **El cron de Spring tiene SEIS campos, no cinco** — segundo, minuto, hora, día del mes, mes, día
+  de la semana. Casi todo lo que encuentres en internet es el cron de Unix, de cinco, y al pegarlo
+  aquí **no da error**: se corre un campo y la tarea se ejecuta a una hora que no es.
+- **La zona se escribe siempre.** Sin ella la decide el servidor, que en producción suele estar en
+  UTC. Un cierre «a las 3» se ejecutaría a las 23:00 o a la medianoche según la época del año,
+  porque Chile cambia la hora y UTC no.
+
+**El problema de las dos instancias.** La DGT abre una segunda sede para atender más público. Las
+dos tienen el mismo manual, y el manual dice *«a las 2 de la mañana se hace el cierre»*.
+
+> **A las 2 de la mañana se hace el cierre dos veces.**
+
+`@Scheduled` dispara **en cada instancia**: cada JVM tiene su planificador y su reloj, y ninguna
+sabe que la otra existe. Es exactamente lo que quieres para escalar el tráfico HTTP y exactamente
+lo que no quieres para un cierre. Y no aparece en desarrollo, donde siempre corre una sola
+instancia: aparece el día del segundo despliegue.
+
+Las salidas, y ninguna es gratis:
+
+- **Que sólo una instancia tenga las tareas activas** (un perfil): simple, y esa instancia pasa a
+  ser un punto único de fallo — si se cae, no hay cierre.
+- **Un candado en la base**, como el del Lab 07: la instancia que lo consigue ejecuta; las demás
+  pasan de largo. Barato, y ya tienes la base. **Ojo**: aquel candado del Lab 07 funciona entre
+  procesos precisamente porque vive en la base. Lo que no funciona entre procesos es
+  `synchronized`, que es memoria de una sola JVM.
+- **Un planificador con estado compartido** (Quartz en clúster, ShedLock): resuelve esto
+  exactamente, y es otra pieza que operar.
+
+Lo importante no es cuál elijas: es **saber que hace falta elegir**.
+
+Y dos cosas más que quedan fuera:
+
+- **Colas de mensajes** (RabbitMQ, Kafka), para cuando el trabajo asíncrono tenga que sobrevivir a
+  que el proceso se caiga. `@Async` vive en memoria: si la aplicación muere, el aviso se pierde.
+- **Planificadores fuera de la aplicación**: el cron del orquestador llamando a un endpoint.
 
 # Para profundizar
 
 - **Cambia `fixedDelay` por `fixedRate`** y sube el `Thread.sleep` a 7 segundos. Mira los
   timestamps: verás dos ejecuciones solapadas.
-- **Quita el `zone`** del cron y compara con la hora de tu reloj.
 - **Llama a `notificarAsincrono` desde otro método de la misma clase** y mide. Vas a ver los 3
   segundos otra vez: es el proxy.
 - **Haz que el método `@Async` lance una excepción** y mira si te enteras. Después cámbialo para
   que devuelva `CompletableFuture` y prueba otra vez.
-- **Arranca práctica y solución a la vez** y mira los dos `[CIERRE]`.
+- **Arranca práctica y solución a la vez** y mira los dos `[CIERRE]` en el mismo segundo. Es el
+  problema de las dos instancias, en tu máquina.
 
 # Antes de cerrar
 
-**Párala con `Ctrl+C`** — y si arrancaste también la solución, para las dos.
+**Párala con `Ctrl+C`.**
 
 ``` bash
 ./mvnw clean
@@ -491,8 +407,8 @@ más que cualquiera de las tres soluciones.
 
 **Lo que te llevas:**
 
-> `@Scheduled` para el trabajo que ocurre solo, con `fixedDelay` por defecto y `cron` con zona
-> cuando importa la hora. `@Async` para el trabajo que no debe hacer esperar — y ojo con el proxy.
+> `@Scheduled` para el trabajo que ocurre solo, con `fixedDelay` por defecto. `@Async` para el
+> trabajo que no debe hacer esperar — y ojo con el proxy. Los hilos virtuales, una línea de YAML.
 > Y todo esto se dispara en cada instancia.
 
 **Lo que queda pendiente, y abre el Lab 13:** tu aplicación funciona **en tu máquina**. Para que

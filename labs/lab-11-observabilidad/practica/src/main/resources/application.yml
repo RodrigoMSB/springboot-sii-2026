@@ -5,26 +5,20 @@ spring:
   application:
     name: lab11-observabilidad
 
-  datasource:
-    url: jdbc:postgresql://localhost:55442/postgres
-    username: postgres
-    hikari:
-      connection-timeout: 2000
-      initialization-fail-timeout: -1
-
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
   flyway:
     locations: classpath:db/migration
 
-lab10:
+lab11:
   base:
     puerto: 55442
 
-# Paso 1 · expón health, info y metrics, y sólo eso.
-# Paso 4 · muestra el detalle del health.
-# Paso 5 · enciende las sondas y mete la base en el grupo readiness.
+# Paso 1 · expón health e info, y sólo eso.
+# Paso 3 · muestra el detalle del health, enciende las sondas y mete la base
+#          en el grupo readiness.
 # escribe aquí
 
 logging:

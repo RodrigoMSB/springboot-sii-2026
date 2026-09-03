@@ -19,7 +19,6 @@
 
   <properties>
     <java.version>25</java.version>
-    <jib.version>3.5.2</jib.version>
   </properties>
 
   <dependencies>
@@ -45,29 +44,6 @@
           <layers>
             <enabled>true</enabled>
           </layers>
-        </configuration>
-      </plugin>
-
-      <!-- Imagen OCI sin demonio Docker (paso 4). -->
-      <plugin>
-        <groupId>com.google.cloud.tools</groupId>
-        <artifactId>jib-maven-plugin</artifactId>
-        <version>${jib.version}</version>
-        <configuration>
-          <from>
-            <image>eclipse-temurin:25-jre</image>
-          </from>
-          <to>
-            <image>lab13-empaquetado:0.1.0</image>
-          </to>
-          <container>
-            <ports>
-              <port>8106</port>
-            </ports>
-            <environment>
-              <SPRING_PROFILES_ACTIVE>prod</SPRING_PROFILES_ACTIVE>
-            </environment>
-          </container>
         </configuration>
       </plugin>
     </plugins>

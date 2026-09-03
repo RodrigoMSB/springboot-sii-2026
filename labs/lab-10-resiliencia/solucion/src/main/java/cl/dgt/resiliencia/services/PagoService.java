@@ -1,11 +1,8 @@
 package cl.dgt.resiliencia.services;
 
 import cl.dgt.resiliencia.tesoreria.ClienteTesoreria;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,7 +18,6 @@ public class PagoService {
 
     private final ClienteTesoreria cliente;
     private final CircuitBreaker circuito;
-    private final Retry reintento;
 
     public PagoService(ClienteTesoreria cliente) {
         this.cliente = cliente;
@@ -39,27 +35,16 @@ public class PagoService {
 
         this.circuito = CircuitBreaker.of("tesoreria", configuracion);
 
-        this.reintento = Retry.of("tesoreria", RetryConfig.custom()
-                .maxAttempts(3)
-                .waitDuration(Duration.ofMillis(200))
-                // Con el circuito abierto no se reintenta: reintentar un rechazo instantáneo es
-                // esperar 400 ms para nada, y borra el efecto que el paso 4 quiere mostrar.
-                .ignoreExceptions(CallNotPermittedException.class)
-                .build());
-
-        // Los cambios de estado salen por consola: son el contenido del paso 4.
+        // Los cambios de estado salen por consola: son el contenido del paso 3.
         circuito.getEventPublisher().onStateTransition(e ->
                 log.info(">>> CIRCUITO {} -> {}",
                         e.getStateTransition().getFromState(), e.getStateTransition().getToState()));
-        reintento.getEventPublisher().onRetry(e ->
-                log.info(">>> REINTENTO n.º {}", e.getNumberOfRetryAttempts()));
     }
 
-    /** Paso 5: si no hay respuesta, se responde igual — con lo que se sabe. */
+    /** Paso 4: si no hay respuesta, se responde igual — con lo que se sabe. */
     public Map<String, Object> consultar(String id) {
         Supplier<Map<String, Object>> protegida =
-                Retry.decorateSupplier(reintento,
-                        CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id)));
+                CircuitBreaker.decorateSupplier(circuito, () -> cliente.consultarPago(id));
         try {
             return protegida.get();
         } catch (Exception e) {

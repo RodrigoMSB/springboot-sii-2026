@@ -12,7 +12,7 @@ public class TesoreriaSimulada {
 
     // WireMock como librería en este mismo proceso: sin Docker y sin un segundo terminal.
     @Bean(destroyMethod = "stop")
-    WireMockServer tesoreria(@Value("${lab09.tesoreria.puerto}") int puerto) {
+    WireMockServer tesoreria(@Value("${lab10.tesoreria.puerto}") int puerto) {
         WireMockServer servidor = new WireMockServer(WireMockConfiguration.options().port(puerto));
         servidor.start();
         sana(servidor);
