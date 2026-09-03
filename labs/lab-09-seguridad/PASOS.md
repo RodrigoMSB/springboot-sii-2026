@@ -119,16 +119,19 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Configuration
 public class SeguridadConfig {
@@ -151,7 +154,7 @@ public class SeguridadConfig {
 
     @Bean
     PasswordEncoder codificadorDeClaves() {
-        return new BCryptPasswordEncoder();
+        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
     }
 
     @Bean
@@ -170,7 +173,11 @@ public class SeguridadConfig {
 
     @Bean
     JwtDecoder decodificadorDeTokens() {
-        return NimbusJwtDecoder.withSecretKey(clave()).build();
+        NimbusJwtDecoder decodificador = NimbusJwtDecoder.withSecretKey(clave()).build();
+
+        decodificador.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                new JwtTimestampValidator(Duration.ZERO)));
+        return decodificador;
     }
 }
 ```
@@ -226,13 +233,19 @@ La salida no es cifrar —cifrar es reversible— sino guardar un **hash**: una 
 sentido. Al hacer login se vuelve a calcular y se comparan los hashes; la clave original **no
 existe en ninguna parte del sistema**.
 
-BCrypt añade dos cosas sobre un hash normal:
+**Argon2** —concretamente **Argon2id**, que es lo que recomienda OWASP hoy— añade tres cosas
+sobre un hash normal:
 
 - **Sal**: un valor aleatorio distinto por contraseña, que se guarda dentro del propio hash. Por
   eso dos personas con la misma clave tienen hashes distintos, y por eso no sirve una tabla de
   hashes precalculada.
-- **Costo**: es **lento a propósito**. El `10` del hash significa 2¹⁰ vueltas. Al que hace login
-  le cuesta unos milisegundos; al que prueba millones de claves por segundo le arruina el negocio.
+- **Costo en tiempo**: es **lento a propósito**. Al que hace login le cuesta unos milisegundos; al
+  que prueba millones de claves por segundo le arruina el negocio.
+- **Y costo en MEMORIA**, que es lo que lo distingue de BCrypt y la razón de que hoy se prefiera:
+  cada cálculo exige reservar **16 MB**. Una GPU tiene miles de núcleos y muy poca memoria por
+  núcleo, así que el ataque por fuerza bruta que hace a BCrypt vulnerable —lanzar veinte mil
+  cálculos en paralelo en una tarjeta gráfica— aquí choca contra la RAM. Ésa es la debilidad de
+  BCrypt hoy, y es la que Argon2 tapa.
 
 El `PasswordEncoder` ya está declarado desde el paso 2. Faltan las dos clases que lo usan.
 
@@ -313,19 +326,25 @@ public class SembradorDeUsuarios implements CommandLineRunner {
 
 ```
 [semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)
-[semilla] ana   ADMIN    $2a$10$z2RuZ6YymqMEOa9haqcN2.m1B31q1pL1oGfPzUUaYNbi43Lor3Lsy
-[semilla] luis  USUARIO  $2a$10$RBxoDtr9qH5oevKTWzwRaeKxD0Oc2pXrQtT07ayvBXO2h09HtqiN2
+[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$6pRDZ7pRwU3jaaV9oNK7Ag$EtTVmBMJb4eWLzEg3NvxJqDad+X7GbuBHBpFJiTBD/A
+[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$DiTWa388g9rj7QMybwv78A$irfjVwPs8vDvX75eHbmMeeWH6WbtpD2SSyInaxrsYeU
 ```
 
 **Aquí se para y se mira.** Las dos claves son `secreta` — la misma palabra— y los dos hashes no
 se parecen en nada. Se lee el formato en voz alta:
 
 ```
-$2a$ 10 $ z2RuZ6YymqMEOa9haqcN2. m1B31q1pL1oGfPzUUaYNbi43Lor3Lsy
- │    │   └── sal (22 car.)      └── el hash propiamente tal
- │    └── costo: 2^10 vueltas
- └── algoritmo BCrypt
+$argon2id$ v=19 $ m=16384,t=2,p=1 $ 6pRDZ7pRwU3jaaV9oNK7Ag $ EtTVmBMJb4eWLz...
+    │        │          │                    │                      │
+    │        │          │                    └── la sal             └── el hash
+    │        │          └── 16 MB de memoria, 2 pasadas, 1 hilo
+    │        └── versión del algoritmo
+    └── la variante: Argon2**id**, la recomendada
 ```
+
+**El `m=16384` es el número que hay que señalar**: son 16 MB de RAM por cada cálculo. Es lo que
+BCrypt no tiene, y lo que hace que una GPU —miles de núcleos, poquísima memoria cada uno— no pueda
+paralelizar el ataque.
 
 La guarda `if (repositorio.count() == 0)` envuelve **sólo la siembra**, no el método entero: por
 eso los hashes también salen en la segunda corrida, cuando la tabla ya está poblada. La base
@@ -499,34 +518,44 @@ lab09:
     vigencia-segundos: 40
 ```
 
-Se reinicia, se pide un token y se vuelve a usar dos veces, con paciencia:
+Se reinicia, se pide un token, se espera y se vuelve a usar:
 
 ```
 $ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
        http://localhost:8095/productos
 200        ← recién emitido
 
-  (a los 50 segundos, con el token ya vencido según su propio `exp`)
-200        ← todavía pasa
+  (a los 32 segundos)
+200        ← todavía vale
 
-  (a los 101 segundos)
+  (a los 40 segundos)
 $ curl -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" \
        http://localhost:8095/productos
 401        ← vencido
 ```
 
-**Los cien segundos no son un error de la demo: son la lección.** El token decía `exp` a los 40
-segundos y siguió pasando cuarenta más. La razón es que `NimbusJwtDecoder` aplica de fábrica una
-**tolerancia de reloj de 60 segundos**: acepta un token vencido hace menos de un minuto, porque el
-reloj del emisor y el del verificador no tienen por qué estar sincronizados al segundo, y rechazar
-un token por medio segundo de deriva sería peor que aceptarlo por medio minuto.
+**Cuarenta segundos, los que dice el yml.** Nadie escribió la comprobación de la fecha: la hace el
+`JwtDecoder` solo, leyendo el claim `exp`.
 
-O sea: **40 de vigencia + 60 de tolerancia = 100 segundos.** Conviene decirlo en voz alta, porque
-si no, la sala ve un 200 donde esperaba un 401 y concluye que la expiración no funciona.
+> **Y aquí hay una línea de `SeguridadConfig` que hay que señalar**, porque de fábrica esto NO
+> saldría así:
+>
+> ```java
+>         decodificador.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+>                 new JwtTimestampValidator(Duration.ZERO)));
+> ```
+>
+> `NimbusJwtDecoder` viene con una **tolerancia de reloj de 60 segundos**: acepta un token vencido
+> hace menos de un minuto. Sin poner esa tolerancia a cero, un token de 40 segundos viviría **100**
+> —40 de vigencia más 60 de gracia— y la demo no cuadraría con lo que dice el yml.
+>
+> **En producción esa tolerancia se deja puesta**, y por una razón buena: los relojes de dos
+> servidores nunca coinciden al segundo, y rechazar un token por medio segundo de deriva es peor
+> que aceptarlo por medio minuto. Aquí se pone a cero **sólo** para que el laboratorio pueda
+> enseñar la expiración sin pedirle a la sala que espere minuto y medio.
 
-Nadie escribió la comprobación de la fecha: la hace el `JwtDecoder` solo, leyendo el claim `exp` —
-y la tolerancia también es suya. **Se vuelve a dejar en `1800`** antes de seguir, o el resto del
-laboratorio obliga a hacer login cada dos curl.
+**Se vuelve a dejar la vigencia en `1800`** antes de seguir, o el resto del laboratorio obliga a
+hacer login cada dos curl.
 
 ---
 

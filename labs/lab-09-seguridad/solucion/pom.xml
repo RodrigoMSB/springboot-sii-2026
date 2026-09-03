@@ -20,6 +20,7 @@
   <properties>
     <java.version>25</java.version>
     <zonky.version>2.2.2</zonky.version>
+    <bouncycastle.version>1.82</bouncycastle.version>
   </properties>
 
   <dependencies>
@@ -41,6 +42,17 @@
     </dependency>
 
     <!-- Los usuarios viven en la base; los productos siguen en memoria. -->
+
+    <!-- Argon2 lo implementa BouncyCastle: `Argon2PasswordEncoder` es una fachada de Spring
+         Security sobre él, y sin esta dependencia el arranque muere con
+         NoClassDefFoundError: org/bouncycastle/crypto/params/Argon2Parameters$Builder.
+         Spring Security la declara `optional`, así que hay que pedirla a mano. -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>

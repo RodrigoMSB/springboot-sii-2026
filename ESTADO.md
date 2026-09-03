@@ -154,7 +154,9 @@
 
 - **La maleta**: el alumno solo necesita Git. Dentro del repositorio viajan
   - `tools/jdk/` — el JDK 25, partido en trozos y ensamblado al vuelo por el shim `mvnw`
-  - `tools/maven/` + `repo-maven/` — Maven y **todas** las dependencias (D-022-1)
+  - `tools/maven/` + `repo-maven/` — Maven y **todas** las dependencias (D-022-1), incluido
+    **BouncyCastle** (8,1 MB), que entró con la SPEC-036: es quien implementa Argon2 por debajo
+    de `Argon2PasswordEncoder`, y Spring Security lo declara `optional`
   - `tools/jib-base/` — las capas de `eclipse-temurin:25-jre`, para construir imágenes OCI sin
     salir a la red (D-032-1). Desde la SPEC-033 el Lab 13 ya no las usa —dejó de construir la
     imagen—, pero **sí** el proyecto final y el examen, que entregan Jib como parte de lo resuelto

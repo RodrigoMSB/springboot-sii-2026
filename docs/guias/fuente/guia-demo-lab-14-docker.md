@@ -40,6 +40,12 @@ Después de eso, todo lo demás corre sin red: los cuatro jar se compilan con el
 en modo offline, contra `repo-maven/`.
 :::
 
+> **Y una cosa que muerde si se proyecta desde otra máquina:** las imágenes se construyen para la
+> **arquitectura de la máquina donde se ejecuta `docker compose build`**. Una construida en un Mac
+> con Apple Silicon es `arm64`; en un portátil Intel, `amd64`. Si preparas la demostración en una
+> máquina y la proyectas desde otra, **reconstruye allí**. Es lo mismo que dice el Lab 13 sobre la
+> arquitectura de destino, ahora en la práctica.
+
 ## La puesta a punto
 
 ``` bash
@@ -353,7 +359,88 @@ Si en tu máquina no, sirve igual `docker compose restart contribuyentes` para e
 aunque entonces el reinicio lo pediste tú y se pierde media lección.
 :::
 
-## 6 · El cierre
+## 6 · Seguir una petición por cuatro contenedores
+
+**Éste es el bloque que paga el Lab 11.** Allí se puso un `traceId` por petición y se dijo que
+servía para cruzar de un servicio a otro. Aquí se ve cruzando.
+
+### Qué vamos a hacer
+
+Mandar **una** petición con un id inventado y encontrarlo en los cuatro servicios.
+
+### La técnica
+
+``` bash
+curl -s -H "Authorization: Bearer $TOKEN" -H "X-Trace-Id: DEMO-1" \
+     http://localhost:8220/tramites/1 > /dev/null
+
+docker compose logs --no-color | grep DEMO-1
+```
+
+### Lo que vas a ver
+
+``` text
+gateway-1        | ... [DEMO-1] c.d.g.enrutado.Enrutador - -> tramites GET /tramites/1
+tramites-1       | ... [DEMO-1] c.d.t.controllers.TramiteController - Buscando trámite 1
+tramites-1       | ... [DEMO-1] c.d.t.clientes.ClienteContribuyentes - Pidiendo contribuyente 1
+contribuyentes-1 | ... [DEMO-1] c.d.c.controllers.ContribuyenteController - Buscando contribuyente 1
+auditoria-1      | ... [DEMO-1] c.d.a.controllers.EventoController - Registrando consulta
+```
+
+**Cuatro contenedores, cuatro logs, una sola historia.**
+
+### Qué señalar, en este orden
+
+**1 · El id lo puso quien llamó.** Con `-H "X-Trace-Id: DEMO-1"`. El gateway lo **respetó** en vez
+de inventarse uno, y eso es el `if` de tres líneas del `FiltroDeCorrelacion` del Lab 11:
+
+``` java
+        String id = peticion.getHeader(CABECERA);
+        if (id == null || id.isBlank()) {
+            id = UUID.randomUUID().toString().substring(0, 8);
+        }
+```
+
+Aquel día parecía una cortesía. Aquí es lo que hace posible todo lo demás.
+
+**2 · Cruzó de proceso a proceso** porque cada cliente HTTP lo reenvía: `Enrutador` en el gateway,
+`ClienteContribuyentes` y `ClienteAuditoria` en trámites. Y el filtro del otro extremo lo recoge.
+**Nadie lo pasa por parámetro en ningún método de negocio** — el `TramiteController` no menciona el
+traceId por ninguna parte.
+
+**3 · Y en `ClienteAuditoria` hay un detalle que vale la pena abrir si hay tiempo:** esa llamada es
+asíncrona, así que el id se copia del MDC **antes** de saltar al otro hilo.
+
+``` java
+        String traceId = MDC.get(FiltroDeCorrelacion.CLAVE);
+        // ... y dentro del otro hilo:
+            MDC.put(FiltroDeCorrelacion.CLAVE, traceId);
+```
+
+El MDC va atado **al hilo**. En el hilo nuevo está vacío. Es exactamente la trampa que el Lab 12
+dejó anunciada con `@Async`, y aquí se ve resuelta.
+
+### Y el contraste, que es por qué este bloque existe
+
+> En el laboratorio esto son **cuatro terminales** que hay que mirar a la vez, buscando el mismo id
+> a ojo en cuatro consolas que scrollean.
+>
+> Aquí es **un `grep`**.
+
+Eso es la mitad de la respuesta a la pregunta que quedó abierta en el Lab 11 — *«contarlo, ¿a
+quién?»*. Compose junta las salidas de los siete contenedores en un solo flujo; en producción ese
+trabajo lo hace un recolector (Loki, Elasticsearch, el del proveedor), y entonces el `grep` es una
+barra de búsqueda sobre semanas de tráfico y cientos de máquinas.
+
+::: atasco
+**Si `grep DEMO-1` no devuelve nada.**
+
+Comprueba que `$TOKEN` sigue vivo —el del bloque 1 caduca— y que la cabecera va escrita
+exactamente `X-Trace-Id`. Si sólo aparece la línea del gateway, el reenvío se rompió en algún
+cliente: mira que `ClienteContribuyentes` y `ClienteAuditoria` sigan poniendo la cabecera.
+:::
+
+## 7 · El cierre
 
 ``` bash
 docker compose down -v
@@ -381,13 +468,19 @@ No decide qué contestarle a un ciudadano cuando la oficina de al lado no coge e
 11 con una diferencia declarada y 9 retirados a propósito. Las diferencias son exactamente las
 piezas que el orquestador reemplaza — el motor embebido, las dos guardas, las direcciones.
 
-**3 · Las dos protecciones son distintas.**
+**3 · Un id por petición convierte cuatro consolas en un `grep`.**
+
+El `traceId` del Lab 11 cruzó los cuatro servicios sin que ningún método de negocio lo mencione:
+lo pone un filtro, lo reenvían los clientes, lo recoge el filtro del otro extremo. En cuatro
+terminales eso se busca a ojo; en un flujo único, se busca con una palabra.
+
+**4 · Las dos protecciones son distintas.**
 
 El circuit breaker tapa el hueco **mientras** el vecino está caído. El reinicio automático hace
 que ese hueco **dure once segundos** en vez de hasta que alguien se dé cuenta. Quitar cualquiera
 de las dos deja un sistema peor.
 
-**4 · Y esto también se paga.**
+**5 · Y esto también se paga.**
 
 Docker Desktop, un compose que mantener, unas imágenes que reconstruir y actualizar, y una pieza
 más que puede fallar. Con un servicio no compensa. Con siete contenedores, compensaba antes de
@@ -403,6 +496,8 @@ terminar de contarlo. **La pregunta de siempre: qué estás pagando y a cambio d
   techo está puesto.
 - **Añade un cuarto servicio** al compose y cuenta cuántas líneas cuesta. Compáralo con abrir una
   quinta terminal.
+- **Manda dos peticiones con el mismo `X-Trace-Id`** y mira el `grep`. ¿Se distinguen? Es el
+  argumento de por qué el id lo genera el que entra, y no el que atiende.
 
 # Antes de cerrar
 
@@ -415,4 +510,5 @@ docker image prune -f     # solo si hace falta el disco
 
 > Un orquestador no hace mejor el sistema: hace más barato operarlo. El orden de arranque, las
 > direcciones y los reinicios dejan de estar en la cabeza de alguien y pasan a estar escritos.
-> Lo que se rompe cuando el vecino se cae sigue siendo tuyo.
+> Lo que se rompe cuando el vecino se cae sigue siendo tuyo. Y una petición que cruza cuatro
+> procesos se sigue con un `grep`, porque alguien puso un id en el Lab 11.

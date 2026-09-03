@@ -170,11 +170,24 @@ contraseñas, tiene además las de su correo y su banco.
 - **En claro**: nunca, por lo de arriba.
 - **Un hash simple** (MD5, SHA-256): rápido de calcular — y ésa es exactamente su desgracia. Un
   atacante puede probar millones por segundo, y con tablas precalculadas ni siquiera prueba.
-- **BCrypt**, que es lo de aquí: **lenta a propósito** y con **sal aleatoria** dentro del propio
-  hash. La lentitud arruina la fuerza bruta; la sal arruina las tablas precalculadas, porque la
-  misma clave da hashes distintos.
-- **Argon2 o scrypt**: mejores hoy, y con parámetros de memoria y paralelismo que hay que ajustar
-  bien. BCrypt no tiene nada que ajustar mal, y sigue siendo suficiente.
+- **BCrypt**: lenta a propósito y con sal aleatoria dentro del hash. Fue el estándar durante
+  quince años y sigue siendo mucho mejor que un hash simple. Su problema hoy no es que esté rota:
+  es que el hardware del atacante mejoró.
+- **Argon2id**, que es lo de aquí y lo que **recomienda OWASP**: lenta a propósito, con sal
+  aleatoria dentro del hash **y con un costo en MEMORIA**. La lentitud arruina la fuerza bruta; la
+  sal arruina las tablas precalculadas; y la memoria arruina las tarjetas gráficas.
+
+Y esa tercera pata es la que decide, porque es la diferencia real:
+
+> **BCrypt es lenta en TIEMPO. Argon2 es lenta en tiempo Y en memoria.**
+>
+> Una GPU tiene miles de núcleos y muy poca memoria por núcleo. Contra BCrypt puede lanzar veinte
+> mil cálculos en paralelo; contra Argon2, que pide **16 MB por cálculo**, se queda sin RAM antes
+> de llegar a cien.
+
+Argon2 tiene parámetros —memoria, pasadas, paralelismo— y elegirlos mal la deja **peor** que
+BCrypt. Por eso no se eligen: se usa la fábrica `defaultsForSpringSecurity_v5_8()`, que trae los
+valores que el equipo de Spring Security mantiene al día.
 
 ### Se pega
 
@@ -187,14 +200,28 @@ En `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java`, **dent
 Al arrancar, la siembra imprime los dos usuarios con su hash:
 
 ``` text
-[semilla] ana   ADMIN    $2a$10$JM2vzr6lChEmxBsL6IvRaOV5JEwvRZcC53QjfXkAmtIexRvTC1ieC
-[semilla] luis  USUARIO  $2a$10$mbxyHiH3SQZTcQ1aeH6bAui0Ww7cXEtHRQYeMI5lKhFgdbTg3M2FW
+[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$6pRDZ7pRwU3jaaV9oNK7Ag$EtTVmBMJb4eWLzEg3NvxJqDad+X7GbuBHBpFJiTBD/A
+[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$DiTWa388g9rj7QMybwv78A$irfjVwPs8vDvX75eHbmMeeWH6WbtpD2SSyInaxrsYeU
 ```
 
 **Las dos claves son la misma palabra: `secreta`.** Y los dos hashes no se parecen en nada.
 
-Lee la estructura: `$2a$` es el algoritmo, `$10$` es el coste —cuántas vueltas da—, y el resto es
-**la sal y el resultado juntos**. Por eso no hace falta guardar la sal aparte: viaja dentro.
+Lee la estructura, que lo dice todo:
+
+``` text
+$argon2id$ v=19 $ m=16384,t=2,p=1 $ 6pRDZ7pRwU3jaaV9oNK7Ag $ EtTVmBMJb4eWLz...
+    │        │           │                     │                     │
+    │        │           │                     └── la sal            └── el hash
+    │        │           └── 16 MB de memoria, 2 pasadas, 1 hilo
+    │        └── versión del algoritmo
+    └── la variante: Argon2id
+```
+
+**La sal y los parámetros viajan DENTRO del hash.** Por eso no hace falta guardarlos aparte, y por
+eso subir la memoria mañana no invalida los hashes de hoy: cada uno se verifica con los suyos.
+
+Y el `m=16384` es el número que hay que mirar: **16 MB de RAM por cada cálculo**. Eso es lo que
+BCrypt no tiene.
 
 :::  nota
 **Tus hashes van a ser distintos de éstos, y distintos en cada arranque.** Es la demostración: si
@@ -423,7 +450,8 @@ endpoint nuevo no puede nacer desprotegido por olvido.
 **2 · Una clave no se guarda: se codifica, lenta y con sal.**
 
 Por eso la misma palabra da dos hashes distintos, y por eso una tabla precalculada no sirve de
-nada. La lentitud de BCrypt no es un defecto: es la defensa.
+nada. La lentitud de Argon2 no es un defecto: es la defensa. Y su apetito de memoria tampoco —es
+lo que deja fuera a las tarjetas gráficas.
 
 **3 · El token es un carnet firmado, no un secreto.**
 
@@ -443,10 +471,11 @@ causa número uno de un 403 inexplicable.
 - **Cambia una letra del token** y vuelve a pedir. ¿401 o 403? ¿Por qué?
 - **Reduce la vigencia del token**: pon `lab09.jwt.vigencia-segundos: 40` en el `application.yml`,
   reinicia, pide un token y vuelve a usarlo al cabo de un rato. Sale 401 — y no tocaste una línea
-  de Java. **Ojo al reloj:** no caduca a los 40 segundos sino a los ~100, porque el verificador
-  acepta de fábrica un token vencido hace menos de 60 segundos. Es la tolerancia de reloj entre
-  el que emite y el que verifica, y sin ella dos máquinas mal sincronizadas se rechazarían tokens
-  buenos.
+  de Java. Caduca a los 40 clavados — y eso es gracias a una línea de `SeguridadConfig` que pone
+  la **tolerancia de reloj a cero**. De fábrica son 60 segundos, así que un token de 40 viviría
+  100. En producción esa tolerancia se deja puesta: los relojes de dos servidores nunca coinciden
+  al segundo, y rechazar un token por medio segundo de deriva es peor que aceptarlo por medio
+  minuto.
 - **Añade `@PreAuthorize`** a un método y compara con la regla de la cadena. ¿Cuál usarías para
   «sólo el dueño del trámite»?
 - **Ponle `hasRole("ADMIN")`** a propósito y comprueba que ana recibe 403. Es el error del prefijo,
