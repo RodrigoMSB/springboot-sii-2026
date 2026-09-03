@@ -14,14 +14,12 @@
 | **036** | 09 Seguridad | BCrypt → **Argon2id**; el token de 40 s vence **a los 40** |
 | **037** | demo Docker | bloque nuevo: **el traceId cruzando cuatro contenedores** |
 
-**Todo lo medible está medido, con una excepción declarada:** el `grep DEMO-1` de la SPEC-037 no
-se pudo ejecutar porque la imagen base de Docker (233 MB) no llegó a bajar en este entorno. Lo que
-sí se verificó de ese bloque —el reenvío de la cabecera en los tres clientes, que es de lo que
-depende— está en §4.1, y el detalle de lo que falta, en §4.4. Las demás salidas reales van en §1
-a §3.
+**Todo lo medible está medido**, incluida la demostración con Docker: los siete contenedores
+levantados y el `grep DEMO-1` devolviendo los cuatro servicios (§4.4). Las salidas reales van en
+§1 a §4.
 
-**Cuatro puntos de la spec resultaron falsos o incompletos al medir**, y los cuatro están
-corregidos y declarados en §5:
+**Cinco puntos de la spec resultaron falsos o incompletos al medir**, y los cinco están corregidos
+y declarados (los cuatro primeros en §5, el quinto en §4.5):
 
 1. **El anexo del lab 07 «se mantiene» — no existía.** Se escribió.
 2. **La demo 2 del lab 07 ensuciaba la consola con 30 líneas de WARN.** La spec pedía consola
@@ -29,6 +27,9 @@ corregidos y declarados en §5:
 3. **`./mvnw test` con «4 verdes» son 7 ejecuciones.** Son 4 métodos en 4 archivos; el
    parametrizado cuenta sus 4 casos.
 4. **Argon2 necesita BouncyCastle**, que no estaba en la maleta. Capturado (8,1 MB).
+5. **El bloque de la demo Docker tenía que ser un `POST`, no un `GET`.** Con el `GET` que la spec
+   escribía, auditoría no aparece: sólo se entera cuando se **crea** un trámite. Corregido, y el
+   bloque mejoró — ver §4.5.
 
 **Y un punto de la spec que resultó verdadero y conviene dejar dicho:** el aviso de la SPEC-034
 sobre si Spring Data aceptaría la consulta nativa devolviendo `Object`. **La acepta.** No hizo
@@ -352,45 +353,66 @@ del `@Async` del Lab 12. Se aprovecha en el bloque.
 `guia-demo-lab-14-docker.pdf` regenerada desde su fuente: **11 páginas**, con el bloque 6 y una
 entrada nueva en «Lo que aprendiste».
 
-### 4.4 · La validación que NO se pudo ejecutar
+### 4.4 · La validación, ejecutada
 
-La spec pide: *«El grep DEMO-1 devuelve al menos una línea de cada uno de los cuatro servicios,
-pegada en el informe.»*
-
-**No se pudo ejecutar, y el bloque va al material sin esa comprobación.** Qué se intentó y dónde se
-paró:
+**Los siete contenedores arriba y sanos:**
 
 ```
-docker info                        → Docker disponible
-./construir.sh                     → OK, los cuatro jar construidos
-docker compose up -d               → se queda esperando la imagen base
-docker pull eclipse-temurin:25-jre-alpine
-                                   → ~20 minutos, log vacío, sin progreso.
-                                     Abortado.
-docker compose down -v             → sin residuos
+SERVICE             STATUS
+auditoria           Up 20 seconds (healthy)
+contribuyentes      Up 20 seconds (healthy)
+db-auditoria        Up 22 seconds (healthy)
+db-contribuyentes   Up 22 seconds (healthy)
+db-tramites         Up 22 seconds (healthy)
+gateway             Up 8 seconds (healthy)
+tramites            Up 14 seconds (healthy)
 ```
 
-La imagen base (233 MB) no llegó a bajar en este entorno. Sin ella los cuatro contenedores de
-aplicación no arrancan, así que el `grep` no tiene sobre qué correr.
+**Y el `grep DEMO-1`, con el bloque tal como quedó escrito en el README:**
 
-**Lo que SÍ está verificado del bloque, y no es poco:**
+```
+gateway-1        | 22:34:06.526 INFO  [DEMO-1] GATEWAY - [GATEWAY] POST /tramites -> tramites
+tramites-1       | 22:34:06.531 INFO  [DEMO-1] TRAMITES - [TRAMITES] trámite 4 creado para 11111111-1
+tramites-1       | 22:34:06.532 INFO  [DEMO-1] TRAMITES - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+contribuyentes-1 | 22:34:06.535 INFO  [DEMO-1] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
+auditoria-1      | 22:34:06.536 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] llega el evento TRAMITE_CREADO del trámite 4 — procesando...
+auditoria-1      | 22:34:08.041 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] REGISTRADO id=2 del trámite 4
+tramites-1       | 22:34:08.043 INFO  [DEMO-1] TRAMITES - [TRAMITES] auditoría acusó recibo del trámite 4
+```
 
-- **Los tres clientes reenvían la cabecera** — comprobado leyendo el código, con línea y archivo
-  (§4.1). Es la condición que la spec pedía verificar *antes* de escribir el bloque, y es de donde
-  depende que el `grep` encuentre las cuatro líneas.
-- **`ClienteAuditoria` copia el `traceId` del MDC antes de saltar de hilo**, que es el detalle fino
-  que el bloque explica.
-- **Los tres archivos son idénticos** entre `labs/lab-14-microservicios/solucion/` y
-  `demos-instructor/lab-14-docker/sistema/`, y el job `demo-docker` del CI lo confirma.
-- **Los cuatro jar de la demo se construyen** con `./construir.sh`, offline.
+**Los cuatro servicios aparecen**, que es lo que la spec exige:
 
-**Lo que queda por comprobar en una máquina con la imagen ya bajada** —el propio README dice que
-hay que bajarla antes de la clase— es la **salida literal** del `grep`: el bloque la muestra con el
-formato de `docker compose logs` (`servicio-1 | ... [DEMO-1] ...`) y los nombres de logger reales de
-cada servicio. Es lo primero que hay que correr al preparar la demostración; si algún nombre de
-logger no cuadra exactamente, se ajusta el bloque de salida esperada del README y de la guía.
+```
+$ docker compose logs --no-color | grep DEMO-1 | awk -F'|' '{print $1}' | sort -u
+auditoria-1
+contribuyentes-1
+gateway-1
+tramites-1
+```
 
----
+### 4.5 · Y aquí la spec se equivocaba: tiene que ser un POST
+
+La SPEC-037 escribe el bloque con un **`GET /tramites/1`**. Medido, ese `GET` cruza **tres**
+servicios, no cuatro:
+
+```
+gateway-1        | 22:32:20.325 ... [GATEWAY] GET /tramites/1 -> tramites
+tramites-1       | 22:32:20.446 ... [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+contribuyentes-1 | 22:32:20.490 ... [CONTRIBUYENTES] me piden la ficha de 11111111-1
+                                    ← auditoría NO aparece
+```
+
+**Auditoría sólo se entera cuando se CREA un trámite.** La llamada sale de
+`TramiteService:48` — `auditoria.avisarDeUnTramiteNuevo(tramite)` — y ese método sólo se ejecuta
+en el alta. El bloque se corrigió al `POST`, y con él salen los cuatro.
+
+**Y el cambio mejoró el bloque**, porque el `POST` hace visible el detalle asíncrono que el texto
+ya explicaba: entre `llega el evento` (…16.536) y `REGISTRADO` (…08.041) pasa **segundo y medio**,
+y `tramites` no dice `auditoría acusó recibo` hasta después. Con el `GET` había que creerse que la
+llamada era asíncrona; con el `POST` se ve en los relojes. El README y la guía lo señalan.
+
+**Un detalle más, para quien prepare la demostración:** las credenciales del `curl` son
+`carolina / dgt2026`, las que ya usa el bloque 1 del guion.
 
 ## 5 · Los puntos de la spec que resultaron falsos, y qué se hizo
 

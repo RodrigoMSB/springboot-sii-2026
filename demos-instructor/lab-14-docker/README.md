@@ -289,9 +289,14 @@ Tres cosas que señalar, y las tres importan:
 Éste es el bloque que **paga el Lab 11**. Allí se puso un `traceId` por petición y se dijo que
 servía para cruzar de un servicio a otro; aquí se ve cruzando.
 
+**Tiene que ser un `POST`**, no un `GET`: auditoría sólo se entera cuando se **crea** un trámite.
+Un `GET /tramites/1` cruza tres servicios; el `POST` cruza los cuatro.
+
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" -H "X-Trace-Id: DEMO-1" \
-     http://localhost:8220/tramites/1 > /dev/null
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "X-Trace-Id: DEMO-1" \
+     -H 'Content-Type: application/json' \
+     -d '{"rutContribuyente":"11111111-1","tipo":"DECLARACION_F29"}' \
+     http://localhost:8220/tramites > /dev/null
 
 docker compose logs --no-color | grep DEMO-1
 ```
@@ -299,14 +304,17 @@ docker compose logs --no-color | grep DEMO-1
 **Qué se ve, y hay que leerlo despacio:**
 
 ```
-gateway-1        | ... [DEMO-1] c.d.g.enrutado.Enrutador - -> tramites GET /tramites/1
-tramites-1       | ... [DEMO-1] c.d.t.controllers.TramiteController - Buscando trámite 1
-tramites-1       | ... [DEMO-1] c.d.t.clientes.ClienteContribuyentes - Pidiendo contribuyente 1
-contribuyentes-1 | ... [DEMO-1] c.d.c.controllers.ContribuyenteController - Buscando contribuyente 1
-auditoria-1      | ... [DEMO-1] c.d.a.controllers.EventoController - Registrando consulta de trámite 1
+gateway-1        | 22:33:16.305 INFO  [DEMO-1] GATEWAY - [GATEWAY] POST /tramites -> tramites
+tramites-1       | 22:33:16.339 INFO  [DEMO-1] TRAMITES - [TRAMITES] trámite 3 creado para 11111111-1
+tramites-1       | 22:33:16.342 INFO  [DEMO-1] TRAMITES - [TRAMITES] pido la ficha de 11111111-1 a contribuyentes
+contribuyentes-1 | 22:33:16.345 INFO  [DEMO-1] CONTRIBUYENTES - [CONTRIBUYENTES] me piden la ficha de 11111111-1
+auditoria-1      | 22:33:16.371 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] llega el evento TRAMITE_CREADO del trámite 3 — procesando...
+auditoria-1      | 22:33:17.959 INFO  [DEMO-1] AUDITORIA - [AUDITORIA] REGISTRADO id=1 del trámite 3
+tramites-1       | 22:33:17.965 INFO  [DEMO-1] TRAMITES - [TRAMITES] auditoría acusó recibo del trámite 3
 ```
 
-**Cuatro contenedores, cuatro logs, una sola historia.**
+**Cuatro contenedores, siete líneas, una sola historia** — y en orden de reloj, aunque cada línea
+la escribió un proceso distinto.
 
 Qué señalar, en este orden:
 
@@ -315,9 +323,11 @@ Qué señalar, en este orden:
 2. **Cruzó de proceso a proceso** porque cada cliente HTTP lo reenvía —`ClienteContribuyentes` y
    `ClienteAuditoria` en trámites, `Enrutador` en el gateway— y el filtro del otro extremo lo
    recoge. Nadie lo pasa por parámetro en ningún método de negocio.
-3. **Y en `ClienteAuditoria` hay un detalle que vale la pena abrir** si hay tiempo: esa llamada es
-   asíncrona, así que el `traceId` se copia del MDC **antes** de saltar al otro hilo. El MDC va
-   atado al hilo; en el nuevo está vacío. Es la trampa que el Lab 12 dejó anunciada.
+3. **Y en `ClienteAuditoria` hay un detalle que vale la pena abrir**, porque está a la vista en la
+   salida: fíjate en el **segundo y medio** entre `llega el evento` (22:33:16.371) y `REGISTRADO`
+   (22:33:17.959), y en que `tramites` no dice `auditoría acusó recibo` hasta después. Esa llamada
+   es asíncrona, así que el `traceId` se copia del MDC **antes** de saltar al otro hilo — el MDC va
+   atado al hilo, y en el nuevo está vacío. Es la trampa que el Lab 12 dejó anunciada, resuelta.
 
 **Y el contraste, que es por qué este bloque está aquí:**
 
