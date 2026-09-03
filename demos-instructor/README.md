@@ -18,7 +18,7 @@ laboratorio. Pero verlo funcionar durante quince minutos sí cabe en una sesión
 ## Y el CI
 
 **Ningún job del CI levanta nada de esta carpeta.** El job `labs` recorre `labs`,
-`proyecto-final` y `examen-huecos`; `demos-instructor/` no está en esa lista, así que sus
+y `proyecto-final`; `demos-instructor/` no está en esa lista, así que sus
 proyectos Maven no entran en la compilación offline y no hay ninguna excepción que mantener. La
 exclusión es estructural.
 

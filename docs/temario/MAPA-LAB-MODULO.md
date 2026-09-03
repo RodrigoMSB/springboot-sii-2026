@@ -1,5 +1,12 @@
 # Mapa Laboratorio ↔ Módulo del temario contratado
 
+> **Nota (SPEC-038).** Los labs **12** y **13** se retiraron del curso, junto con `examen-huecos/`:
+> siguen enteros en el tag `material-v1.11.1`. El **módulo 15** lo cubre ahora la **demostración
+> con Docker del lab 14** (`demos-instructor/lab-14-docker/`) más el empaquetado que entrega el
+> proyecto final. Los temas que sólo tocaban esos dos labs pasan de **cubiertos** a
+> **mencionados**: se nombran donde corresponde y no se practican.
+
+
 *Documento de trazabilidad para la entrega al SII. Rehecho por la **SPEC-034** contra el arco de
 catorce labs, actualizado por la **SPEC-035** (que cerró la brecha del proyecto final), por la
 **SPEC-037**, que añadió el Lab 14 de microservicios, y por la **SPEC-046**, que añadió el Lab 05b

@@ -8,7 +8,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -32,15 +32,22 @@ public class SeguridadConfig {
                 .authorizeHttpRequests(rutas -> rutas
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // La documentación de la API es pública: describe QUÉ endpoints hay, no
+                        // devuelve ni un dato. Y sin esto `/swagger-ui.html` daría 401, que es la
+                        // primera pantalla que alguien abre para entender el servicio.
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Las reglas del encargo van aquí.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
     }
 
+    // Argon2id, lo que recomienda OWASP y lo mismo que enseña el Lab 09: lento en tiempo Y en
+    // memoria, que es lo que deja fuera a las tarjetas gráficas. Los parámetros salen de la
+    // fábrica de Spring Security — elegirlos a mano y mal deja Argon2 peor que BCrypt.
     @Bean
     PasswordEncoder codificadorDeClaves() {
-        return new BCryptPasswordEncoder();
+        return Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8();
     }
 
     @Bean

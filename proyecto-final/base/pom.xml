@@ -21,6 +21,8 @@
     <java.version>25</java.version>
     <zonky.version>2.2.2</zonky.version>
     <jib.version>3.5.2</jib.version>
+    <springdoc.version>2.8.13</springdoc.version>
+    <bouncycastle.version>1.82</bouncycastle.version>
   </properties>
 
   <dependencies>
@@ -36,6 +38,16 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
+
+    <!-- Argon2 lo implementa BouncyCastle: `Argon2PasswordEncoder` es una fachada de Spring
+         Security sobre él, y Spring lo declara `optional`. Sin esta dependencia el arranque
+         muere con NoClassDefFoundError sobre Argon2Parameters$Builder. -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -47,6 +59,14 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <!-- OpenAPI: /swagger-ui.html sale solo, y el endpoint que escribas aparece ahí sin
+         que tengas que anotar nada. Es un requisito del contrato, no del encargo. -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -115,6 +135,17 @@
         </configuration>
       </plugin>
       <!-- Configurado y listo: el empaquetado es un requisito del encargo, no un obstáculo. -->
+      <!-- La consola de un test rojo tiene que poder leerse. Misma configuración que el
+           Lab 08: traza recortada al test, y sin los WARNING del agente de Mockito. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <trimStackTrace>true</trimStackTrace>
+          <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>jib-maven-plugin</artifactId>

@@ -1,7 +1,7 @@
 # ¿En qué va el curso?
 
 *Una página, sin jerga. Si llevas dos semanas sin mirar el repo, empieza aquí.*
-*Última actualización: SPEC-047 — el lab 14 con Docker, para que el instructor lo proyecte.*
+*Última actualización: SPEC-038 — proyecto final fácil y completo, y retiro del 12, el 13 y el examen.*
 
 ---
 
@@ -10,10 +10,12 @@
 - **El temario definitivo** (v3, julio 2026): `docs/temario/`. Son 36 horas, 12 sesiones de 3,
   15 módulos. El `.md` manda; el `.docx` es lo que se le entrega al SII.
 
-- **EL ARCO, COMPLETO: dieciséis labs de construcción guiada — quince numerados del 00 al 14, más
-  el 05b, que entró después entre el 05 y el 06.** Es todo el material
-  que el alumno usa. Cada uno con `README.md`, `PASOS.md` y **tres carpetas** (`practica/`,
-  `solucion/`, `instructor/`). Sin Docker, sin instalar nada, sin red.
+- **EL ARCO: catorce labs de construcción guiada — trece numerados del 00 al 14 y el 05b.** Es
+  todo el material que el alumno usa. Cada uno con `README.md`, `PASOS.md` y **tres carpetas**
+  (`practica/`, `solucion/`, `instructor/`). Sin Docker, sin instalar nada, sin red.
+
+  > **Los números 12 y 13 no están** (SPEC-038): `lab-12-tareas` y `lab-13-empaquetado` salieron
+  > del curso junto con `examen-huecos/`. Ver §1.a. **Los números no se reutilizan.**
 
   | | lab | el número que se proyecta |
   |---|---|---|
@@ -25,85 +27,41 @@
   | 05 | `relaciones` | **1 SELECT con LAZY, 4 con EAGER**, y la `LazyInitializationException` |
   | 05b | `muchos-a-muchos` | la tabla intermedia que nadie escribe, y **1 sentencia con `Set` contra 6 con `List`** |
   | 06 | `rendimiento` | el N+1: **201 consultas contra 1** |
-  | 07 | `concurrencia` | 20 emisiones a la vez: **21 de 21** con candado |
+  | 07 | `concurrencia` | 20 emisiones a la vez: **21 de 21** con el turno con nombre |
   | 08 | `testing` | el rojo provocado: `expected: <5938> but was: <5489>`. De 0,03 s a 0,7 s con Spring |
-  | 09 | `seguridad` | **401** sin token, **403** con token y sin rol. Dos hashes para la misma clave |
-  | 10 | `resiliencia` | **30,01 s → 0,002 s**, y de 1 llamada HTTP a **0** con el circuito abierto |
+  | 09 | `seguridad` | **401** sin token, **403** con token y sin rol. Dos hashes Argon2 para la misma clave |
+  | 10 | `resiliencia` | **30,01 s → 0,003 s**, y el contador de llamadas HTTP **congelado** con el circuito abierto |
   | 11 | `observabilidad` | base caída: liveness **200**, readiness **503** nombrando la causa |
-  | 12 | `tareas` | **3,03 s → 0,004 s**, y el cierre nocturno **dos veces en el mismo segundo** |
-  | 13 | `empaquetado` | imagen OCI de **138,9 MB** construida sin Docker y sin red |
   | 14 | `microservicios` | cuatro procesos, tres bases: con un servicio caído, **HTTP 500 → HTTP 200 degradado**, y las llamadas a un muerto **congeladas en 3** |
 
-- **EL INSTRUMENTO DE EVALUACIÓN: `proyecto-final/`.** Recuperado del arco antiguo y adaptado
-  (SPEC-035). No es un lab: es con lo que el PO certifica. Un requerimiento de negocio incompleto
-  en los bordes («el consolidado del contribuyente»), tres horas, y una rúbrica de tres ejes
-  —Correctitud, Oficio, Criterio— con el umbral que define el curso: **núcleo verde Y Criterio ≥
-  Suficiente**. Todo funcionando y sin criterio **no aprueba**.
-  - `base/` (8107) — compila y arranca: dominio, datos sembrados y la autenticación JWT resueltos.
-    El encargo, no.
-  - `brief/` · `rubrica/` · `plantillas/reporte.md` — lo que el alumno lee y entrega.
-  - `instructor/` — la solución de referencia (10 tests, verificada) y la guía de defensa con
-    respuestas calibradas por nivel. **No viaja al repositorio**: traería las respuestas dentro.
-  - Los **20 requisitos del encargo están atados a su lab y su paso**: no se evalúa nada que no se
-    haya enseñado.
+- **LA EVALUACIÓN, y son dos partes con pesos** (SPEC-038):
 
-- **Los dieciséis `PASOS.md` traen el código listo para pegar** (SPEC-038, -039 y -046): cada paso dice el
-  bloque exacto, el archivo y el sitio. El instructor lo tiene en una ventana y `practica/` en la
-  otra. `instructor/` queda para preparar la clase y para el *por qué*.
+  | | peso | dónde |
+  |---|---|---|
+  | **Proyecto final** | **70 %** | `proyecto-final/`, en el repositorio |
+  | Evaluación de conocimientos | 30 % | **fuera del repositorio**, ya construida |
 
-- **La estructura de tres carpetas rige en los dieciséis** (SPEC-031, -032, -033, -037, -046): `practica/` sin
-  una línea de documentación, `solucion/` con comentarios breves, e `instructor/` con todo
-  explicado línea por línea. La tercera **no viaja al repositorio** (`labs/*/instructor/` en el
-  `.gitignore`): es la chuleta de quien dicta, y versionarla anularía el motivo de haber vaciado
-  `practica/`. La genera quien prepara la sesión, a partir de `solucion/` — y al terminar
-  corre `python3 tools/verificar-instructor.py`, que comprueba que quedó al día con
-  `solucion/` y que sus `pom.xml` son XML válido. **Ese chequeo no puede estar en el CI**:
-  la carpeta no viaja, así que en el runner no existe y el job pasaría siempre (D-FIX10-2).
-
-- **LOS QUINCE LABS TIENEN GUÍA EN PDF QUE EL ALUMNO SIGUE SOLO** (SPEC-044 el 00 al 03,
-  SPEC-045 el resto). **El PDF está en la carpeta de su lab**, junto al `README.md` y al
-  `PASOS.md`; en `docs/guias/` sólo se quedan el fuente y el estilo. Es un formato distinto de
-  `PASOS.md` —que es el guion de quien dicta—: aquí no hay notas de conducción, y cada paso trae
-  **el problema antes de la solución**, **la alternativa que se descartó**, un **«Vas bien si…»**
-  comprobable y un **«Si te atascas»** con el error literal que el alumno va a ver.
-  - **Una metáfora por lab, y es un mundo que crece, no dieciséis analogías**: la oficina de la DGT
-    abre (00), pone una ventanilla (01), encarga a un proveedor (02), aprende a explicar por qué
-    un trámite no procede (03), compra un archivador (04-05), cuenta los viajes al sótano (06),
-    reparte un talonario entre veinte funcionarios (07), se deja inspeccionar (08), pone un
-    guardia (09), llama por teléfono a Tesorería (10), enciende su cuadro de luces (11), contrata
-    un conserje de noche (12), se muda dentro de una caja (13) y acaba **partida en cuatro
-    oficinas** (14).
-  - **El código no se teclea: se extrae de `solucion/`** con `tools/generar-guias.py`, que además
-    comprueba que cada línea impresa esté ahí (`D-044-1`). **72 bloques, 0 divergencias.**
-  - **El YAML nunca se pega**, porque copiarlo del PDF pierde la sangría y el archivo dice otra
-    cosa sin dar error: o se edita una clave que ya existe (`D-044-2`), o va marcado **«Se escribe
-    — aquí no se pega nada»** (`D-045-1`). Auditable: 0 bloques de YAML bajo «Se pega».
-  - **1.604 KB los dieciséis**, de 9 a 15 páginas cada uno.
-  - **Falta la prueba de fondo en quince de los dieciséis**: la única guía seguida entera sobre
-    `practica/` limpia sigue siendo la del 00. La del 05b tampoco —lo que se pegó allí fue su
-    `PASOS.md`, que es otro documento (`INFORME-SPEC-046` §4.1)—. Y **de los labs 04 a 14 no queda
-    registro de haber medido las salidas y los «Si te atascas»** —se perdió con un reinicio de la
-    máquina—, aunque están escritos con el error literal. Todo en `INFORME-SPEC-045` §8 y §9.
-
-- **HAY UN SEGUNDO INSTRUMENTO DE EVALUACIÓN, y es corto** (SPEC-043): `examen-huecos/`. Una
-  aplicación pequeña que compila y arranca, con **doce huecos marcados** que el alumno completa —
-  **48 líneas de código en total**. Cubre lo de los labs 01 al 09: entidad con relación, tres
-  consultas derivadas, servicio, controller con DTO, los dos errores con forma, seguridad por rol y
-  configuración externa.
-  - **No lleva `PASOS.md`**: cada hueco dice **qué** tiene que hacer, nunca cómo.
-  - **Cada hueco tiene su test**, y **el puntaje es directo**: la nota es la última línea de
-    `./mvnw test`, `RESUELTOS: n de 12`. El alumno la ve antes de entregar.
-  - **Los doce huecos son independientes, y está medido**: resolviéndolos de uno en uno la cuenta de
-    verdes va 0, 1, 2 … 12 sin saltos. Es lo que hace honesto el puntaje directo.
-  - `base/` arranca en **3,8 s** y da 0 de 12; `solucion/` da 12 de 12; una corrida de la suite
-    tarda **7 segundos**.
-  - **Estimado en 60 a 90 minutos, NO medido.** Es lo único que falta y sólo lo dice un alumno:
-    `INFORME-SPEC-043` §1.6 explica cómo se cierra en quince minutos.
-  - **El `proyecto-final/` no se tocó.** Sigue entero, y son dos instrumentos, no uno.
+- **EL PROYECTO FINAL: `proyecto-final/`.** Es con lo que el PO certifica, y desde la SPEC-038 es
+  **fácil y completo**: se hace **en la casa, con plazo**, no en tres horas contra el reloj.
+  - **El brief está CERRADO.** Ni un borde abierto: rutas, códigos de estado, los seis campos que
+    salen y el criterio del total, todo fijado. El alumno implementa, no adivina.
+  - `base/` (8107) — compila, arranca y **su test pasa**. Trae resuelto todo lo que no se evalúa:
+    dominio, datos, JWT, Actuator, **OpenAPI con `/swagger-ui.html`**, la **métrica de negocio ya
+    declarada** (`dgt.consolidados.emitidos`), Jib y la consola limpia.
+  - `ejemplo/` (8108) — **el mismo encargo resuelto sobre otra entidad**, pieza por pieza y con los
+    mismos nombres de método. El alumno lo abre al lado de `base/` y traduce. Es la pieza que hace
+    fácil el proyecto sin regalarlo: *consolidado de un contribuyente* ↔ *resumen de una oficina*.
+  - **Seis piezas a escribir**, nombradas con su archivo: dos DTO, la consulta sin N+1, el
+    servicio, el controller, la regla de rol y **dos tests**.
+  - `rubrica/` — **los seis criterios del temario adjudicado** con sus pesos (arquitectura 20,
+    correctitud 20, pruebas 20, seguridad 15, persistencia 15, observabilidad 10), tres niveles cada
+    uno y **el comando que lo comprueba**. Se aprueba con «suficiente» en los seis.
+  - `instructor/solucion-referencia/` (8109) — una solución completa, verificada.
+  - **Testcontainers no se exige**: la sala no tiene Docker, y los tests sobre el PostgreSQL
+    embebido valen igual. Está escrito en la rúbrica.
 
 - **`instructor/` tiene respaldo, y sigue sin viajar al repositorio público** (SPEC-042). Las
-  dieciocho carpetas —los dieciséis labs, el proyecto final y el examen de huecos, **293
-  archivos**— están en un
+  carpetas —los labs vivos y el proyecto final— están en un
   repositorio **privado** aparte, `springboot-sii-2026-instructor`, con las mismas rutas para que
   restaurar sea copiar. **D-031-2 no cambia** (D-042-1): el clon del alumno sigue sin traerlas.
   - **El puente es `tools/instructor-respaldo.sh`**, con tres verbos: `estado` compara los dos
@@ -139,7 +97,7 @@
     repitió el andamiaje heredado (`pom.xml`, clase de arranque, `infra/`), que ya está documentado
     en el 04. `INFORME-SPEC-043` §2.4 lo mide y lo acota.
 
-- **Los dieciséis labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
+- **Todos los labs llaman igual a las mismas cosas** (SPEC-040). Antes no: el alumno veía `web/`
   en un lab y `controllers/` en el siguiente, `servicios/` en español en uno solo, una clase que
   hacía de servicio anotada `@Component`, y paquetes que tartamudeaban —`seguridad/seguridad`—.
   Aprendía que da igual, y no da igual. Hoy **un rol, un nombre, una anotación**: `controllers/`
@@ -172,12 +130,12 @@
 
 - **Un CI de siete jobs** (`.github/workflows/material-ci.yml`):
   `temario` (el `.md` y el `.docx` no divergen) · `siembra` (todo lab con sucesor siembra el
-  siguiente) · **`labs`** (los **41** proyectos Maven compilan **offline**, y falla si alguien
+  siguiente) · **`labs`** (los **36** proyectos Maven compilan **offline**, y falla si alguien
   necesitó la red: el Lab 14 aporta ocho —cuatro servicios × dos carpetas—, el 05b dos, más
-  `proyecto-final/base` y los dos de `examen-huecos`) · **`demo-docker`** (la copia del lab 14 que
+  `proyecto-final/base` y `proyecto-final/ejemplo`) · **`demo-docker`** (la copia del lab 14 que
   vive en `demos-instructor/` no se ha separado del laboratorio: **compara archivos, no necesita
-  Docker**) · **`pasos`** (los **dieciséis** guiones traen el código para pegar y ninguno
-  promete un código que `solucion/` ya no tenga: **196 bloques y 108 métodos** comprobados contra la
+  Docker**) · **`pasos`** (los guiones traen el código para pegar y ninguno
+  promete un código que `solucion/` ya no tenga: los bloques y métodos comprobados contra la
   solución) · **`guion-practica`** (lo que los dieciséis guiones prometen de `practica/` —carpetas
   vacías, archivos que ya están, archivos por crear— es lo que `practica/` trae: **96 promesas**
   comprobadas) · `labs-sh` (los scripts, en Linux y en Git Bash).
@@ -193,12 +151,37 @@
   - **El código es el mismo, y está comprobado**: 32 archivos idénticos byte a byte y cuatro
     diferencias declaradas, que son las piezas que el orquestador reemplaza (`D-047-2`).
   - **Docker no entra en el CI, y la exclusión es estructural** (`D-047-1`): el job `labs` recorre
-    `labs proyecto-final examen-huecos`, y `demos-instructor/` no está ahí. No hubo que escribir
+    `labs proyecto-final`, y `demos-instructor/` no está ahí. No hubo que escribir
     ninguna excepción.
   - Necesita **Docker Desktop** y, **la primera vez, red** para bajar dos imágenes base. Después,
     ninguna.
 
 ## 1.a · Lo que se retiró, y dónde está
+
+La **SPEC-038** sacó de `main` **`examen-huecos/`, `labs/lab-12-tareas/` y
+`labs/lab-13-empaquetado/`**, porque el curso dejó de dictarlos: el calendario se cierra con los
+labs 08, 09, 10, 11 y la demostración con Docker del 14, y la evaluación son el proyecto final
+(70 %) y la evaluación de conocimientos (30 %), que ya está hecha y no vive aquí.
+
+**No se borró nada del historial.** Todo sigue entero en el tag `material-v1.11.1`:
+
+```bash
+git show material-v1.11.1:labs/lab-12-tareas/PASOS.md
+git checkout material-v1.11.1 -- labs/lab-13-empaquetado/
+git checkout material-v1.11.1 -- examen-huecos/
+```
+
+**Los números 12 y 13 no se reutilizan**: un lab nuevo tomaría el siguiente libre, para que las
+referencias del historial y de los informes sigan queriendo decir lo que decían.
+
+Lo que el curso conserva de esos temas: el **empaquetado** vive en el proyecto final, que se
+entrega con su imagen OCI construida con Jib; y de las **tareas programadas** queda el problema de
+las dos instancias, nombrado en el cierre del lab 07.
+
+Con ellos salieron sus dos fuentes de guía y sus dos PDF. `tools/jib-base/` **se queda**: lo usa el
+proyecto final.
+
+---
 
 La **SPEC-033** sacó de `main` el arco antiguo entero: los ocho labs `lab-07-el-portero` a
 `lab-14-la-dgt-se-parte-en-pedazos`, el tronco `dgt-tramites-api`, `labs/lib/` con la maquinaria
@@ -491,52 +474,21 @@ Y por módulo: **3 cubiertos** (M4 Testing I, M5 Persistencia, M7 Transacciones)
 evalúa, recuperado del antiguo `lab-13-capsula-y-egreso` y adaptado al arco nuevo. Con eso, la
 cobertura sube a **20 temas cubiertos de 35**.
 
-**Lo que sigue sin instrumento es el otro 50 % de la evaluación:**
+**La evaluación está decidida y cerrada** (SPEC-038):
 
 | | Peso | Instrumento |
 |---|---|---|
-| Proyecto final | **50 %** | ✅ `proyecto-final/` — y ahora también `examen-huecos/` |
-| Evaluación de conocimientos | **30 %** | ❌ **no existe** |
-| Ejercicios | **20 %** | ⚠️ **`examen-huecos/` podría serlo, y es decisión del PO** |
+| **Proyecto final** | **70 %** | ✅ `proyecto-final/` — brief cerrado, con `ejemplo/` resuelto al lado |
+| **Evaluación de conocimientos** | **30 %** | ✅ construida, **fuera del repositorio** |
 
-**Sobre esa última fila:** el examen de huecos se construyó como alternativa corta al proyecto
-final, no como instrumento de la casilla de ejercicios. Pero da una nota numérica, objetiva y
-automática sobre los labs 01 a 09, que es exactamente lo que esa casilla pedía. Usarlo así, usarlo
-en lugar del proyecto final, o usar los dos, es una decisión del PO y no del material.
-
-Los dieciséis labs son construcción guiada y no llevan nota, así que no sirven como «ejercicios
-evaluados» sin definir antes qué se puntúa. Las dos casillas vacías son una decisión del PO, no un
-trabajo pendiente del material.
-
-Las ocho brechas restantes: gRPC, AOP, manejo de archivos, eventos de aplicación, mensajería,
-caché, Liquibase y OpenAPI/versionado. **Siete de ellas son un paso dentro de un lab que ya existe**; las
-caras —Testcontainers, mensajería y Buildpacks— lo son porque las tres exigen Docker, que la sala
-del SII no tiene. El mapa las detalla con qué haría falta para cada una.
-
-**Y el alcance de microservicios ya está cubierto (SPEC-037).** El título del contrato
-—«Desarrollo de Microservicios en Java»— prometía algo que su propio temario no reparte: ninguno
-de los 15 módulos ni de los 35 temas es de microservicios. Lo cubría el antiguo Lab 14, retirado
-con el arco viejo por necesitar Docker Compose y seis servicios.
-
-El **`lab-14-microservicios`** lo reconstruye en formato guiado: **cuatro procesos que el alumno
-arranca a mano, tres bases de datos, cero Docker**. Su teoría se recuperó entera del tag
-`material-v0.8.0` y se leyó antes de diseñar nada.
-
-Lo que queda para el PO es la aritmética, no el material: son **tres horas más** sobre un contrato
-que ya iba seis por encima, y el lab **no mapea a ningún módulo contratado como titular** — toca
-M10, M13 y M14 sin ser el dueño de ninguno. Está declarado en el mapa, §6.4.
-
-## 3 · Qué viene ahora
-
-**El material está terminado.** Quince labs, numerados 00 a 14, con las tres carpetas, la maleta
-completa y el CI verde. No queda laboratorio por escribir.
+El `examen-huecos/` se retiró: era una tercera vía que ya no hace falta, y su casilla la cubre la
+evaluación de conocimientos. Ver §1.a.
 
 Lo que viene, en orden:
 
-0. **Elegir con qué se evalúa, antes del lunes.** Están los dos instrumentos: el `proyecto-final/`
-   de tres horas y el `examen-huecos/` de hora y media. La decisión es del PO y es la más urgente,
-   porque quedan tres o cuatro clases. Si se elige el examen de huecos, lo que falta es un número:
-   cuánto tarda de verdad (`INFORME-SPEC-043` §1.6, se cierra en quince minutos).
+0. **Fijar el plazo de entrega del proyecto final** y comunicarlo. Es lo único que el material
+   deja en blanco a propósito: el `README.md` de `proyecto-final/` dice «el plazo lo fija el
+   relator».
 1. **La fila de aceptación del PO.** Sentarse con cada `PASOS.md` sobre `practica/`, sin abrir
    `solucion/`, del 00 al 14. Es la etapa que cierra cada SPEC y la única que el ejecutor no puede
    hacer. **Empezar por el 14**: es el más grande, el más nuevo, el único con cuatro terminales, y

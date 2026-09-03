@@ -1,451 +1,434 @@
-# INFORME-SPEC-038 · `PASOS.md` con el código listo para pegar — piloto en el Lab 04
+# INFORME-SPEC-038 · Proyecto final fácil y completo, y retiro de material
 
-**Ejecuta:** mocito · **Rama:** `spec-038-pasos-copiables-lab04` · **Fecha:** 20 de agosto de 2026
-**Estado:** ejecutado y verificado. **Es un piloto: la decisión de extenderlo al resto es del PO.**
+**Ejecuta:** mocito · **Rama:** `spec-038-proyecto-final` · **Fecha:** 3 de septiembre de 2026
+**Origen:** SPEC-038 del PO.
 
 ---
 
 ## 0 · Resumen
 
-`labs/lab-04-jpa/PASOS.md` trae ahora, en cada paso, el **bloque exacto que va en el archivo**,
-con el archivo y el sitio dichos sin ambigüedad. **Un solo archivo cambió en todo el repositorio.**
+**Dos cosas: se retira material y el proyecto final deja de ser un examen sorpresa.**
 
-Los bloques **no están tecleados**: se extraen de `solucion/` con un script, y se verificó por dos
-caminos independientes que cada línea de cada bloque proviene de ahí (§3).
+| | |
+|---|---|
+| **Retirado** | `examen-huecos/`, `lab-12-tareas`, `lab-13-empaquetado` — fuera de `main`, enteros en `material-v1.11.1` |
+| **El brief** | **cerrado**: ni un borde abierto. El alumno implementa, no adivina |
+| **`ejemplo/`** | **la pieza nueva**: el mismo encargo resuelto sobre otra entidad, pieza por pieza |
+| **`base/`** | trae más resuelto: OpenAPI, la métrica ya declarada, consola limpia, test en verde |
+| **La rúbrica** | los seis criterios del contrato, con el comando que comprueba cada uno |
 
-La prueba que importa —la V1, que es literalmente lo que hará el PO en clase— se corrió de punta a
-punta: **partir de `practica/` limpia, pegar solo los bloques, en orden, sin abrir `solucion/`.**
-Los diez pasos compilan y arrancan, las ocho demos imprimen lo mismo que `solucion/`, y el
-resultado final es idéntico a `solucion/` salvo comentarios.
+**Todo lo medible está medido.** Los tres proyectos en verde con **cero WARNING**, los cuatro curl
+dando **401 / 403 / 404 / 200** con el total correcto, Swagger mostrando el endpoint, la métrica
+moviéndose y `jib:buildTar` produciendo **286 MB** en los tres.
 
-**El guion creció de 393 a 719 líneas**, pero la parte que se *lee* creció apenas **+95**: casi
-todo lo añadido es código que se copia, no prosa que se lee (§6). No se vuelve inmanejable.
+**36 proyectos compilan offline** (eran 41: salen 6 de los retirados, entra 1 de `ejemplo/`).
 
-**Y el piloto encontró tres defectos preexistentes en el guion del Lab 04** (§5). Los tres son de
-la clase que solo aparece cuando alguien intenta seguir el guion al pie de la letra, que es
-exactamente para lo que servía este ejercicio.
+**Cuatro puntos de la spec resultaron falsos o incompletos al medir**, corregidos y declarados en
+§6:
 
----
+1. **El «archivo de retirados» no es una carpeta**: es el mecanismo de la SPEC-033 — fuera de
+   `main`, recuperable desde el tag.
+2. **`labs/README.md` no existía.** Se creó.
+3. **Swagger daba 401**: la cadena de seguridad exigía token en todo. Hubo que abrir sus rutas.
+4. **El proyecto final seguía en BCrypt** mientras el lab 09 ya enseñaba Argon2id. Señalado, y
+   **alineado después a petición del PO** — §8.1.
 
-## 1 · El formato, tal como quedó
+**Y tres agregados del PO sobre este mismo PR**, en §8: Argon2id en el proyecto final, el plazo de
+entrega y la nota del mapa de módulos.
 
-Cada paso conserva lo que ya tenía —**Se explica**, **En consola**— y suma:
-
-- **`Se pega:`** el bloque, con el archivo y el sitio. Tres formas, según el caso:
-  - **archivo entero** (pasos 1, 2 y 10): «archivo **nuevo** … el archivo entero».
-  - **método entero** (pasos 3 a 8): «**reemplazando el método `guardar()` entero** (desde su
-    firma hasta su llave de cierre)». Reemplazar un método completo no tiene ambigüedad posible:
-    la firma está a la vista y el bloque trae la suya.
-  - **línea suelta** (imports, métodos del repositorio): «**arriba**, con los imports» / «**dentro
-    de la interfaz**».
-- **`Se agrega al runner:`** la línea exacta que va en `Lab04Application`.
-- Cuando un paso toca más de un sitio, los bloques van rotulados **`(1 de 3)`, `(2 de 3)`,
-  `(3 de 3)`** y en el orden en que conviene pegarlos.
-- El bloque va **antes** de «En consola», que es lo que se mira después de pegar.
-
-Y una nota al principio del documento que explica cómo leerlo, y remite a `instructor/` para el
-*por qué* — que es la división de trabajo que pedía la SPEC.
+**El tag.** La cabecera pide `material-v1.12.0`, y **esta vez sí está libre**: es la primera spec
+de la serie cuyo número de tag no colisiona.
 
 ---
 
-## 2 · Dos pasos completos, citados
+## 1 · Retirar material
 
-### 2.1 · Uno simple — paso 2
+### 1.1 · Qué salió
 
-> ## Paso 2 · El repositorio
->
-> **Se explica:** no hace falta escribir la clase que guarda y busca. Se declara una interfaz y
-> Spring Data genera la implementación al arrancar.
->
-> Eso solo ya trae `save`, `findById`, `findAll`, `deleteById` y `count`. Los métodos propios
-> llegan en los pasos 5, 6 y 8.
->
-> **Se pega:** archivo **nuevo**
-> `practica/src/main/java/cl/dgt/jpa/repositories/ObservacionRepository.java` — el archivo entero.
->
-> ```java
-> package cl.dgt.jpa.repositories;
->
-> import cl.dgt.jpa.entities.Observacion;
-> import org.springframework.data.jpa.repository.JpaRepository;
->
-> public interface ObservacionRepository extends JpaRepository<Observacion, Long> {
-> }
-> ```
->
-> **Se agrega al runner:** nada todavía.
->
-> **En consola:** otra vez, arranca y termina. Sin errores.
+```
+examen-huecos/              40 MB
+labs/lab-12-tareas/        324 KB
+labs/lab-13-empaquetado/   179 MB
+docs/guias/fuente/guia-lab-12-tareas.md
+docs/guias/fuente/guia-lab-13-empaquetado.md
+```
 
-Nótese lo que **no** trae: `import java.util.List;` ni `import java.time.LocalDate;`. Los dos
-llegan en los pasos 5 y 6, con el método que los necesita. Es la regla de imports de la SPEC §1
-aplicada al pie de la letra.
+Los dos PDF salieron con sus carpetas.
 
-### 2.2 · Uno que toca dos archivos — paso 7
+**No se borró nada del historial.** Recuperables uno a uno:
 
-> ## Paso 7 · Actualizar sin `save()`
->
-> **Se explica:** este es el momento raro del laboratorio, y conviene decirlo antes: vamos a
-> cambiar un dato en la base **sin llamar a `save`**. Dentro de una transacción, el objeto que
-> cargaste queda vigilado; al cerrar, Hibernate compara y lanza el `UPDATE` solo.
->
-> Hace falta un setter en la entidad —`setTexto`— que hasta ahora no existía: es la primera vez
-> que se modifica una observación.
->
-> **Se pega (1 de 3):** en `entities/Observacion.java`, **junto a los getters**, antes del
-> `@Override` del `toString()`.
->
-> ```java
->     public void setTexto(String texto) { this.texto = texto; }
-> ```
->
-> **Se pega (2 de 3):** en `demos/DemosJpa.java`, **arriba**, con los imports.
->
-> ```java
-> import org.springframework.transaction.annotation.Transactional;
-> ```
->
-> **Se pega (3 de 3):** en `demos/DemosJpa.java`, **reemplazando el método `actualizar()` entero**.
-> Ojo con la anotación `@Transactional`: va con el bloque, encima de la firma.
->
-> ```java
->     @Transactional
->     public void actualizar() {
->         seccion(6, "ACTUALIZAR SIN save() · dirty checking");
->
->         Observacion observacion = repositorio.findById(primerId).orElseThrow();
->         System.out.println("  antes:  " + observacion.getTexto());
->
->         observacion.setTexto("Revisión anual: se detecta diferencia menor.");
->         System.out.println("  después: " + observacion.getTexto());
->         System.out.println("  NO llamamos a save(). El UPDATE aparece justo aquí abajo,");
->         System.out.println("  cuando esta transacción se cierre:");
->     }
-> ```
->
-> **Se agrega al runner:**
->
-> ```java
->             demos.actualizar();
-> ```
+```bash
+git show material-v1.11.1:labs/lab-12-tareas/PASOS.md
+git checkout material-v1.11.1 -- labs/lab-13-empaquetado/
+git checkout material-v1.11.1 -- examen-huecos/
+```
 
-Tres bloques, dos archivos, cada uno con su sitio. La `@Transactional` viaja **dentro** del bloque
-del método —no como una instrucción aparte— porque una anotación que hay que acordarse de poner es
-una anotación que alguien va a olvidar.
+### 1.2 · Lo que se sacó del CI y de los verificadores
+
+| archivo | qué cambió |
+|---|---|
+| `.github/workflows/material-ci.yml` | el job `labs` recorre `labs proyecto-final`, sin `examen-huecos` |
+| `tools/verificar-instructor.py` | ya no busca `examen-huecos/instructor` |
+| `tools/instructor-respaldo.sh` | ya no respalda esa carpeta |
+| `.gitignore` | fuera las dos reglas de `examen-huecos` |
+| `demos-instructor/README.md` | la frase que citaba la lista del job |
+
+### 1.3 · El grep que la spec pedía
+
+Sobre los labs vivos y `proyecto-final/`, buscando `lab-12`, `lab-13`, `examen-huecos`, `lab12.` y
+`lab13.`:
+
+```
+$ grep -rn "lab-12\|lab-13\|examen-huecos\|lab12\.\|lab13\." \
+    labs/lab-0*/ labs/lab-14*/ proyecto-final/ demos-instructor/ tools/ .github/ README.md
+   (sin resultados en labs vivos ni en proyecto-final)
+```
+
+Lo que apareció estaba en el CI, los verificadores y los README, y está corregido. **Ningún lab
+vivo ni `proyecto-final/` referenciaban a los tres retirados**, ni por carpeta ni por propiedad de
+yml.
+
+### 1.4 · `labs/README.md`
+
+**No existía** — ver §6.2. Se creó, con la tabla de los catorce labs vivos y la sección que la
+spec pedía:
+
+> **Los números 12 y 13 no se reutilizan.** Un lab nuevo tomaría el siguiente libre, para que las
+> referencias del historial y de los informes sigan queriendo decir lo que decían.
+
+Y qué conserva el curso de esos temas: el **empaquetado** vive en el proyecto final, que se entrega
+con su imagen OCI; de las **tareas programadas** queda el problema de las dos instancias, nombrado
+en el cierre del lab 07 al hablar del turno que vive en la base y no en la JVM.
+
+### 1.5 · `tools/jib-base/` se queda
+
+**No se tocó.** Lo usa el proyecto final, que entrega su imagen OCI construida con Jib. Es la misma
+razón por la que sobrevivió a la SPEC-033.
 
 ---
 
-## 3 · V4 · los bloques están extraídos, no tecleados
+## 2 · El brief, cerrado
 
-La regla de fondo de la SPEC §2. Se resolvió con un extractor que **lee los archivos de
-`solucion/`** y compone los bloques: saca métodos completos localizando su firma y contando llaves,
-saca líneas sueltas por su contenido, y quita los comentarios pedagógicos (porque `practica/` va
-sin documentación, SPEC §3).
+`brief/requerimientos.md` reescrito entero. Se fue la nota del relator que decía *«está
+deliberadamente incompleto en los bordes, y esos bordes son parte del examen»*; ahora hay una
+especificación sin huecos.
 
-El `PASOS.md` se genera sustituyendo marcadores `{{...}}` de una plantilla por esos bloques, así
-que **el documento no contiene una sola línea de código escrita a mano**.
+**Lo que quedó fijado, con su tabla en el brief:**
 
-Verificado por **dos caminos independientes**:
+| caso | respuesta |
+|---|---|
+| Sin token | 401 |
+| Token de CONTRIBUYENTE | 403 |
+| RUT que no existe | 404 con `{"mensaje": ...}` |
+| Falta `desde` o `hasta` | 400 con `{"mensaje": ...}` |
+| Contribuyente sin trámites en el período | 200, `tramites: []`, `totalDeclarado: 0` |
+| Todo bien | 200 |
 
-**(a) Cada línea de cada bloque existe en `solucion/`:**
-
-```
-  bloques verificados: 21
-  lineas que NO provienen de solucion/: 0
-```
-
-**(b) Al revés — cada bloque extraído aparece VERBATIM en el `PASOS.md` que quedó escrito:**
+**Los campos, exactamente seis en la raíz y cinco por trámite:**
 
 ```
-  bloques de solucion/ presentes VERBATIM en PASOS.md: 21/21
-  bloques ```java en PASOS.md: 29  (los que sobran son runner y curl)
+rut · razonSocial · desde · hasta · tramites · totalDeclarado
+    tramites[]:  id · tipo · estado · fecha · montoDeclarado
 ```
 
-El segundo es el que de verdad protege: comprueba lo que quedó en el documento, no lo que el
-generador *creía* haber puesto.
+**`totalDeclarado` suma todos los trámites del período, sin filtrar por estado.** Está dicho con su
+razón: la pregunta es cuánto se **declaró**, no cuánto se pagó.
 
-> **Nota para cuando se extienda al resto:** el extractor y la plantilla quedaron fuera del
-> repositorio a propósito, porque la V6 de esta SPEC exige que solo cambie `PASOS.md`. Si el piloto
-> se aprueba, lo que corresponde es promoverlos a `tools/` y añadir al CI un job que regenere el
-> guion y falle si el resultado difiere del commiteado — con eso, tocar `solucion/` sin actualizar
-> el guion pasa a ser imposible. **Hoy esa garantía no existe:** los bloques están sincronizados
-> porque se acaban de extraer, no porque nada lo vigile.
+**Y `puntaje_riesgo` salió de la migración**, como pedía la spec: no se puede filtrar lo que no
+existe, así que el criterio de la lista blanca deja de poder aprobarse por accidente.
+
+**Sin batch, sin paginación, sin reporte escrito** — dicho explícitamente en un apartado *«lo que
+NO hay que hacer»*, porque hacerlo tampoco suma.
 
 ---
 
-## 4 · La verificación
+## 3 · `ejemplo/`, la pieza nueva
 
-### V1 · pegar los bloques en `practica/` limpia, en orden — **CUMPLE** ★
+`proyecto-final/ejemplo/` **viaja en el repositorio**. Es `base/` más el mismo encargo resuelto
+sobre otra entidad, uno a uno:
 
-Es la prueba de esta SPEC. Se partió de `practica/` en su estado de entrega exacto (comprobado con
-`git status` vacío), se pegaron **solo** los bloques del `PASOS.md`, en el orden del guion, y se
-compiló y arrancó en cada paso:
+| El encargo del alumno | El ejemplo |
+|---|---|
+| `GET /consolidados/{rut}?desde&hasta` | `GET /resumenes/{codigo}?desde&hasta` |
+| `ConsolidadoContribuyente`, `TramiteDelConsolidado` | `ResumenOficina`, `TramiteDelResumen` |
+| consulta por RUT y fechas | consulta por código de oficina y fechas |
+| `ConsolidadoService` | `ResumenService` |
+| `ConsolidadoController` | `ResumenController` |
+| sólo FISCALIZADOR: 401 y 403 | sólo FISCALIZADOR: 401 y 403 |
+| 404 si el RUT no existe | 404 si el código no existe |
+| dos tests: servicio y controller | dos tests: servicio y controller |
 
-```
-########## PASO 1   [COMPILA] [ARRANCA]     entities/Observacion.java (archivo nuevo)
-########## PASO 2   [COMPILA] [ARRANCA]     repositories/ObservacionRepository.java (archivo nuevo)
-########## PASO 3   [COMPILA] [ARRANCA]     imports + cabecera + método guardar() + runner
-########## PASO 4   [COMPILA] [ARRANCA]     imports + buscarPorId() + listarTodas() + runner
-########## PASO 5   [COMPILA] [ARRANCA]     import + findByAutor() + buscarPorAutor() + runner
-########## PASO 6   [COMPILA] [ARRANCA]     import + findByAutorAndFechaAfter() + demo + runner
-########## PASO 7   [COMPILA] [ARRANCA]     setTexto() + import + actualizar() + runner
-########## PASO 8   [COMPILA] [ARRANCA]     countByAutor() + borrar() + contar() + runner
-########## PASO 9   [ARRANCA]               runner con una sola llamada
-########## PASO 10  [COMPILA] [ARRANCA]     ObservacionController.java (archivo entero)
-```
+**Cada archivo lleva dos líneas arriba** —qué hace y cuál es su equivalente— y los comentarios de
+dentro explican **por qué**, no qué. Ejemplos de lo que explican: por qué el DTO es un `record`
+inmutable y una lista blanca; por qué `BigDecimal` y no `double`; por qué `compareTo` y no `equals`
+al comparar importes en un test; por qué el `@RequestParam` sin `required = false` produce el 400
+sin escribir un `if`.
 
-**Diez de diez.** Ningún paso necesitó tocar nada que el guion no dijera.
+**El esquema creció lo mínimo que la spec autorizaba**: una tabla `oficina` con tres filas —la
+tercera sin trámites, que es el borde del ejemplo— y una columna `oficina_codigo` en `tramite`.
 
-### V2 · el resultado final vs `solucion/` — **CUMPLE**
-
-```
-  [IDÉNTICO] entities/Observacion.java
-  [DIFIERE]  repositories/ObservacionRepository.java
-      4d3
-      < import java.util.List;
-      5a5
-      > import java.util.List;
-  [DIFIERE]  demos/DemosJpa.java
-      2d1
-      < import org.springframework.stereotype.Component;
-      4a4,5
-      > import org.springframework.stereotype.Component;
-      > import org.springframework.transaction.annotation.Transactional;
-      8d8
-      < import org.springframework.transaction.annotation.Transactional;
-  [IDÉNTICO] web/ObservacionController.java
-  [DIFIERE]  Lab04Application.java
-      29c29
-      <     static final int PUERTO_BASE = 55432;
-      ---
-      >     static final int PUERTO_BASE = 55433;
-```
-
-**Las tres diferencias son las tres inofensivas y hay que decirlo con nombre:**
-
-1. **El orden de los imports** en dos archivos. No cambia nada —Java no se entera— y depende de
-   dónde los pegue cada uno. Está avisado en el propio guion, para que nadie crea que se equivocó.
-2. **El puerto de la base**, 55432 contra 55433. Es de diseño: `practica/` y `solucion/` corren a
-   la vez sin pisarse.
-
-Ni una diferencia de código. Los dos archivos que se pegan enteros —la entidad y el controller—
-salen **idénticos**.
-
-### V3 · las 8 demos tras pegar — **CUMPLE**
-
-Comparadas contra la salida de `solucion/`, normalizando los `id` (que avanzan entre arranques,
-§5.3):
-
-```
-  IDÉNTICO: las 8 demos imprimen exactamente lo mismo
-  (31 líneas comparadas)
-```
-
-Y el momento del laboratorio, el `UPDATE` del paso 7 que aparece **después** del último `println`,
-salió donde el guion dice:
-
-```
-  NO llamamos a save(). El UPDATE aparece justo aquí abajo,
-  cuando esta transacción se cierre:
-Hibernate:
-    update
-        observacion
-    set
-        autor=?,
-        fecha=?,
-        texto=?
-    where
-        id=?
-```
-
-El paso 10 también, por HTTP:
-
-```
-  GET  /api/observaciones      -> [{"texto":"Solicita certificado de situación.",...,"id":20}, ...]
-  GET  ?autor=Carolina         -> [{"texto":"Solicita certificado de situación.",...,"id":20}]
-  GET  /api/observaciones/9999 -> HTTP 404
-  POST /api/observaciones      -> HTTP 201  {"texto":"Creada desde Postman.",...,"id":23}
-```
-
-Y el cierre: Ctrl+C, arrancar otra vez, y la observación creada por HTTP sigue ahí.
-
-### V4 · cada bloque ↔ su origen en `solucion/` — **CUMPLE**
-
-Ver §3: 21/21 por los dos caminos, 0 líneas tecleadas.
-
-### V5 · los imports — **CUMPLE**
-
-Ningún paso dejó un bloque que no compilara por un import no mencionado. Se demuestra por V1: los
-diez pasos compilan, y el compilador es el único juez que importa aquí. Los imports se reparten
-así, cada uno con el paso que lo necesita:
-
-| paso | import que introduce | por qué ahí |
-|---|---|---|
-| 3 | `Observacion`, `ObservacionRepository`, `LocalDate` | el campo, el constructor y `LocalDate.of(...)` |
-| 4 | `List`, `Optional` | `findAll()` devuelve lista, `findById()` devuelve `Optional` |
-| 5 | `java.util.List` *(en el repositorio)* | `List<Observacion> findByAutor(...)` |
-| 6 | `java.time.LocalDate` *(en el repositorio)* | el parámetro de la fecha de corte |
-| 7 | `Transactional` | la anotación del método |
-
-### V6 · el lab sin tocar — **CUMPLE**
-
-```
-$ git status --short
- M labs/lab-04-jpa/PASOS.md
-
-  archivos del lab 04 modificados: 1
-```
-
-`practica/`, `solucion/` e `instructor/` sin una línea de cambio. Se restauraron con
-`git checkout` tras el paseo y se comprobó que el árbol quedó limpio.
-
-*(Los archivos sin trackear de los labs 01 y 02 son del PO, son anteriores a esta SPEC y no se
-tocaron.)*
+**Y una diferencia que el ejemplo declara en voz alta**, porque si no sería una trampa: el ejemplo
+filtra por `oficinaCodigo`, que es una columna del propio trámite; el encargo filtra por el RUT, que
+vive en `Contribuyente`, así que **la consulta del alumno navega la relación** y ahí sí conviene un
+`join fetch`. Está dicho en el comentario de su `TramiteRepository` y en el brief.
 
 ---
 
-## 5 · Tres defectos del guion que el piloto destapó
+## 4 · Lo que `base/` trae resuelto
 
-Ninguno lo introduce esta SPEC. Los tres estaban desde antes y **solo aparecen cuando alguien
-intenta seguir el guion literalmente**, que es lo que este ejercicio obliga a hacer.
+| | estado |
+|---|---|
+| Entidades, migración, datos, login, JWT, cadena | ya estaba |
+| Actuator `health` e `info` | ya estaba · **se añadió `metrics`** |
+| **OpenAPI** | **nuevo**: `springdoc-openapi-starter-webmvc-ui` 2.8.13, en la maleta y en el pom |
+| **Contador de negocio** | **nuevo**: `ContadorDeConsolidados` con `dgt.consolidados.emitidos` |
+| Jib | ya estaba |
+| **Test de contexto que pasa** | **nuevo**: `ContextoDeSpringTest` |
+| **Consola limpia** | **nuevo**: `.mvn/jvm.config` + Surefire con `trimStackTrace` |
 
-### 5.1 · «Se descomenta» — no había nada comentado
+**La maleta creció 1,3 MB** con springdoc y sus transitivas (58 entradas nuevas en `repo-maven/`,
+casi todas BOM y POM de resolución). Capturadas con el procedimiento de la SPEC-023, con el matiz
+que el informe anterior dejó escrito:
 
-El `PASOS.md` decía **ocho veces** «**Se descomenta:** `demos.guardar();`», y el `README.md` del
-lab lo repite: *«En `practica/` las ocho demos están **comentadas** en `Lab04Application`»*.
+```bash
+DGT_ONLINE=1 ./mvnw compile -Dmaven.repo.local=<raíz>/repo-maven
+```
 
-No lo están. El runner de `practica/` llega así:
+**El contador está declarado y esperando.** El alumno pone una línea:
 
 ```java
-    @Bean
-    CommandLineRunner run(DemosJpa demos) {
-        return args -> {
-        };
-    }
+    contador.emitidos().increment();
 ```
-
-**Vacío.** No hay nada que descomentar: hay que **escribir** las ocho líneas.
-
-**Qué se hizo:** el guion dice ahora «**Se agrega al runner:**» y entrega la línea exacta. Es una
-corrección de un hecho, no un cambio de paso.
-
-**Qué queda pendiente y es del Arquitecto:** `README.md:43` sigue diciendo lo mismo. **No se
-tocó**, porque la V6 de esta SPEC exige que solo cambie `PASOS.md`. Hay dos salidas y las dos son
-legítimas: corregir esa línea del README, o —mejor— **añadir las ocho llamadas comentadas a
-`practica/`**, con lo que el guion original recupera su sentido y el alumno ve de un vistazo el
-mapa completo del laboratorio. La segunda toca `practica/` y por eso no se hizo aquí.
-
-### 5.2 · El paso 9 decía «3 observaciones» y son **2**
-
-El guion mostraba:
-
-```
-  3 observaciones:
-    Observacion{id=2, ...}
-    Observacion{id=3, ...}
-```
-
-Un `3` encabezando dos filas. Lo que de verdad imprime, medido:
-
-```
-=== 3 · LISTAR TODAS · findAll() ===
-  2 observaciones:
-    Observacion{id=17, texto='Solicita certificado de situación.', autor='Carolina', ...}
-    Observacion{id=18, texto='Diferencias en el F29 de julio.', autor='Ignacio', ...}
-```
-
-**Dos**, porque el paso 8 borró una y sigue borrada — que es justamente lo que el paso quiere
-demostrar. Corregido, y con una frase que lo dice en voz alta en vez de dejarlo al ojo del lector.
-
-### 5.3 · Los `id` no son `1, 2, 3` más que la primera vez
-
-`guardar()` empieza con `repositorio.deleteAll()` —línea que, de paso, **el guion nunca
-mencionaba**— pero borrar filas no devuelve atrás la secuencia de la base. Medido, arrancando una
-vez por paso como manda el guion:
-
-| corrida | ids |
-|---|---|
-| paso 3 | 1, 2, 3 |
-| paso 4 | 4, 5, 6 |
-| paso 5 | 7, 8, 9 |
-| paso 6 | 10, 11, 12 |
-| paso 7 | 13, 14, 15 |
-| paso 8 | 16, 17, 18 |
-
-Todos los bloques «En consola» del guion muestran `id = 1`. **A partir del segundo arranque eso
-deja de ser verdad**, y en clase el segundo arranque llega en el paso 4.
-
-No se reescribieron los bloques —seguirían siendo falsos en la corrida siguiente— sino que se
-avisa una vez, arriba del documento, y se explica por qué: *lo que importa no es el número, sino
-que el `id` pase de `null` a algo*. Y se añadió una frase sobre `deleteAll()` donde aparece.
-
-> **Un aviso metodológico sobre este hallazgo:** durante las primeras pruebas los `id` saltaban de
-> 3 a 34. No era del lab: era **mi arnés** matando PostgreSQL con `kill -9`, lo que fuerza
-> recuperación por WAL y adelanta la secuencia hasta 32 posiciones. Al apagar con `SIGINT` —que es
-> lo que hace el Ctrl+C del alumno— los ids avanzan de tres en tres, como en la tabla. Se corrigió
-> el arnés y se volvió a medir todo desde cero.
 
 ---
 
-## 6 · Cuánto creció el documento
+## 5 · Validación
 
-La pregunta que la SPEC pide contestar para poder decidir si esto se extiende al resto.
-
-```
-  antes:   393 líneas   13 864 bytes
-  después: 719 líneas   24 127 bytes
-```
-
-**+83 % en líneas.** Pero ese número, solo, engaña. Partido en lo que se lee y lo que se copia:
+### 5.1 · Los tres proyectos
 
 ```
-  PROSA (lo que de verdad se lee):  antes 299  ->  después 394   (+95)
-  CÓDIGO (lo que se copia):         antes  95  ->  después 326   (+231)
+base                             [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+ejemplo                          [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+instructor/solucion-referencia   [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+
+WARNINGs:  base 0  ·  ejemplo 0  ·  solucion-referencia 0
 ```
 
-**Tres cuartas partes de lo que creció es código**, que no se lee: se copia. La prosa creció +95
-líneas, y de esas, unas 25 son el aviso de cómo leer el guion y los dos avisos de consola del
-encabezado; el resto son las frases de «dónde va este bloque», que es precisamente el trabajo que
-esta SPEC le quita al instructor en vivo.
+> **«Cuatro» y no «tres»**, que es lo que decía la spec: son **tres archivos** de test —contexto,
+> servicio y controller— y **cuatro métodos**, porque el de servicio tiene dos (el total y el 404).
+> Mismo caso que el parametrizado de la SPEC-035.
 
-Por paso, que es como se usa:
+### 5.2 · Los cuatro curl sobre `solucion-referencia/`
 
-| paso | antes | después | de las cuales, código |
-|---|---|---|---|
-| 1 · La entidad | 27 | 75 | 49 |
-| 2 · El repositorio | 21 | 27 | 8 |
-| 3 · Guardar | 45 | 94 | 46 |
-| 4 · Buscar por id, y listar | 31 | 67 | 34 |
-| 5 · Buscar por autor | 31 | 52 | 19 |
-| 6 · Dos condiciones | 30 | 54 | 20 |
-| 7 · Actualizar sin `save()` | 43 | 73 | 34 |
-| 8 · Borrar y contar | 44 | 71 | 36 |
-| 9 · La prueba de que quedó guardado | 38 | 56 | 18 |
-| 10 · Lo mismo, por HTTP | 43 | 96 | 59 |
+```
+1 · sin token                401
+2 · token CONTRIBUYENTE      403
+3 · RUT que no existe        {"mensaje":"No existe el contribuyente 99.999.999-9"} [404]
+4 · el caso bueno            rut=76.111.111-1  razonSocial=Comercial Andes Ltda.
+                             trámites=4  totalDeclarado=6330000.0
+```
 
-**Veredicto: no se vuelve inmanejable.** El paso más largo son 96 líneas y 59 de ellas son el
-controller entero, que se copia de una vez. Nadie lee el documento de corrido: lee un paso, pega,
-mira la consola, pasa al siguiente. Los dos pasos más gordos (1 y 10) lo son porque pegan un
-archivo completo, que es justo el caso más cómodo de todos.
+**El total, contra los datos sembrados:**
 
-Lo que **sí** conviene tener presente si esto se extiende: en un lab con más archivos —el 14, sin
-ir más lejos, son cuatro servicios— el documento crecería bastante más que un 83 %, y ahí la
-decisión de qué llega hecho en `practica/` pesa más que el formato del guion.
+```
+1.200.000 + 950.000 + 3.400.000 + 780.000 = 6.330.000
+```
+
+Los 3.400.000 son de un trámite **PENDIENTE** y suman igual — que es el criterio del brief. La
+rúbrica usa ese número para cazar al alumno que filtre por estado: le saldría 2.930.000.
+
+**Y los campos, exactamente los que el brief fija:**
+
+```
+campos raíz:          ['desde', 'hasta', 'razonSocial', 'rut', 'totalDeclarado', 'tramites']
+campos de un trámite: ['estado', 'fecha', 'id', 'montoDeclarado', 'tipo']
+```
+
+### 5.3 · Los dos bordes
+
+```
+sin trámites   {"rut":"78.333.333-3","razonSocial":"Inversiones Atacama Ltda.",
+                "desde":"2026-01-01","hasta":"2026-12-31","tramites":[],"totalDeclarado":0} [200]
+
+falta `hasta`  {"mensaje":"Faltan `desde` y `hasta`, o no tienen formato YYYY-MM-DD"} [400]
+```
+
+### 5.4 · Swagger, la métrica y Jib
+
+```
+/swagger-ui.html   200
+endpoints          ['/auth/login', '/consolidados/{rut}']     ← en solucion-referencia
+                   ['/auth/login', '/resumenes/{codigo}']     ← en ejemplo
+
+dgt.consolidados.emitidos = 2.0    (solucion-referencia, tras dos peticiones)
+dgt.consolidados.emitidos = 3.0    (ejemplo, tras tres)
+
+jib:buildTar       base 286M  ·  ejemplo 286M  ·  solucion-referencia 286M
+```
+
+**El endpoint aparece en Swagger sin una sola anotación de OpenAPI** en el controller, que es lo que
+la spec pedía.
+
+### 5.5 · El CI local
+
+```
+[INFO] 36 proyectos · 0 fallos            (41 antes: −6 retirados, +1 ejemplo)
+
+verificar-temario.py            VEREDICTO: las 5 verificaciones PASAN
+verificar-pasos-copiables.py    [OK] 14 guion(es) verificado(s)
+verificar-guion-vs-practica.py  [OK] Todo lo que los guiones prometen es verdad
+verificar-instructor.py         [OK] 18 XML · 171 .java · 15/15 carpetas
+verificar-demo-docker.py        [OK] la demostración dice el mismo código que el laboratorio
+generar-guias.py --verificar    [OK] 78 bloque(s) · 0 líneas que la solución no tenga
+```
 
 ---
 
-## 7 · Lo que este informe NO puede afirmar
+## 6 · Los puntos de la spec que resultaron falsos, y qué se hizo
 
-- **Que en clase funcione.** V1 demuestra que los bloques están completos y correctos: pegándolos
-  al pie de la letra se llega a `solucion/`. Que ahorren el trabajo mental que el PO describe
-  —*«en clases no tengo tiempo de pensar en nada que no sea lo que estoy pasando»*— solo lo dice
-  una clase de verdad. **Es un piloto, y esa es la prueba que falta.**
-- **Que el guion se mantenga sincronizado solo.** Hoy los bloques cuadran porque se acaban de
-  extraer. Nada impide que mañana alguien toque `solucion/` y el guion quede mintiendo. La
-  garantía es el job de CI descrito en §3, y **no está hecho**: promoverlo depende de si el piloto
-  se aprueba.
-- **Que esto sea lo correcto para los otros catorce labs.** El Lab 04 es de los más regulares:
-  cuatro archivos, métodos independientes, un solo proyecto. Los labs 07, 12 y 14 tienen mucho más
-  código y menos simetría, y el formato podría necesitar ajustes.
-- **Que funcione en Windows.** Todo se midió en macOS. El formato es texto plano y no debería
-  variar, pero los `curl` del paso 10 y el Ctrl+C del paso 9 se comportan distinto en `cmd.exe`.
+### 6.1 · El «archivo de retirados» no es una carpeta
+
+La spec dice: *«Mover al archivo de retirados, donde está el lab 14 antiguo.»*
+
+**No existe ninguna carpeta de archivo.** Se comprobó: no hay `archivo/`, ni `retirados/`, ni
+`docs/archivo/`. Lo que la SPEC-033 hizo con el arco antiguo —y que `ESTADO.md` §1.a documenta— fue
+**sacarlo de `main` y dejarlo en el historial y en los tags**:
+
+```bash
+git show material-v0.8.0:labs/lab-13-capsula-y-egreso/README.md
+```
+
+Se aplicó **el mismo mecanismo**, que cumple el «no se borra nada» de la spec: nada desaparece del
+historial, y `ESTADO.md` §1.a y `labs/README.md` dicen cómo recuperarlo con el tag correcto
+(`material-v1.11.1`).
+
+### 6.2 · `labs/README.md` no existía
+
+La spec pide *«una línea en `labs/README.md`»*. Ese archivo **no existía**: la tabla de labs vivía
+sólo en el README de la raíz.
+
+Se **creó**, con la tabla de los catorce labs y la sección de los números retirados. Y se quitaron
+las dos filas del README de la raíz.
+
+### 6.3 · Swagger daba 401
+
+La spec pide *«`/swagger-ui.html` funcionando»*. Con la dependencia puesta y nada más, **daba 401**:
+la cadena de `base/` exige token en todo salvo `/auth/login` y `/actuator/health`.
+
+```
+  /swagger-ui.html      -> 401
+  /v3/api-docs          -> 401
+```
+
+Se abrieron sus tres rutas en `SeguridadConfig`, con el motivo escrito en el código: la
+documentación describe **qué** endpoints hay, no devuelve un dato, y es la primera pantalla que
+alguien abre para entender el servicio. Después:
+
+```
+  /swagger-ui.html -> 200
+  endpoints:  ['/auth/login']
+```
+
+### 6.4 · BCrypt frente a Argon2 · **resuelto: alineado con el lab 09**
+
+La spec original no mencionaba el codificador, así que la primera versión de este trabajo dejó el
+proyecto final en `BCryptPasswordEncoder` y señaló la inconsistencia: el **lab 09 pasó a Argon2id
+con la SPEC-036**, y el proyecto final seguía en BCrypt.
+
+**El PO decidió alinearlo**, y está hecho — ver §9.1.
+
+### 6.5 · Dos cosas menores que la spec no anticipaba
+
+- **La ruta de `jib.baseImageCache`.** `solucion-referencia/` está un nivel más abajo que `base/`,
+  así que su `.mvn/maven.config` necesita `../../../tools/jib-base` y no `../../`. Con la ruta
+  heredada, `jib:buildTar` fallaba con *«Cannot run Jib in offline mode»*. Corregido.
+- **El test de controller y la cadena de seguridad.** El `@WebMvcTest` intentaba montar la cadena
+  entera, que necesita el `JwtDecoder`. Se resolvió con `@AutoConfigureMockMvc(addFilters = false)`,
+  y está explicado en el comentario del ejemplo: lo que ese test prueba es el 404 y su cuerpo, no la
+  seguridad — la seguridad se comprueba con los curl de la rúbrica. Es el criterio del Lab 08: cada
+  test al nivel más barato que responda su pregunta.
+
+---
+
+## 7 · El tag
+
+La cabecera pide **`material-v1.12.0`**, y **por primera vez en esta serie el número está libre**:
+no colisiona con la serie histórica v0.x. Se cierra con ése.
+
+---
+
+## 8 · Los tres agregados del PO
+
+Pedidos sobre este mismo PR, después de la primera revisión.
+
+### 8.1 · Argon2id en el proyecto final
+
+Alineado con el lab 09. Los cuatro cambios, en **`base/`, `ejemplo/` y
+`instructor/solucion-referencia/`**:
+
+1. **`Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()`** en `SeguridadConfig`, con el motivo
+   comentado: lento en tiempo **y en memoria**, que es lo que deja fuera a las tarjetas gráficas, y
+   los parámetros de la fábrica porque elegirlos mal deja Argon2 peor que BCrypt.
+2. **`clave_hash` de 60 a 120**, con la razón en la propia migración: un hash Argon2 mide unos 95 y
+   su largo **depende de los parámetros** — no es fijo como el de BCrypt.
+3. **`bcprov-jdk18on` declarado en los tres poms.** Ya estaba en la maleta: lo capturó la SPEC-036
+   para el lab 09, así que `repo-maven/` **no cambió** y los 36 proyectos siguen compilando offline.
+4. **Hashes regenerados**, con el propio `Argon2PasswordEncoder` del proyecto:
+
+```
+ana   $argon2id$v=19$m=16384,t=2,p=1$2WZREBTpf3Q2qNoiFbO1cg$u9NGi9Dj2pW98+bSI50H9FvsCqrlqbckQQ6xEx8MvnI
+luis  $argon2id$v=19$m=16384,t=2,p=1$k2zUdDw7e1DQxTSf86+LyQ$qhEPAHw2vBCgP/1R/9xW/R3IbyoRFn/7ubipO5JVWr4
+```
+
+Los dos son de la palabra `secreta` y **no se parecen**: es la sal, y sirve como demostración
+adicional del lab 09 dentro del propio proyecto final.
+
+**Medido después del cambio:**
+
+```
+base                             Tests run: 1, Failures: 0, Errors: 0
+ejemplo                          Tests run: 4, Failures: 0, Errors: 0
+instructor/solucion-referencia   Tests run: 4, Failures: 0, Errors: 0
+
+login ana        200          ← con el hash Argon2 sembrado
+login luis       200
+clave mala       401
+
+1 sin token       401
+2 CONTRIBUYENTE   403
+3 RUT inexistente 404
+4 el bueno        200  ·  total = 6.330.000
+
+36 proyectos compilan offline · repo-maven sin cambios
+```
+
+### 8.2 · El plazo de entrega
+
+**Viernes 25 de septiembre de 2026, 23:59**, en el `README.md` de `proyecto-final/` y en el cierre
+del brief.
+
+**Por qué esa fecha y no el 18**, que era el viernes de las tres semanas naturales: el **18 y el 19
+de septiembre son feriados en Chile**. Una entrega el viernes 18 habría sido, en la práctica, una
+entrega el jueves 17 para todo el mundo — y con la semana de Fiestas Patrias por delante. El 25 da
+las tres semanas completas de trabajo útil. **Está escrito en el README con esa razón**, para que
+si el PO la mueve sepa qué está moviendo.
+
+### 8.3 · La nota del mapa de módulos
+
+Tres líneas al inicio de `docs/temario/MAPA-LAB-MODULO.md`, sin tocar la matriz —que es lo que
+`verificar-temario.py` comprueba, y sigue verde—:
+
+> Los labs **12** y **13** se retiraron del curso, junto con `examen-huecos/`: siguen enteros en el
+> tag `material-v1.11.1`. El **módulo 15** lo cubre ahora la **demostración con Docker del lab 14**
+> más el empaquetado que entrega el proyecto final. Los temas que sólo tocaban esos dos labs pasan
+> de **cubiertos** a **mencionados**.
+
+---
+
+## 9 · Lo que queda para el PO
+
+**`docs/temario/MAPA-LAB-MODULO.md` sigue citando lab-12 y lab-13 en las filas de su matriz.** La
+nota del §8.3 lo advierte al principio del documento, pero las filas no se reescribieron: esa matriz
+refleja el **contrato adjudicado**, cuyos módulos no cambian porque el material se reordene, y
+tocarla obliga a revisar `verificar-temario.py` y la coherencia con el `.docx` que se le entrega al
+SII. Si el PO quiere que la matriz refleje lo que hoy se dicta, es un cambio aparte.

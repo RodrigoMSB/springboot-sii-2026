@@ -260,8 +260,8 @@ jobs:
   #  Este job NACE en la SPEC-033, y ocupa el sitio que dejaron `app`, `lab14`,
   #  `grpc` y `deriva`. Aquellos verificaban el arco antiguo, que ya no está.
   #
-  #  Verifica lo que el alumno de verdad ejecuta: los 28 proyectos Maven de los
-  #  catorce labs (`practica/` y `solucion/`), con el MISMO shim `./mvnw` que
+  #  Verifica lo que el alumno de verdad ejecuta: los proyectos Maven de los
+  #  labs vivos (`practica/` y `solucion/`), con el MISMO shim `./mvnw` que
   #  usa él — o sea con `--offline` forzado y contra el `repo-maven/` del
   #  repositorio.
   #
@@ -335,10 +335,9 @@ jobs:
           # Incluye `proyecto-final/base`: es material que el alumno usa y sin esto
           # sería lo único del repositorio que nadie compila.
           # (`proyecto-final/instructor/` está en el .gitignore: en el runner no existe.)
-          # Incluye también `examen-huecos/`, por la misma razón: sus dos proyectos son
-          # material que el alumno usa. Se COMPILAN, no se testean — los doce tests de
-          # `examen-huecos/base` están rojos a propósito, que es de lo que va el examen.
-          for POM in $(find labs proyecto-final examen-huecos -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
+          # `examen-huecos/` salió con la SPEC-038: la evaluación de conocimientos ya no
+          # va en el repositorio. Con él salieron los labs 12 y 13.
+          for POM in $(find labs proyecto-final -name pom.xml -not -path '*/target/*' -not -path '*/instructor/*' | sort); do
               PROY="$(dirname "$POM")"
               TOTAL=$((TOTAL + 1))
               printf '[..] %s\n' "$PROY"
@@ -391,7 +390,7 @@ jobs:
   #  DOCKER NO ESTA EN ESTE CI Y NO VA A ESTARLO. Ningun job levanta el compose,
   #  construye una imagen ni descarga `postgres:16-alpine`. La exclusion es
   #  ESTRUCTURAL, no una lista de excepciones: el job `labs` recorre
-  #  `labs proyecto-final examen-huecos`, y `demos-instructor/` no esta ahi, asi
+  #  `labs proyecto-final`, y `demos-instructor/` no esta ahi, asi
   #  que sus cuatro `pom.xml` no entran en la compilacion offline. No hay nada que
   #  anadir a ningun job para excluirlo; lo que habria que anadir es lo contrario.
   #

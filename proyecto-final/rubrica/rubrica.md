@@ -1,122 +1,242 @@
-# Rúbrica de evaluación · Proyecto final
+# Rúbrica · Proyecto final
 
-Tres ejes × cuatro niveles. Los descriptores son **concretos y verificables**: si un descriptor no se
-puede comprobar mirando la entrega o escuchando la defensa, no está en esta rúbrica.
+**Vale el 70 % de la nota del curso.** El 30 % restante es la evaluación de conocimientos, que se
+rinde aparte.
 
-> **Umbral de aprobación: núcleo verde (Correctitud + Oficio ≥ Suficiente) Y Criterio ≥ Suficiente.**
+**Seis criterios, los del temario adjudicado.** Cada uno tiene tres niveles y **un comando que lo
+comprueba**: la corrección no es una impresión, es una salida de consola.
+
+> ## El umbral
 >
-> Un alumno con todo verde y Criterio Insuficiente **no aprueba**. No es una severidad arbitraria: es
-> la tesis del curso. La sintaxis la escribe la máquina; lo que se certifica aquí es lo otro.
+> **Se aprueba con «suficiente» en los SEIS criterios.**
+>
+> No hay compensación entre ellos: un «bien» en pruebas no cubre un «insuficiente» en seguridad.
+> Son seis cosas distintas y el trabajo tiene que estar hecho en las seis.
 
-**Cómo se mide, ahora que no hay validadores.** El arco antiguo tenía `90-validar.sh`, `91-e2e.sh` y
-siete reglas ArchUnit. No existen. Cada descriptor de abajo dice **cómo se comprueba**, y todas las
-comprobaciones son cosas que el relator hace en minutos con la entrega delante.
-
----
-
-## Eje 1 · CORRECTITUD — *¿funciona, y funciona de verdad?*
-
-| Nivel | Descriptores | Cómo se comprueba |
+| # | Criterio | Peso |
 |---|---|---|
-| **Insuficiente** | Cualquiera de: no compila · su suite falla · el endpoint no devuelve lo pedido · **el pipeline es deshonesto** (`@Disabled`, `catch` vacío, aserciones que no pueden fallar) | `./mvnw test` · un `curl` al endpoint · leer los tests buscando `@Disabled` y aserciones vacías |
-| **Suficiente** | Compila, `./mvnw test` pasa, y `GET /consolidados/{rut}?desde=&hasta=` devuelve los trámites del período, su estado y el total | `./mvnw test` · `curl` con el token de `ana` |
-| **Competente** | Lo anterior **y** los bordes resueltos con coherencia: RUT inexistente → **404** (no una lista vacía) · anónimo → **401** · `luis` (CONTRIBUYENTE) → **403** · el total corresponde **al período pedido**, no al histórico | Los cuatro `curl` de la §«Comprobación rápida» · comparar el total contra los datos sembrados |
-| **Destacado** | Lo anterior **y** hay evidencia de haber pensado en lo que no se pidió: **el total no se infla** y hay una prueba que lo demuestra · el contribuyente sin trámites en el período devuelve un consolidado en cero y no un 404 · el camino del batch está pensado · documentó el contrato sin que nadie se lo pidiera | Leer la prueba del total · `curl` a `78.333.333-3` (sembrado sin trámites) · la defensa |
-
-> **Señal de alarma que baja a Insuficiente aunque todo esté verde: una prueba que no puede fallar.**
->
-> **Cómo se comprueba, en dos minutos:** comenta una línea de producción del alumno —el filtro de
-> fechas del total, o su regla de rol— y corre su suite. Si sigue verde, el verde no valía nada.
->
-> Está verificado que muerde: sobre la solución de referencia, quitar el filtro de período del total
-> pone la suite en rojo con `el total se salió del período`, y quitar la regla de rol la pone en rojo
-> con `Status expected:<403> but was:<200>`.
+| 1 | Arquitectura y diseño | **20 %** |
+| 2 | Correctitud | **20 %** |
+| 3 | Pruebas | **20 %** |
+| 4 | Seguridad | **15 %** |
+| 5 | Persistencia y rendimiento | **15 %** |
+| 6 | Observabilidad y despliegue | **10 %** |
 
 ---
 
-## Eje 2 · OFICIO — *¿está bien hecho por dentro?*
-
-| Nivel | Descriptores | Cómo se comprueba |
-|---|---|---|
-| **Insuficiente** | Cualquiera de: **suite flaky** (tres corridas no coinciden) · una credencial literal en un archivo versionado · **el perfil productivo arranca con un secreto por defecto** · el esquema improvisado a mano en vez de una migración · el `puntaje_riesgo` sale en la respuesta | `./mvnw test` tres veces · `grep -rn "password\|secreto\|clave" src/` · `SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run` **sin** la variable: debe **negarse a arrancar** · mirar `db/migration/` · `curl` y buscar el campo |
-| **Suficiente** | Suite determinista, sin credenciales versionadas, migraciones en orden, y el dato interno no sale | Lo mismo, en verde |
-| **Competente** | Lo anterior **y** el código se lee como el resto del curso: el controlador **no conoce la entidad** · la lógica vive en el servicio · el DTO es **lista blanca** (enumera lo que sale, no excluye lo que no debe salir) · los nombres dicen lo que hacen | Leer `controllers/` buscando imports de `entities/` · leer el DTO: ¿enumera o excluye? |
-| **Destacado** | Lo anterior **y** decisiones que se sostienen solas: la consulta no arrastra el ORM donde no toca · hay comentarios que explican **por qué**, no qué · el que llegue mañana no necesita preguntar nada | Leer la consulta y los comentarios |
-
-> **Sobre el flaky: no se negocia.** Un test que a veces pasa no es una prueba, es una moneda, y una
-> suite con una moneda dentro no protege nada. **Cómo se comprueba:** `./mvnw test` tres veces
-> seguidas. Si los tres resultados no coinciden, el eje es Insuficiente aunque todo lo demás brille.
->
-> Es un criterio con precedente: al construir la solución de referencia, su suite falló
-> **exactamente así** —verde al correr un test solo, roja al correrlos juntos— por dos contextos de
-> Spring levantando el mismo PostgreSQL. Si le pasó a la referencia, le va a pasar a alguien.
-
----
-
-## Eje 3 · CRITERIO — *¿sabe por qué lo hizo así?*
-
-**Lo mide:** el relator, con la defensa oral y el reporte. Guion en `instructor/guia-defensa.md`.
-
-| Nivel | Descriptores |
-|---|---|
-| **Insuficiente** | No identifica ningún borde · no puede justificar sus decisiones más allá de «así lo hice» · atribuye sus elecciones a la costumbre o a lo que sugirió una herramienta, sin haberlas evaluado |
-| **Suficiente** | Identifica **al menos un** borde y explica qué decidió y por qué · sabe decir qué probó y qué no · reconoce alguna limitación de su entrega |
-| **Competente** | Identifica **varios** bordes y los resuelve con un criterio coherente entre ellos · sabe decir **qué habría hecho decidir lo contrario** · distingue lo que dejó fuera por alcance de lo que dejó fuera por descuido · su selección de pruebas tiene una lógica que puede explicar |
-| **Destacado** | Lo anterior **y** anticipa el costo futuro de sus decisiones («esto se revisa el día que un contribuyente tenga miles de trámites, y así lo mediría») · nombra explícitamente lo que NO hizo y por qué era lo correcto no hacerlo · conecta su solución con lecciones concretas del curso, no con lugares comunes |
-
-**La pregunta que separa Suficiente de Competente:** *«¿qué te habría hecho decidir lo contrario?»*.
-Quien sólo puede defender su elección tomó una decisión; quien puede describir el escenario que la
-invalida **entendió el problema**.
-
----
-
-## Comprobación rápida (10 minutos por entrega)
+## Antes de corregir · dejar el proyecto en marcha
 
 ```bash
-cd <entrega-del-alumno>
-./mvnw test && ./mvnw test && ./mvnw test        # determinismo
-./mvnw spring-boot:run &
+cd base                     # la carpeta que entregó el alumno
+./mvnw test                 # criterio 3
+./mvnw spring-boot:run      # queda corriendo, en el 8107
 
-ANA=$(curl -s -X POST localhost:8107/auth/login -H 'Content-Type: application/json' \
-      -d '{"usuario":"ana","clave":"secreta"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
-LUIS=$(curl -s -X POST localhost:8107/auth/login -H 'Content-Type: application/json' \
-      -d '{"usuario":"luis","clave":"secreta"}' | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
-Q='desde=2026-01-01&hasta=2026-12-31'
-
-curl -s -o /dev/null -w '%{http_code} sin token\n'   "localhost:8107/consolidados/76.111.111-1?$Q"
-curl -s -o /dev/null -w '%{http_code} contribuyente\n' -H "Authorization: Bearer $LUIS" "localhost:8107/consolidados/76.111.111-1?$Q"
-curl -s -o /dev/null -w '%{http_code} rut inexistente\n' -H "Authorization: Bearer $ANA" "localhost:8107/consolidados/99.999.999-9?$Q"
-curl -s -o /dev/null -w '%{http_code} sin periodo\n'  -H "Authorization: Bearer $ANA" "localhost:8107/consolidados/76.111.111-1"
-curl -s -H "Authorization: Bearer $ANA" "localhost:8107/consolidados/76.111.111-1?$Q"
+# y en otra terminal, el token de fiscalizador:
+TOKEN=$(curl -s -X POST localhost:8107/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"usuario":"ana","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 ```
 
-**Lo esperable:** `401 · 403 · 404 · 400` y un consolidado con **4 trámites y total 6.330.000**
-(los dos trámites de 2025 quedan fuera). El campo `puntajeRiesgo` **no** debe aparecer.
+---
 
-Y el empaquetado: `./mvnw package jib:buildTar` deja `target/jib-image.tar`.
+## 1 · Arquitectura y diseño · 20 %
+
+Que cada pieza esté donde le toca y no sepa de más.
+
+| | |
+|---|---|
+| **Insuficiente** | Toda la lógica en el controller, o el repositorio llamado desde él. Devuelve la entidad en vez de un DTO |
+| **Suficiente** | Controller → servicio → repositorio, cada uno en su paquete. DTO propio. Dependencias por constructor |
+| **Bien** | Además: el controller no tiene ni un `if` de negocio, el DTO es un `record` inmutable, y los nombres de fuera y de dentro pueden cambiar por separado |
+
+**Cómo se comprueba:**
+
+```bash
+# el controller delega y no calcula
+cat src/main/java/cl/dgt/consolidado/controllers/ConsolidadoController.java
+
+# y NO devuelve la entidad
+grep -r "Contribuyente\b" src/main/java/cl/dgt/consolidado/controllers/
+```
+
+> **El DTO es una lista blanca**, y es el criterio que más se cae: si devuelve la entidad, cualquier
+> columna que alguien añada mañana se publica sola. Ese es exactamente el incidente que el
+> requerimiento quería evitar.
 
 ---
 
-## Cómo se combina
+## 2 · Correctitud · 20 %
 
-| Correctitud | Oficio | Criterio | Resultado |
-|---|---|---|---|
-| ≥ Suficiente | ≥ Suficiente | ≥ Suficiente | **Aprueba** |
-| ≥ Suficiente | ≥ Suficiente | Insuficiente | **No aprueba** |
-| Insuficiente | cualquiera | cualquiera | **No aprueba** |
-| cualquiera | Insuficiente | cualquiera | **No aprueba** |
+Que responda lo que el brief dice, en los seis casos.
 
-El resultado se comunica **por eje**, nunca como un número. Un «Competente en Criterio, Suficiente en
-Oficio» le dice al alumno dónde está y hacia dónde ir. Un «5,8» no le dice nada.
+| | |
+|---|---|
+| **Insuficiente** | Falla alguno de los cuatro `curl`, o el total está mal, o salen campos que el brief no pide |
+| **Suficiente** | Los cuatro `curl` dan 401, 403, 404 y 200. El total cuadra. Los campos son exactamente los seis |
+| **Bien** | Además: distingue 404 de lista vacía, y el 400 sale con cuerpo cuando falta un parámetro |
+
+**Cómo se comprueba — los cuatro `curl` de la corrección:**
+
+```bash
+# 1 · sin token  ->  401
+curl -s -o /dev/null -w "%{http_code}\n" \
+  "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01&hasta=2026-12-31"
+
+# 2 · token de CONTRIBUYENTE  ->  403
+TC=$(curl -s -X POST localhost:8107/auth/login -H 'Content-Type: application/json' \
+     -d '{"usuario":"luis","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TC" \
+  "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01&hasta=2026-12-31"
+
+# 3 · RUT que no existe  ->  404 con cuerpo
+curl -s -w " [%{http_code}]\n" -H "Authorization: Bearer $TOKEN" \
+  "localhost:8107/consolidados/99.999.999-9?desde=2026-01-01&hasta=2026-12-31"
+
+# 4 · el caso bueno  ->  200, y el total tiene que ser 6330000
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01&hasta=2026-12-31"
+```
+
+**El número contra los datos sembrados.** Para `76.111.111-1` en 2026 hay cuatro trámites:
+
+```
+1.200.000 + 950.000 + 3.400.000 + 780.000 = 6.330.000
+```
+
+Los 3.400.000 son de un trámite **PENDIENTE** y suman igual: si el total sale **2.930.000**, el
+alumno filtró por estado y eso es **insuficiente** en este criterio.
+
+**Y los dos bordes:**
+
+```bash
+# contribuyente sin trámites  ->  200 con lista vacía y total 0
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "localhost:8107/consolidados/78.333.333-3?desde=2026-01-01&hasta=2026-12-31"
+
+# falta un parámetro  ->  400 con cuerpo
+curl -s -w " [%{http_code}]\n" -H "Authorization: Bearer $TOKEN" \
+  "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01"
+```
 
 ---
 
-## Lo que esta rúbrica NO evalúa, a propósito
+## 3 · Pruebas · 20 %
 
-- **La cantidad de código.** Una solución de treinta líneas que se defiende gana a una de trescientas
-  que no.
-- **El parecido con la referencia.** `instructor/solucion-referencia/` es *una* solución. Si la del
-  alumno difiere y defiende su criterio, puede estar igual de bien o mejor.
-- **La velocidad.** Terminar en dos horas no suma. Terminar en tres, tampoco resta.
-- **Si usó IA.** Se da por hecho que sí, y está bien: el curso entero parte de ahí. Lo que se evalúa
-  es si sabe **auditar** lo que le entregó — y eso se ve en la defensa en treinta segundos.
+Que haya dos tests y que prueben algo.
+
+| | |
+|---|---|
+| **Insuficiente** | No hay tests, no compilan, o alguno está rojo. O prueban que `1 == 1` |
+| **Suficiente** | Los dos que pide el brief, en verde: servicio con `@Mock` comprobando el total, controller con `MockMvc` comprobando el 404 |
+| **Bien** | Además: el test del servicio se pone rojo si se filtra por estado, y compara `BigDecimal` con `compareTo` y no con `equals` |
+
+**Cómo se comprueba:**
+
+```bash
+./mvnw test
+```
+
+Tienen que salir **al menos tres** en verde: el de contexto que ya venía, y los dos del encargo.
+
+**Y la comprobación que de verdad separa:** romper el código y ver si el test avisa.
+
+```bash
+# en ConsolidadoService, filtrar el total sólo por PAGADO, y correr otra vez:
+./mvnw test          # el test del servicio TIENE que ponerse rojo
+```
+
+Si sigue verde, el test no prueba lo que dice probar. Es **insuficiente** aunque estuviera verde
+antes.
+
+> **Testcontainers no se exige**, y no es un olvido: las máquinas de la sala no tienen Docker. Los
+> tests sobre el **PostgreSQL embebido** que trae `base/` valen exactamente igual para esta rúbrica.
+
+---
+
+## 4 · Seguridad · 15 %
+
+Que sólo el fiscalizador vea el consolidado.
+
+| | |
+|---|---|
+| **Insuficiente** | El endpoint responde sin token, o responde a un CONTRIBUYENTE. O el 403 sale como 401 |
+| **Suficiente** | Sin token 401, con token de CONTRIBUYENTE 403, con FISCALIZADOR 200. La regla está en la cadena de filtros |
+| **Bien** | Además: no hay ningún `if` de rol dentro del controller ni del servicio — la autorización vive en un solo sitio |
+
+**Cómo se comprueba:** los `curl` 1 y 2 del criterio 2, y:
+
+```bash
+grep -rn "FISCALIZADOR" src/main/java/
+```
+
+Tiene que aparecer en `SeguridadConfig` y **en ningún otro sitio**.
+
+> **401 y 403 no son lo mismo**, y confundirlos baja este criterio: 401 es «no sé quién eres», 403
+> es «sé quién eres y esto no te toca».
+
+---
+
+## 5 · Persistencia y rendimiento · 15 %
+
+Que la consulta sea una, no una por fila.
+
+| | |
+|---|---|
+| **Insuficiente** | Trae el contribuyente y recorre `getTramites()` filtrando en Java. O dispara un SELECT por trámite |
+| **Suficiente** | Una consulta con el filtro por RUT y fechas hecho **en la base** |
+| **Bien** | Además: `join fetch` donde hace falta, `between` para el rango y un `order by` explícito |
+
+**Cómo se comprueba** — encender el SQL y contar:
+
+```bash
+# en application.yml:  spring.jpa.show-sql: true
+./mvnw spring-boot:run
+# y una petición:
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01&hasta=2026-12-31" > /dev/null
+```
+
+En la consola tiene que salir **un `select` de trámites**, no cuatro. Es el N+1 del Lab 06 con otro
+disfraz.
+
+---
+
+## 6 · Observabilidad y despliegue · 10 %
+
+Que se pueda operar y que salga de la máquina.
+
+| | |
+|---|---|
+| **Insuficiente** | `jib:buildTar` falla, o el health no responde |
+| **Suficiente** | La imagen se construye, `/actuator/health` responde `UP`, y el contador se mueve |
+| **Bien** | Además: el endpoint aparece en `/swagger-ui.html` sin que se haya anotado nada |
+
+**Cómo se comprueba:**
+
+```bash
+curl -s localhost:8107/actuator/health
+
+# el contador, después de haber pedido algún consolidado
+curl -s -H "Authorization: Bearer $TOKEN" \
+  localhost:8107/actuator/metrics/dgt.consolidados.emitidos
+
+# la documentación
+curl -s -o /dev/null -w "%{http_code}\n" -L localhost:8107/swagger-ui.html
+
+# y la imagen
+./mvnw package jib:buildTar
+ls -lh target/jib-image.tar
+```
+
+El contador y Swagger **vienen dados** en `base/`: lo único que el alumno pone es la línea
+`contador.emitidos().increment()`. Si el contador está en 0 después de varias peticiones, esa línea
+falta.
+
+---
+
+## La solución de referencia
+
+`instructor/solucion-referencia/` tiene **una** solución completa, no *la* solución. Si la del
+alumno difiere y él la defiende, puede estar igual de bien o mejor — salvo en lo que el brief fija
+de forma cerrada, que no admite variantes: las rutas, los códigos de estado, los campos que salen y
+el criterio del total.
