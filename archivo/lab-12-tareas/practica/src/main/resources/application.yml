@@ -1,0 +1,17 @@
+server:
+  port: 8103
+
+spring:
+  application:
+    name: lab12-tareas
+
+  threads:
+    virtual:
+      # Paso 3 · ponlo en true.
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO

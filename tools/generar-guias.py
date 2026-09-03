@@ -59,7 +59,7 @@ MARCADOR = re.compile(r'\{\{codigo\s+(.*?)\}\}', re.S)
 # vista, en vez de deducirlas de una convención: son la excepción, y una
 # excepción que se deduce sola es una excepción que nadie repasa.
 DESTINOS_FUERA_DE_LABS = {
-    'guia-demo-lab-14-docker': RAIZ / 'demos-instructor' / 'lab-14-docker',
+    'guia-demo-microservicios-docker': RAIZ / 'demos-instructor' / 'microservicios-docker',
 }
 
 

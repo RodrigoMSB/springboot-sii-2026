@@ -1,0 +1,26 @@
+server:
+  port: 8210
+
+spring:
+  application:
+    name: microservicios-gateway-solucion
+
+microservicios:
+  # Las tres direcciones del sistema. Sin registro y sin Config Server: una URL por
+  # servicio, en configuración. Cambiar un puerto es editar esto, no recompilar.
+  contribuyentes:
+    url: http://localhost:8211
+  tramites:
+    url: http://localhost:8212
+  auditoria:
+    url: http://localhost:8213
+  jwt:
+    secreto: ${LAB14_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] GATEWAY - %msg%n"

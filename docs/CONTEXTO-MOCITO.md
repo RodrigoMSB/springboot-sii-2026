@@ -15,7 +15,7 @@ El material del **curso de Spring Boot para el SII**, año 2026. Repositorio
 cuenta `RodrigoMSB`.
 
 No es una aplicación: es **material de enseñanza**. Lo que aquí se llama "el producto" son
-dieciséis laboratorios, dos instrumentos de evaluación, una demostración que solo corre el
+catorce laboratorios, el proyecto final, una demostración que solo corre el
 instructor, el temario y el tooling que verifica que todo eso siga siendo verdad.
 
 ---
@@ -129,20 +129,23 @@ springboot-sii-2026/
 │       ├── MAPA-LAB-MODULO.md               ← trazabilidad lab ↔ módulo
 │       └── README.md
 ├── labs/
-│   ├── lab-00-hola-mundo ... lab-14-microservicios   ← dieciséis: quince del 00 al 14,
-│   │                                                  más lab-05b-muchos-a-muchos
+│   ├── lab-00-hola-mundo ... lab-11-observabilidad · lab-microservicios
+│   │                          ← catorce: del 00 al 11, más lab-05b y el de cierre,
+│   │                            que NO lleva número (SPEC-039)
+│   └── README.md              ← la tabla, y por qué faltan el 12 y el 13
 ├── demos-instructor/          ← lo que el instructor PROYECTA y el alumno no corre.
-│   └── lab-14-docker/         ← el lab 14 con Docker Compose (SPEC-047). Fuera de labs/
+│   └── microservicios-docker/         ← el lab de microservicios con Docker Compose (SPEC-047). Fuera de labs/
 │                                 a propósito: así el CI lo excluye sin excepciones
-├── proyecto-final/            ← el instrumento de evaluación largo: tres horas
-│   ├── base/ brief/ rubrica/ plantillas/ instructor/
-├── examen-huecos/             ← el corto: doce huecos, hora y media, se corrige solo
-│   ├── README.md base/ solucion/ instructor/
+├── proyecto-final/            ← el instrumento de evaluación: vale el 70 %, se hace en casa
+│   ├── base/ ejemplo/ brief/ rubrica/ plantillas/ instructor/
+├── archivo/                   ← material retirado, ENTERO y a la vista (SPEC-039).
+│   ├── lab-12-tareas/ lab-13-empaquetado/
+│   └── README.md              ← fuera de la maleta y del CI, por estructura
 ├── repo-maven/                ← TODAS las dependencias, ~230 MB
 ├── tools/
 │   ├── jdk/                   ← JDK 25 Temurin, partido en trozos de 80 MB
 │   ├── maven/                 ← la distribución de Maven
-│   ├── jib-base/              ← capas de eclipse-temurin:25-jre (lab 13)
+│   ├── jib-base/              ← capas de eclipse-temurin:25-jre (el proyecto final)
 │   ├── settings-sii.xml       ← el Nexus del SII, plan B, sin credenciales
 │   ├── instructor-respaldo.sh ← el puente con el repositorio privado (D-042-1)
 │   ├── generar-guias.py       ← las guías del alumno en PDF (D-044-1)
@@ -157,7 +160,7 @@ springboot-sii-2026/
 
 ### La anatomía de un lab
 
-Los dieciséis tienen exactamente la misma forma:
+Los catorce tienen exactamente la misma forma:
 
 ```
 lab-NN-nombre/
@@ -281,7 +284,7 @@ maleta, y se sostiene porque quien genera guías es quien prepara el material, n
 
 ```bash
 python3 tools/verificar-temario.py            # .md <-> .docx no divergen (pide python-docx)
-python3 tools/verificar-demo-docker.py        # la demostración con Docker dice el mismo código que el lab 14
+python3 tools/verificar-demo-docker.py        # la demostración con Docker dice el mismo código que el lab de microservicios
 python3 tools/verificar-instructor.py         # instructor/ al día con solucion/ + XML válido
 python3 tools/verificar-pasos-copiables.py    # PASOS.md no promete código que solucion/ no tiene
 python3 tools/verificar-guion-vs-practica.py  # lo que PASOS.md promete de practica/, practica/ lo trae
@@ -310,7 +313,7 @@ for p in $(find labs proyecto-final examen-huecos -name pom.xml -not -path '*/in
 done
 ```
 
-Son **41 proyectos**: el lab 14 aporta ocho (cuatro servicios × dos carpetas), el 05b dos y `examen-huecos`,
+Son **41 proyectos**: el lab de microservicios aporta ocho (cuatro servicios × dos carpetas), el 05b dos y `examen-huecos`,
 dos. **Los del examen se compilan pero NO se testean**: los doce tests de su `base/` están rojos a
 propósito, que es de lo que va el examen.
 
@@ -323,7 +326,7 @@ propósito, que es de lo que va el examen.
 | `temario` | el `.md` y el `.docx` no divergen |
 | `siembra` | toda `TEORIA.md` con sucesor siembra el módulo N+1 (`P-18`) |
 | `labs` | los **41** proyectos Maven compilan **offline**. Falla si alguien necesitó la red. Recorre `labs`, `proyecto-final` y `examen-huecos` — **NO `demos-instructor/`**, y ésa es toda la exclusión de Docker |
-| `demo-docker` | la copia del lab 14 en `demos-instructor/` no se ha separado del laboratorio. Compara archivos: **no necesita Docker** |
+| `demo-docker` | la copia del lab de microservicios en `demos-instructor/` no se ha separado del laboratorio. Compara archivos: **no necesita Docker** |
 | `pasos` | los dieciséis guiones traen el código y no prometen lo que la solución no tiene (196 bloques, 108 métodos) |
 | `guion-practica` | lo que los guiones prometen de `practica/` es lo que `practica/` trae (96 promesas) |
 | `labs-sh` | los scripts, en Linux y en Git Bash |
@@ -400,7 +403,7 @@ quedó fuera, dicho.
 
 - `main` en **`material-v1.10.0`**, CI en verde, **siete jobs**.
 - **Siete SPEC cerraron entre el 27 de agosto y el 1 de septiembre:**
-  - **SPEC-047** (`v1.10.0`) — **el lab 14 con Docker Compose**, en `demos-instructor/`, para que
+  - **SPEC-047** (`v1.10.0`) — **el lab de microservicios con Docker Compose**, en `demos-instructor/`, para que
     el PO lo proyecte. **El alumno no lo corre.** Siete contenedores en 21 s contra cuatro
     terminales y un orden que hay que recordar; un proceso que muere y **vuelve solo en 11 s**.
     El código es el mismo: 32 archivos idénticos byte a byte, vigilados por `demo-docker`.
@@ -447,7 +450,7 @@ quedó fuera, dicho.
   3. Las **diapositivas y el material de sala**. Las guías en PDF cubren ya los dieciséis labs del
      lado del alumno; una presentación para proyectar sigue sin existir.
   4. La casilla de **conocimientos (30 %)**, que sigue vacía.
-  5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab 14 sin módulo
+  5. La **aritmética del contrato**: nueve horas y tres sesiones por encima, y el lab de microservicios sin módulo
      titular.
 - **Anotado para después, del lado del material** (INFORME-SPEC-043 §6 e INFORME-SPEC-044 §10): la
   V2 de las guías del 01, 02 y 03 —solo está hecha la del 00—; los PDF abiertos en un visor real y

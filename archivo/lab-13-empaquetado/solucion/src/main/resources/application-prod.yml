@@ -1,0 +1,4 @@
+lab13:
+  saludo: Hola desde PRODUCCIÓN
+  # En producción la URL real llega por variable de entorno; esto es sólo el respaldo.
+  tesoreria-url: ${TESORERIA_URL:https://tesoreria.example.cl/pagos}
