@@ -143,7 +143,7 @@
 - **HAY MATERIAL QUE EL INSTRUCTOR PROYECTA Y EL ALUMNO NO CORRE** (SPEC-047):
   `demos-instructor/`. Existe porque hay cosas que vale la pena **enseñar** y no caben en la
   maleta. **Nada de ahí es requisito para aprobar y nada entra en el clon del alumno.**
-  - **`lab-14-docker/`** — el sistema del Lab 14, **los mismos cuatro servicios**, levantado con
+  - **`microservicios-docker/`** — el sistema del lab de microservicios, **los mismos cuatro servicios**, levantado con
     `docker compose up` en vez de cuatro terminales. **Siete contenedores en 21 s**, 853–887 MiB.
     Demuestra qué aporta un orquestador: el orden de arranque escrito una vez, las bases como
     contenedores, los servicios hablándose **por nombre**, y un proceso que muere y **vuelve solo
@@ -158,32 +158,44 @@
 
 ## 1.a · Lo que se retiró, y dónde está
 
-La **SPEC-038** sacó de `main` **`examen-huecos/`, `labs/lab-12-tareas/` y
-`labs/lab-13-empaquetado/`**, porque el curso dejó de dictarlos: el calendario se cierra con los
-labs 08, 09, 10, 11 y la demostración con Docker del 14, y la evaluación son el proyecto final
-(70 %) y la evaluación de conocimientos (30 %), que ya está hecha y no vive aquí.
+**Dos sitios, y la diferencia importa:** lo que sigue siendo material útil vive en la carpeta
+`archivo/`, a la vista; lo que fue un instrumento de su momento vive sólo en un tag.
 
-**No se borró nada del historial.** Todo sigue entero en el tag `material-v1.11.1`:
+| qué | dónde | por qué ahí |
+|---|---|---|
+| `lab-12-tareas` | **`archivo/lab-12-tareas/`** | Material completo y bueno. Salió del calendario, no del mundo |
+| `lab-13-empaquetado` | **`archivo/lab-13-empaquetado/`** | Ídem. Su tema lo cubre ahora el proyecto final |
+| `examen-huecos/` | tag `material-v1.11.1` | Era un instrumento de evaluación, no un laboratorio, y la evaluación de conocimientos lo reemplazó |
+| El lab 14 antiguo (`lab-14-la-dgt-se-parte-en-pedazos`) | tag `material-v0.8.0` | Su versión viva es `labs/lab-microservicios/` más la demostración con Docker |
+| El arco antiguo entero (labs 07-14 v1, tronco `dgt-tramites-api`, `labs/lib/`) | tags `material-v0.4.0` a `material-v0.8.0` | 2.120 archivos de un curso que ya no se dicta |
 
 ```bash
-git show material-v1.11.1:labs/lab-12-tareas/PASOS.md
-git checkout material-v1.11.1 -- labs/lab-13-empaquetado/
-git checkout material-v1.11.1 -- examen-huecos/
+# de la carpeta: está ahí, se abre y ya
+ls archivo/lab-12-tareas/
+
+# del tag
+git show material-v1.11.1:examen-huecos/README.md
+git checkout material-v0.8.0 -- dgt-tramites-api/
 ```
 
-**Los números 12 y 13 no se reutilizan**: un lab nuevo tomaría el siguiente libre, para que las
-referencias del historial y de los informes sigan queriendo decir lo que decían.
+**`archivo/` no entra en la maleta ni en el CI**, y la exclusión es **estructural**: el job `labs`
+recorre `labs proyecto-final`, y ningún verificador recorre el repositorio entero — todos parten de
+`labs/`, `proyecto-final/` o una ruta fija. No hubo que escribir ni una excepción (SPEC-039).
 
-Lo que el curso conserva de esos temas: el **empaquetado** vive en el proyecto final, que se
-entrega con su imagen OCI construida con Jib; y de las **tareas programadas** queda el problema de
-las dos instancias, nombrado en el cierre del lab 07.
-
-Con ellos salieron sus dos fuentes de guía y sus dos PDF. `tools/jib-base/` **se queda**: lo usa el
-proyecto final.
+**Los números de los labs retirados no se reutilizan.** Un lab nuevo tomaría el siguiente libre,
+para que las referencias del historial y de los informes sigan queriendo decir lo que decían.
 
 ---
 
-La **SPEC-033** sacó de `main` el arco antiguo entero: los ocho labs `lab-07-el-portero` a
+La **SPEC-038** sacó de `main` **`examen-huecos/`, `labs/lab-12-tareas/` y
+`labs/lab-13-empaquetado/`**, porque el curso dejó de dictarlos: el calendario se cierra con los
+labs 08, 09, 10, 11 y la demostración con Docker del lab de microservicios, y la evaluación son el
+proyecto final (70 %) y la evaluación de conocimientos (30 %). La **SPEC-039** trajo los dos labs de
+vuelta a `archivo/`, enteros.
+
+---
+
+La **SPEC-033** sacó de `main`La **SPEC-033** sacó de `main` el arco antiguo entero: los ocho labs `lab-07-el-portero` a
 `lab-14-la-dgt-se-parte-en-pedazos`, el tronco `dgt-tramites-api`, `labs/lib/` con la maquinaria
 de derivación y los tres scripts `tools/vuelo-*`. **2.120 archivos.**
 
@@ -498,7 +510,7 @@ Lo que viene, en orden:
 3. **Las diapositivas y el material de sala.** Las guías en PDF cubren ya la parte del alumno en
    los dieciséis labs; una presentación para proyectar, no.
 4. **Resolver la aritmética del contrato con el SII** (§2 y mapa §6.4): el material va **nueve
-   horas y tres sesiones** por encima de lo contratado, y el lab-14 no tiene módulo titular. Es una
+   horas y tres sesiones** por encima de lo contratado, y el lab de microservicios no tiene módulo titular. Es una
    conversación, no un trabajo pendiente del material.
 
 ## 4 · Si estás perdido

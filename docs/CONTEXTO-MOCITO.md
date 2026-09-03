@@ -15,7 +15,7 @@ El material del **curso de Spring Boot para el SII**, año 2026. Repositorio
 cuenta `RodrigoMSB`.
 
 No es una aplicación: es **material de enseñanza**. Lo que aquí se llama "el producto" son
-dieciséis laboratorios, dos instrumentos de evaluación, una demostración que solo corre el
+catorce laboratorios, el proyecto final, una demostración que solo corre el
 instructor, el temario y el tooling que verifica que todo eso siga siendo verdad.
 
 ---
@@ -129,20 +129,23 @@ springboot-sii-2026/
 │       ├── MAPA-LAB-MODULO.md               ← trazabilidad lab ↔ módulo
 │       └── README.md
 ├── labs/
-│   ├── lab-00-hola-mundo ... lab-microservicios   ← dieciséis: quince del 00 al 14,
-│   │                                                  más lab-05b-muchos-a-muchos
+│   ├── lab-00-hola-mundo ... lab-11-observabilidad · lab-microservicios
+│   │                          ← catorce: del 00 al 11, más lab-05b y el de cierre,
+│   │                            que NO lleva número (SPEC-039)
+│   └── README.md              ← la tabla, y por qué faltan el 12 y el 13
 ├── demos-instructor/          ← lo que el instructor PROYECTA y el alumno no corre.
 │   └── microservicios-docker/         ← el lab de microservicios con Docker Compose (SPEC-047). Fuera de labs/
 │                                 a propósito: así el CI lo excluye sin excepciones
-├── proyecto-final/            ← el instrumento de evaluación largo: tres horas
-│   ├── base/ brief/ rubrica/ plantillas/ instructor/
-├── examen-huecos/             ← el corto: doce huecos, hora y media, se corrige solo
-│   ├── README.md base/ solucion/ instructor/
+├── proyecto-final/            ← el instrumento de evaluación: vale el 70 %, se hace en casa
+│   ├── base/ ejemplo/ brief/ rubrica/ plantillas/ instructor/
+├── archivo/                   ← material retirado, ENTERO y a la vista (SPEC-039).
+│   ├── lab-12-tareas/ lab-13-empaquetado/
+│   └── README.md              ← fuera de la maleta y del CI, por estructura
 ├── repo-maven/                ← TODAS las dependencias, ~230 MB
 ├── tools/
 │   ├── jdk/                   ← JDK 25 Temurin, partido en trozos de 80 MB
 │   ├── maven/                 ← la distribución de Maven
-│   ├── jib-base/              ← capas de eclipse-temurin:25-jre (lab 13)
+│   ├── jib-base/              ← capas de eclipse-temurin:25-jre (el proyecto final)
 │   ├── settings-sii.xml       ← el Nexus del SII, plan B, sin credenciales
 │   ├── instructor-respaldo.sh ← el puente con el repositorio privado (D-042-1)
 │   ├── generar-guias.py       ← las guías del alumno en PDF (D-044-1)
@@ -157,7 +160,7 @@ springboot-sii-2026/
 
 ### La anatomía de un lab
 
-Los dieciséis tienen exactamente la misma forma:
+Los catorce tienen exactamente la misma forma:
 
 ```
 lab-NN-nombre/
