@@ -18,7 +18,8 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String nombre;
 
-    // Nunca la contraseña: siempre su hash BCrypt. 60 caracteres, siempre.
+    // Nunca la contraseña: siempre su hash Argon2id. El largo no lo pone la contraseña, lo ponen
+    // los parámetros del codificador: con los de `defaultsForSpringSecurity_v5_8()` son 97.
     @Column(name = "clave_hash", nullable = false)
     private String claveHash;
 
