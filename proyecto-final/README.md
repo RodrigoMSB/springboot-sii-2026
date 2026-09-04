@@ -43,13 +43,13 @@ curso.
 ```bash
 # el login ya funciona: viene resuelto
 curl -X POST localhost:8107/auth/login -H 'Content-Type: application/json' \
-     -d '{"usuario":"ana","clave":"secreta"}'
+     -d '{"usuario":"ana","clave":"dgt2026"}'
 ```
 
 | usuario | clave | rol |
 |---|---|---|
-| `ana` | `secreta` | **FISCALIZADOR** |
-| `luis` | `secreta` | **CONTRIBUYENTE** |
+| `ana` | `dgt2026` | **FISCALIZADOR** |
+| `luis` | `dgt2026` | **CONTRIBUYENTE** |
 
 ## Qué trae `base/` resuelto
 

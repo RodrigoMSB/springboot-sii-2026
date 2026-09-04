@@ -200,16 +200,16 @@ En `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java`, **dent
 Al arrancar, la siembra imprime los dos usuarios con su hash:
 
 ``` text
-[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$6pRDZ7pRwU3jaaV9oNK7Ag$EtTVmBMJb4eWLzEg3NvxJqDad+X7GbuBHBpFJiTBD/A
-[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$DiTWa388g9rj7QMybwv78A$irfjVwPs8vDvX75eHbmMeeWH6WbtpD2SSyInaxrsYeU
+[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$4/hkUnFEeRln96MWwoMq5Q$JmwNO6b+wwI93/ntep1WjGkEH08BGkHamGvglmffpHQ
+[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$eFPVYfr596eNE7tc1P6nrw$QjSIE1stNTlgVFptCXgWBNlKY/smK01UcD4dn0lsw54
 ```
 
-**Las dos claves son la misma palabra: `secreta`.** Y los dos hashes no se parecen en nada.
+**Las dos claves son la misma palabra: `dgt2026`.** Y los dos hashes no se parecen en nada.
 
 Lee la estructura, que lo dice todo:
 
 ``` text
-$argon2id$ v=19 $ m=16384,t=2,p=1 $ 6pRDZ7pRwU3jaaV9oNK7Ag $ EtTVmBMJb4eWLz...
+$argon2id$ v=19 $ m=16384,t=2,p=1 $ 4/hkUnFEeRln96MWwoMq5Q $ JmwNO6b+wwI93/...
     │        │           │                     │                     │
     │        │           │                     └── la sal            └── el hash
     │        │           └── 16 MB de memoria, 2 pasadas, 1 hilo
@@ -288,7 +288,7 @@ El servicio que emite, en
 ``` bash
 curl -X POST localhost:8095/auth/login \
      -H 'Content-Type: application/json' \
-     -d '{"usuario":"ana","clave":"secreta"}'
+     -d '{"usuario":"ana","clave":"dgt2026"}'
 ```
 
 ### Lo que vas a ver
@@ -383,11 +383,11 @@ En `practica/src/main/java/cl/dgt/seguridad/config/SeguridadConfig.java`, la cad
 curl -i localhost:8095/productos/administracion
 
 TOKEN_LUIS=$(curl -s -X POST localhost:8095/auth/login -H 'Content-Type: application/json' \
-             -d '{"usuario":"luis","clave":"secreta"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+             -d '{"usuario":"luis","clave":"dgt2026"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 curl -i -H "Authorization: Bearer $TOKEN_LUIS" localhost:8095/productos/administracion
 
 TOKEN_ANA=$(curl -s -X POST localhost:8095/auth/login -H 'Content-Type: application/json' \
-            -d '{"usuario":"ana","clave":"secreta"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+            -d '{"usuario":"ana","clave":"dgt2026"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 curl -i -H "Authorization: Bearer $TOKEN_ANA" localhost:8095/productos/administracion
 ```
 

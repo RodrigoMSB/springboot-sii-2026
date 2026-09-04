@@ -309,11 +309,11 @@ public class SembradorDeUsuarios implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (repositorio.count() == 0) {
-            repositorio.save(new Usuario("ana", codificador.encode("secreta"), "ADMIN"));
-            repositorio.save(new Usuario("luis", codificador.encode("secreta"), "USUARIO"));
+            repositorio.save(new Usuario("ana", codificador.encode("dgt2026"), "ADMIN"));
+            repositorio.save(new Usuario("luis", codificador.encode("dgt2026"), "USUARIO"));
         }
 
-        System.out.println("[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)");
+        System.out.println("[semilla] usuarios ana/dgt2026 (ADMIN) y luis/dgt2026 (USUARIO)");
         repositorio.findAll().forEach(u ->
                 System.out.printf("[semilla] %-5s %-8s %s%n", u.getNombre(), u.getRol(), u.getClaveHash()));
     }
@@ -325,16 +325,16 @@ public class SembradorDeUsuarios implements CommandLineRunner {
 **En consola:**
 
 ```
-[semilla] usuarios ana/secreta (ADMIN) y luis/secreta (USUARIO)
-[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$6pRDZ7pRwU3jaaV9oNK7Ag$EtTVmBMJb4eWLzEg3NvxJqDad+X7GbuBHBpFJiTBD/A
-[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$DiTWa388g9rj7QMybwv78A$irfjVwPs8vDvX75eHbmMeeWH6WbtpD2SSyInaxrsYeU
+[semilla] usuarios ana/dgt2026 (ADMIN) y luis/dgt2026 (USUARIO)
+[semilla] ana   ADMIN    $argon2id$v=19$m=16384,t=2,p=1$4/hkUnFEeRln96MWwoMq5Q$JmwNO6b+wwI93/ntep1WjGkEH08BGkHamGvglmffpHQ
+[semilla] luis  USUARIO  $argon2id$v=19$m=16384,t=2,p=1$eFPVYfr596eNE7tc1P6nrw$QjSIE1stNTlgVFptCXgWBNlKY/smK01UcD4dn0lsw54
 ```
 
-**Aquí se para y se mira.** Las dos claves son `secreta` — la misma palabra— y los dos hashes no
+**Aquí se para y se mira.** Las dos claves son `dgt2026` — la misma palabra— y los dos hashes no
 se parecen en nada. Se lee el formato en voz alta:
 
 ```
-$argon2id$ v=19 $ m=16384,t=2,p=1 $ 6pRDZ7pRwU3jaaV9oNK7Ag $ EtTVmBMJb4eWLz...
+$argon2id$ v=19 $ m=16384,t=2,p=1 $ 4/hkUnFEeRln96MWwoMq5Q $ JmwNO6b+wwI93/...
     │        │          │                    │                      │
     │        │          │                    └── la sal             └── el hash
     │        │          └── 16 MB de memoria, 2 pasadas, 1 hilo
@@ -472,7 +472,7 @@ public class AuthController {
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8095/auth/login \
         -H 'Content-Type: application/json' \
-        -d '{"usuario":"ana","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+        -d '{"usuario":"ana","clave":"dgt2026"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 ```
 
 **En consola — las tres pruebas del paso:**
@@ -586,9 +586,9 @@ endpoint nuevo, no reemplaza a ninguno.
 
 ```bash
 ANA=$(curl -s -X POST http://localhost:8095/auth/login -H 'Content-Type: application/json' \
-      -d '{"usuario":"ana","clave":"secreta"}'  | sed 's/.*"token":"\([^"]*\)".*/\1/')
+      -d '{"usuario":"ana","clave":"dgt2026"}'  | sed 's/.*"token":"\([^"]*\)".*/\1/')
 LUIS=$(curl -s -X POST http://localhost:8095/auth/login -H 'Content-Type: application/json' \
-      -d '{"usuario":"luis","clave":"secreta"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+      -d '{"usuario":"luis","clave":"dgt2026"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 ```
 
 ### El momento del laboratorio

@@ -68,8 +68,8 @@ cuánto se pagó.
 **Sólo el rol FISCALIZADOR.** Los dos usuarios están sembrados y el login ya funciona:
 
 ```
-ana   / secreta   FISCALIZADOR
-luis  / secreta   CONTRIBUYENTE
+ana   / dgt2026   FISCALIZADOR
+luis  / dgt2026   CONTRIBUYENTE
 ```
 
 ### Lo que NO hay que hacer
