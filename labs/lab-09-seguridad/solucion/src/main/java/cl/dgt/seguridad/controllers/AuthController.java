@@ -32,7 +32,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Credenciales credenciales) {
         try {
-            // Aquí es donde BCrypt compara: la clave que llega contra el hash de la tabla.
+            // Aquí no se compara nada. `authenticate` se lo pasa al DaoAuthenticationProvider que
+            // hay detrás del AuthenticationManager, y ese es quien llama al PasswordEncoder
+            // —Argon2id— con la clave que llega y el hash de la tabla.
             Authentication autenticado = gestor.authenticate(
                     new UsernamePasswordAuthenticationToken(credenciales.usuario(), credenciales.clave()));
 
