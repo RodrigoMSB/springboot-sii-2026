@@ -36,14 +36,14 @@ create table usuario (
 );
 
 -- ---------------------------------------------------------------------------
---  Usuarios. Las dos claves son `secreta`, con hash Argon2id — el mismo
+--  Usuarios. Las dos claves son `dgt2026`, con hash Argon2id — el mismo
 --  algoritmo que enseña el Lab 09. Los dos hashes son distintos: es la sal.
 --     ana   FISCALIZADOR
 --     luis  CONTRIBUYENTE
 -- ---------------------------------------------------------------------------
 insert into usuario (nombre, clave_hash, rol) values
-  ('ana',  '$argon2id$v=19$m=16384,t=2,p=1$2WZREBTpf3Q2qNoiFbO1cg$u9NGi9Dj2pW98+bSI50H9FvsCqrlqbckQQ6xEx8MvnI', 'FISCALIZADOR'),
-  ('luis', '$argon2id$v=19$m=16384,t=2,p=1$k2zUdDw7e1DQxTSf86+LyQ$qhEPAHw2vBCgP/1R/9xW/R3IbyoRFn/7ubipO5JVWr4', 'CONTRIBUYENTE');
+  ('ana',  '$argon2id$v=19$m=16384,t=2,p=1$RfCQMhqOIR2PP0ab3OUM5Q$fG0zPxCafxTuSVAaCkOgcJPSMOIDRAiXQv+awlgC29Y', 'FISCALIZADOR'),
+  ('luis', '$argon2id$v=19$m=16384,t=2,p=1$BcXeXiLj1vY6WkjoBuWfSg$kUpG7TRm237LW6cM0E861/jlcgRaQaJjMtxP87rnK0s', 'CONTRIBUYENTE');
 
 -- ---------------------------------------------------------------------------
 --  Tres oficinas. La tercera NO tiene trámites: es el borde del ejemplo, igual

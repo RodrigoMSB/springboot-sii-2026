@@ -49,8 +49,8 @@ hacerlo.
 ## Los dos usuarios de la semilla
 
 ```
-ana   / secreta   ADMIN
-luis  / secreta   USUARIO
+ana   / dgt2026   ADMIN
+luis  / dgt2026   USUARIO
 ```
 
 **La misma clave a propósito.** El paso 3 mira la tabla y encuentra dos hashes distintos —los dos
