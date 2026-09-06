@@ -1,0 +1,76 @@
+# =============================================================================
+#  registro — Eureka Server
+# -----------------------------------------------------------------------------
+#  Esta es la ÚNICA pieza del sistema que no lee su configuración del Config
+#  Server, y la razón es de orden: el registro arranca ANTES que el config para
+#  que el config pueda registrarse en él. Un servicio no puede pedirle su
+#  configuración a alguien que todavía no existe.
+#
+#  Es la misma pregunta del huevo y la gallina que tiene cualquier sistema con
+#  las dos piezas, y hay dos formas de romperla: o el registro lee su propia
+#  configuración (esto), o el config arranca primero y los demás lo buscan por
+#  una URL fija. Aquí se eligió la primera porque deja el Config Server visible
+#  en el panel de Eureka, que es la mitad del bloque 1 de la demostración.
+# =============================================================================
+server:
+  port: 8761      # el puerto de Eureka por convención: el que sale en todos los
+                  # tutoriales que el alumno va a encontrar después
+
+spring:
+  application:
+    name: registro
+
+eureka:
+  client:
+    # El servidor es cliente de sí mismo por defecto: intentaría registrarse en
+    # su propio registro y bajarse su propia copia. Con un solo nodo eso no es
+    # útil y ensucia el panel. Con VARIOS nodos sí se usa —así se replican entre
+    # ellos— y es la forma en que Eureka se hace tolerante a fallos de verdad.
+    register-with-eureka: false
+    fetch-registry: false
+
+  server:
+    # ---------------------------------------------------------------------
+    #  LOS DOS RELOJES DEL SERVIDOR, en claro y con su valor de fábrica al lado.
+    #  Están escritos aunque coincidan con el defecto porque son la mitad de lo
+    #  que la demostración mide, y buscarlos en la documentación en mitad de una
+    #  clase no es un plan.
+    # ---------------------------------------------------------------------
+
+    # Cada cuánto el servidor rehace la respuesta que le da a los clientes.
+    # DE FÁBRICA SON 30 000 ms, y ése es el motivo REAL de la fama de lento que
+    # tiene Eureka: un servicio que ya se registró correctamente puede tardar
+    # medio minuto en aparecer para los demás. Aquí se baja a 2 s, y se dice:
+    # es una concesión a la clase, no una recomendación. Ver el README, bloque 1.
+    response-cache-update-interval-ms: 2000
+
+    # Cada cuánto pasa la escoba tachando a los que dejaron de dar señales.
+    # De fábrica son 60 000 ms.
+    eviction-interval-timer-in-ms: 5000
+
+    # ---------------------------------------------------------------------
+    #  MODO DE AUTOPRESERVACIÓN — apagado, y hay que explicar por qué
+    # ---------------------------------------------------------------------
+    #  Encendido (que es como viene), si el servidor deja de recibir el 85 % de
+    #  los latidos que esperaba, DEJA DE TACHAR A NADIE. El razonamiento es
+    #  bueno: «si de golpe se callan todos, lo más probable es que el roto sea
+    #  yo —mi red— y no ellos; borrar el registro entero empeoraría un problema
+    #  que no es suyo».
+    #
+    #  En producción se deja encendido. Aquí se apaga por una razón concreta y
+    #  de sala: con seis instancias, matar una es el 16 % de los latidos y el
+    #  umbral salta enseguida, así que el panel se queda con el servicio muerto
+    #  listado como UP y con un banner rojo, para siempre. Eso no es lo que se
+    #  quiere enseñar en el bloque 4 — y lo que sí se quiere enseñar, que el
+    #  registro miente durante unos segundos, se ve igual de bien sin él.
+    enable-self-preservation: false
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.boot.tomcat: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] REGISTRO - %msg%n"

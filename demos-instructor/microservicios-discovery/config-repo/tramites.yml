@@ -1,0 +1,30 @@
+# =============================================================================
+#  tramites.yml
+# =============================================================================
+server:
+  port: 8232
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:55481/postgres
+    username: postgres
+    hikari:
+      connection-timeout: 2000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+microservicios:
+  # Los dos vecinos de trámites, por nombre. En el laboratorio eran
+  # `http://localhost:8211` y `http://localhost:8213`.
+  contribuyentes:
+    url: http://contribuyentes
+  auditoria:
+    url: http://auditoria
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] TRAMITES - %msg%n"

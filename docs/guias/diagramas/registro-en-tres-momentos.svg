@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" width="900" height="440"
+     font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+    <marker id="fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/>
+    </marker>
+  </defs>
+  <style>
+    .caja   { fill:#fff; stroke:#333; stroke-width:2; }
+    .reg    { fill:#fdf6e3; stroke:#b58900; stroke-width:2.5; }
+    .tit    { font-size:19px; font-weight:bold; fill:#111; text-anchor:middle; }
+    .sub    { font-size:14px; fill:#555; text-anchor:middle; }
+    .nota   { font-size:15px; fill:#333; text-anchor:middle; }
+    .verde  { font-size:16px; font-weight:bold; fill:#1a7f37; text-anchor:middle; }
+    .flecha { stroke:#333; stroke-width:2; fill:none; marker-end:url(#f); }
+    .fverde { stroke:#1a7f37; stroke-width:3; fill:none; marker-end:url(#fg); }
+    .momento{ font-size:16px; font-weight:bold; fill:#666; letter-spacing:1px; }
+    .lat    { font-size:14px; fill:#555; text-anchor:start; }
+  </style>
+
+  <!-- MOMENTO 1 -->
+  <text x="15" y="26" class="momento">1 · AL ARRANCAR — «existo, y estoy aquí»</text>
+  <rect x="15"  y="48" width="180" height="58" rx="6" class="caja"/>
+  <text x="105" y="74" class="tit">contribuyentes</text>
+  <text x="105" y="94" class="sub">acaba de arrancar</text>
+
+  <rect x="640" y="48" width="185" height="58" rx="6" class="reg"/>
+  <text x="732" y="74" class="tit">REGISTRO</text>
+  <text x="732" y="94" class="sub">Eureka · :8761</text>
+
+  <path d="M 200 77 L 633 77" class="flecha"/>
+  <text x="415" y="68" class="nota">me llamo «contribuyentes» y vivo en …:8231</text>
+  <text x="415" y="99" class="sub">y cada 30 s repite: «sigo vivo»</text>
+
+  <!-- MOMENTO 2 -->
+  <text x="15" y="170" class="momento">2 · AL LLAMAR — «¿dónde está?»</text>
+  <rect x="15"  y="192" width="180" height="58" rx="6" class="caja"/>
+  <text x="105" y="218" class="tit">trámites</text>
+  <text x="105" y="238" class="sub">quiere una ficha</text>
+
+  <rect x="640" y="192" width="185" height="58" rx="6" class="reg"/>
+  <text x="732" y="226" class="tit">REGISTRO</text>
+
+  <path d="M 200 212 L 633 212" class="flecha"/>
+  <text x="415" y="204" class="nota">¿quién es «contribuyentes»?</text>
+  <path d="M 633 236 L 200 236" class="flecha"/>
+  <text x="415" y="255" class="nota">esta lista: [ …:8231 ]</text>
+
+  <text x="732" y="278" class="sub" style="font-weight:bold; fill:#b58900;">…y trámites SE LA GUARDA</text>
+
+  <!-- MOMENTO 3 -->
+  <text x="15" y="326" class="momento">3 · LA LLAMADA — el registro ya no pinta nada</text>
+  <rect x="15"  y="348" width="180" height="58" rx="6" class="caja"/>
+  <text x="105" y="383" class="tit">trámites</text>
+
+  <rect x="330" y="348" width="200" height="58" rx="6" class="caja"/>
+  <text x="430" y="376" class="tit">contribuyentes</text>
+  <text x="430" y="396" class="sub">:8231</text>
+
+  <rect x="640" y="348" width="185" height="58" rx="6" style="fill:#f6f6f6; stroke:#bbb; stroke-width:2; stroke-dasharray:6 4;"/>
+  <text x="732" y="376" class="tit" style="fill:#999;">REGISTRO</text>
+  <text x="732" y="396" class="sub" style="fill:#999;">fuera del camino</text>
+
+  <path d="M 200 377 L 323 377" class="fverde"/>
+  <text x="261" y="367" class="verde">HTTP</text>
+
+  <text x="732" y="424" class="sub" style="font-weight:bold;">Por eso apagarlo no corta nada</text>
+</svg>

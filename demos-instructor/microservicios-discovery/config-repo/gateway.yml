@@ -1,0 +1,38 @@
+# =============================================================================
+#  gateway.yml — la configuración del gateway, fuera del gateway
+# -----------------------------------------------------------------------------
+#  Éste es el archivo que se edita en el BLOQUE 3 de la demostración.
+# =============================================================================
+server:
+  port: 8230
+
+microservicios:
+  # =========================================================================
+  #  LA TABLA DE RUTAS — y el antes/después del BLOQUE 2
+  # =========================================================================
+  #  En el laboratorio esto decía:
+  #
+  #      contribuyentes: { url: http://localhost:8211 }
+  #      tramites:       { url: http://localhost:8212 }
+  #      auditoria:      { url: http://localhost:8213 }
+  #
+  #  Una máquina y un puerto, escritos a mano. Funciona perfectamente mientras
+  #  haya UNA instancia de cada cosa, en una máquina que no cambia — que es el
+  #  caso de muchísimos sistemas reales, y por eso el laboratorio lo hace así.
+  #
+  #  Aquí es un NOMBRE. No hay máquina y no hay puerto: el gateway le pregunta
+  #  al registro dónde está `contribuyentes` en el momento de llamar.
+  # =========================================================================
+  contribuyentes:
+    url: http://contribuyentes
+  tramites:
+    url: http://tramites
+  auditoria:
+    url: http://auditoria
+
+  jwt:
+    secreto: ${LAB14_JWT_SECRETO:clave-de-laboratorio-que-debe-tener-32-bytes-o-mas}
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] GATEWAY - %msg%n"

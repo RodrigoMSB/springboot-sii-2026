@@ -1,0 +1,30 @@
+# =============================================================================
+#  contribuyentes.yml
+# -----------------------------------------------------------------------------
+#  Fíjate en lo que hay aquí: el PUERTO en el que escucha y la BASE a la que se
+#  conecta. Ninguna de las dos cosas está ya dentro del programa.
+#
+#  El servicio no sabe en qué puerto va a escuchar hasta que alguien se lo dice.
+#  Eso suena a pérdida de control y es justo lo contrario: es lo que permite
+#  levantar el mismo artefacto, sin recompilarlo, en desarrollo, en integración
+#  y en producción — o dos veces en la misma máquina.
+# =============================================================================
+server:
+  port: 8231
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:55480/postgres
+    username: postgres
+    hikari:
+      connection-timeout: 2000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] CONTRIBUYENTES - %msg%n"

@@ -1,0 +1,30 @@
+# =============================================================================
+#  application.yml de gateway — lo que QUEDA dentro del programa
+# -----------------------------------------------------------------------------
+#  Esto es todo. En el laboratorio este archivo tenía el puerto, la base de
+#  datos, JPA, Flyway, las direcciones de los vecinos y el formato del log.
+#  Aquí quedan dos cosas, y las dos son irreducibles:
+#
+#    · CÓMO SE LLAMA. Es lo que le pide al Config Server («dame la
+#      configuración de `gateway`») y es el nombre con el que se
+#      inscribe en el registro. No puede venir de fuera: es la pregunta, no
+#      la respuesta.
+#
+#    · DÓNDE PREGUNTAR. La dirección del Config Server, escrita a mano. En
+#      algún punto la cadena tiene que tocar suelo, y toca aquí.
+#
+#  Todo lo demás vive en `config-repo/gateway.yml`.
+#
+#  ⚠️  `spring.config.import` NO es una dependencia blanda. Si el Config Server
+#      no contesta, este servicio NO ARRANCA: muere en el arranque con
+#      `ConfigClientFailFastException: Could not locate PropertySource and the
+#      resource is not optional, failing`. Es el comportamiento de fábrica y
+#      es el correcto —arrancar sin saber a qué base conectarse sería peor— pero
+#      convierte al Config Server en un requisito de ARRANQUE para los cuatro.
+#      El README lo mide en «Y si se arranca al revés».
+# =============================================================================
+spring:
+  application:
+    name: gateway
+  config:
+    import: "configserver:http://localhost:8888"
