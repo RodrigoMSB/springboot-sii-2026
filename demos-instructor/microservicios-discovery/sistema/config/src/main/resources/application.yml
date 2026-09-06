@@ -1,0 +1,56 @@
+# =============================================================================
+#  config — Config Server
+# -----------------------------------------------------------------------------
+#  La segunda pieza que NO lee su configuración de sí misma, por el mismo motivo
+#  de orden que el registro: alguien tiene que ser el primero.
+#
+#  Sí se REGISTRA en Eureka, y por eso arranca DESPUÉS del registro. Los otros
+#  cuatro lo encuentran por una URL fija (ver `spring.config.import` en cada uno)
+#  y no por su nombre — y eso también tiene explicación: para preguntar por un
+#  nombre habría que hablar antes con el registro, y la dirección del registro
+#  tendría que estar escrita en alguna parte. En algún punto la cadena termina en
+#  una dirección escrita a mano. Aquí termina en dos, y están las dos a la vista.
+# =============================================================================
+server:
+  port: 8888      # el puerto del Config Server por convención, igual que el 8761
+
+spring:
+  application:
+    name: config
+
+  profiles:
+    # Sin este perfil el Config Server espera un repositorio Git y muere en el
+    # arranque pidiendo un `uri`. Es el error más frecuente de la pieza.
+    active: native
+
+  cloud:
+    config:
+      server:
+        native:
+          # Dónde están los archivos. `levantar.sh` pasa la ruta ABSOLUTA por
+          # variable de entorno; el valor de reserva es la ruta relativa que
+          # funciona cuando se arranca a mano desde `sistema/config/`.
+          #
+          # La ruta relativa depende del directorio de trabajo, y ésa es
+          # justamente la clase de fragilidad que no se quiere en una clase: por
+          # eso el guion usa el script y no el `cd`.
+          search-locations: ${DGT_CONFIG_REPO:file:./../../config-repo}
+
+eureka:
+  instance:
+    # ⚠️  NO ES DECORATIVO. Ver la nota larga en `config-repo/application.yml`:
+    #     sin esta línea, `POST /actuator/refresh` devuelve HTTP 500.
+    instance-id: ${spring.application.name}:${server.port}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    com.netflix.discovery: INFO
+    org.springframework.cloud.config: INFO
+    org.springframework.boot.tomcat: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:-........}] CONFIG - %msg%n"

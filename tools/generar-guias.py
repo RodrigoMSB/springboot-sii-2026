@@ -42,6 +42,7 @@ import io
 import pathlib
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 
@@ -60,6 +61,7 @@ MARCADOR = re.compile(r'\{\{codigo\s+(.*?)\}\}', re.S)
 # excepción que se deduce sola es una excepción que nadie repasa.
 DESTINOS_FUERA_DE_LABS = {
     'guia-demo-microservicios-docker': RAIZ / 'demos-instructor' / 'microservicios-docker',
+    'guia-demo-microservicios-discovery': RAIZ / 'demos-instructor' / 'microservicios-discovery',
 }
 
 
@@ -340,10 +342,55 @@ def comprobar(comprobaciones):
 
 
 # -----------------------------------------------------------------------------
+#  Diagramas
+# -----------------------------------------------------------------------------
+#  Los diagramas de las guías se versionan en SVG (`docs/guias/diagramas/`), que es
+#  el formato que se puede editar y del que se puede leer un `git diff`. Pero
+#  xelatex no sabe leer SVG, y si se le deja a pandoc, emite `\includesvg` — que
+#  necesita Inkscape instalado y, cuando no lo está, ignora el ancho pedido y
+#  compone el diagrama a un tamaño arbitrario.
+#
+#  Así que la conversión se hace aquí, explícita, con `rsvg-convert`: cada SVG
+#  referenciado se convierte a PDF en `.build/` y el Markdown pasa a apuntar al
+#  PDF. Entonces pandoc emite un `\includegraphics` normal, el `width=100%` se
+#  respeta y el diagrama sale a todo el ancho de la caja de texto — que es lo que
+#  hace falta para proyectarlo.
+# -----------------------------------------------------------------------------
+def diagramas_a_pdf(md):
+    """Convierte los `.svg` referenciados a `.pdf` en `.build/` y reescribe el enlace."""
+    referencias = sorted(set(re.findall(r'\]\((diagramas/[^)\s]+\.svg)\)', md)))
+    if not referencias:
+        return md
+
+    if not shutil.which('rsvg-convert'):
+        raise SystemExit(
+            '[ERROR] hay diagramas SVG y no encuentro `rsvg-convert`.\n'
+            '        Se instala con:  brew install librsvg\n'
+            '        (xelatex no sabe leer SVG; hay que convertirlo por el camino)')
+
+    destino_svg = BUILD / 'diagramas'
+    destino_svg.mkdir(parents=True, exist_ok=True)
+    for ref in referencias:
+        origen = ESTILO.parent / ref
+        if not origen.is_file():
+            raise SystemExit(f'[ERROR] la guía referencia {ref} y no existe')
+        salida = destino_svg / (pathlib.Path(ref).stem + '.pdf')
+        r = subprocess.run(['rsvg-convert', '-f', 'pdf', '-o', str(salida), str(origen)],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            raise SystemExit(f'[ERROR] rsvg-convert falló con {ref}:\n{r.stderr}')
+        print(f'    diagrama  {origen.stat().st_size // 1024:3d} KB  <-  '
+              f'{origen.relative_to(RAIZ)}')
+        md = md.replace(f']({ref})', f'](diagramas/{salida.name})')
+    return md
+
+
+# -----------------------------------------------------------------------------
 #  PDF
 # -----------------------------------------------------------------------------
 def a_pdf(md_resuelto, destino, titulo):
     BUILD.mkdir(parents=True, exist_ok=True)
+    md_resuelto = diagramas_a_pdf(md_resuelto)
     intermedio = BUILD / (destino.stem + '.md')
     intermedio.write_text(md_resuelto, encoding='utf-8')
     orden = [
@@ -354,6 +401,16 @@ def a_pdf(md_resuelto, destino, titulo):
         '--number-sections',
         '--highlight-style=tango',
         '--lua-filter', str(ESTILO / 'recuadros.lua'),
+        # Dónde buscar las imágenes que las guías incrusten. El Markdown resuelto
+        # se escribe en `.build/`, así que una ruta como `diagramas/x.svg` se
+        # buscaría desde ahí y no aparecería. Con esto, se busca desde
+        # `docs/guias/`, que es donde el fuente la escribió.
+        #
+        # Y los SVG necesitan `rsvg-convert` (brew install librsvg): xelatex no
+        # sabe leer SVG, así que pandoc lo convierte a PDF por el camino. Se eligió
+        # SVG y no PNG a propósito — un diagrama proyectado se amplía, y un PNG se
+        # ve como un PNG ampliado (SPEC-048 §6).
+        '--resource-path', f'{BUILD}:{ESTILO.parent}',
         '--include-in-header', str(ESTILO / 'preambulo.tex'),
         '-V', 'documentclass=article',
         '-V', 'papersize=a4',

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   registro — la guía telefónica del sistema (Eureka Server)
+  .............................................................................
+   Una dependencia, una anotación, cero código de negocio. Toda la pieza son
+   catorce líneas de Java y seis de YAML, y aun así es un proceso más que
+   arrancar, vigilar y explicar. Ése es exactamente el costo que la demostración
+   tiene que dejar ver.
+
+   ⚠️  DE DÓNDE SALE LA VERSIÓN — verificado, no supuesto
+
+   Spring Cloud NO usa el versionado de Spring Boot: usa "release trains" con
+   nombre de año. El tren fija de una vez las versiones de Eureka, Config,
+   LoadBalancer y Gateway, y por eso ninguna dependencia de spring-cloud lleva
+   <version> propia: la pone el BOM.
+
+   Y aquí hay algo que el laboratorio ya advertía y que esta demostración
+   COMPRUEBA: el tren 2025.1.3 está compilado contra Spring Boot 4.0.8, y el
+   curso usa Boot 4.1.0. No es la combinación que Spring publica como probada.
+   Se midió pieza por pieza y funciona — con UNA excepción documentada, que es
+   `eureka.instance.instance-id` en los clientes (ver `config-repo/application.yml`).
+   Si algún día el tren sube a un número que declare Boot 4.1, se sube aquí y se
+   vuelve a mirar esa excepción.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>microservicios-registro-discovery</artifactId>
+  <version>0.1.0</version>
+  <name>microservicios-registro-discovery</name>
+  <description>Demo Discovery · registro — Eureka Server: quién existe y dónde está</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <spring-cloud.version>2025.1.3</spring-cloud.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- El jar ejecutable: es lo que `levantar.sh` arranca con `java -jar`.
+           Sin este bloque el plugin queda solo en el `pluginManagement` del
+           padre, no se ejecuta, y el jar sale de 5 KB — compila, y no arranca. -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

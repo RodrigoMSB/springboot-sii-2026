@@ -155,6 +155,33 @@
     ninguna excepción.
   - Necesita **Docker Desktop** y, **la primera vez, red** para bajar dos imágenes base. Después,
     ninguna.
+  - **`microservicios-discovery/`** (SPEC-048, 6 de septiembre) — el mismo sistema **más dos piezas
+    de infraestructura**: un **registro** (Eureka, `:8761`) y un **Config Server** (`:8888`). **Sin
+    Docker**: seis JVM y tres PostgreSQL embebidos, arriba y sirviendo en **24–27 s**, **2,4 GB**.
+    Demuestra qué aporta descubrir **por nombre** —mover un servicio de puerto sin tocar a nadie
+    más— y sacar la configuración del programa —cambiar una propiedad sin recompilar ni reiniciar—.
+  - **Y el bloque que la justifica: se mata el registro y no pasa nada.** Medido: **cinco minutos
+    sin un solo error**, porque cada servicio guarda su copia de la lista y el registro **no está en
+    el camino de las peticiones**. Lo que sí se rompe es la capacidad de **cambiar**: con el
+    registro muerto, un servicio que se mueve de puerto no lo encuentra nadie, nunca. Y al volver a
+    encenderlo, **45 s** y un bache: el registro vuelve vacío y los clientes tiran su copia buena.
+  - **Las dos demostraciones se contradicen a propósito, y eso es material.** La de Docker enseña
+    que el DNS del compose ya descubre por nombre, gratis; ésta monta el registro que allí sobraba.
+    La frase que las cose: **Eureka no compite con Docker, compite con no tener plataforma.** Si se
+    dictan las dos, **Docker primero**.
+  - **Es la primera cosa del repositorio que NO compila offline**, y a propósito: Eureka y el Config
+    Server **no se metieron en `repo-maven/`** —serían megas en el clon de dieciocho alumnos para un
+    material que ningún alumno ejecuta—. `construir.sh` usa `DGT_ONLINE=1` y necesita red **una
+    vez**, antes de la clase, igual que las imágenes de la otra demostración. **`D-022-3` no se
+    toca**: sigue diciendo que lo que el *alumno* necesita viaja en el repositorio.
+  - **Corre sobre una combinación de versiones que Spring no publica como probada** —tren
+    2025.1.3, compilado contra Boot 4.0.8, sobre el Boot 4.1.0 del curso— y **funciona**, con dos
+    aristas encontradas midiendo y desactivadas en la configuración: `eureka.instance.instance-id`
+    fijado a mano (si no, `/actuator/refresh` devuelve 500) y **`eureka.client.refresh.enable:
+    false`** (si no, **el refresco echa al servicio del registro y no vuelve a entrar**). Las dos
+    están explicadas con su traza en `config-repo/application.yml`. **La segunda no se quita.**
+  - **Es OPCIONAL y va al final.** Si el tiempo aprieta, el lab de microservicios y la demostración
+    con Docker cubren la sesión enteros.
 
 ## 1.a · Lo que se retiró, y dónde está
 

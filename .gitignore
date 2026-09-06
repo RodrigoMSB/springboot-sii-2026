@@ -41,6 +41,11 @@ incoming/
 # El estado local del lab (log y PID de la app). No se versiona.
 labs/**/.estado/
 
+# Lo mismo para las demostraciones del instructor: `microservicios-discovery/levantar.sh`
+# guarda ahi el log y el PID de cada uno de los seis procesos. Es estado de una
+# corrida, no material — y los PID de otra maquina no le sirven a nadie.
+demos-instructor/**/.estado/
+
 # El directorio de datos del PostgreSQL embebido. Lo crea la aplicación al
 # arrancar y pesa decenas de MB; es estado local, no material.
 #

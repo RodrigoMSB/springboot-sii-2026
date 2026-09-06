@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>microservicios-auditoria-discovery</artifactId>
+  <version>0.1.0</version>
+  <name>microservicios-auditoria-discovery</name>
+  <description>Demo Discovery · auditoría — el mismo del lab, ahora inscrito en el registro</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <zonky.version>2.2.2</zonky.version>
+    <spring-cloud.version>2025.1.3</spring-cloud.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-flyway</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>${zonky.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test.postgres</groupId>
+      <artifactId>embedded-postgres-binaries-windows-amd64</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.zonky.test.postgres</groupId>
+      <artifactId>embedded-postgres-binaries-darwin-arm64v8</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- =====================================================================
+         LAS TRES QUE NO ESTÁN EN EL LABORATORIO
+         =====================================================================
+         Son las mismas tres en los cuatro servicios, y entre las tres son todo
+         lo que hace falta para pasar de «una URL en un archivo» a «un nombre
+         que alguien resuelve». Diecisiete líneas de XML.
+    -->
+
+    <!-- 1. Se inscribe en el registro al arrancar, late cada 30 s, y se baja
+            una copia del registro para resolver nombres. Arrastra consigo
+            `spring-cloud-loadbalancer`, que es quien de verdad convierte
+            `http://contribuyentes` en una dirección. -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+
+    <!-- 2. El cliente del Config Server: lo que hace que `spring.config.import`
+            entienda `configserver:`. Aquí trae además el puerto y la URL de la
+            base, así que sin él este servicio no sabe ni dónde escuchar. -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-config</artifactId>
+    </dependency>
+
+    <!-- 3. Actuator, y aquí NO es opcional: `POST /actuator/refresh` —el comando
+            entero del bloque 3— lo publica él. Sin actuator hay Config Server
+            pero no hay recarga en caliente, y la demostración se queda coja. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+  </dependencies>
+
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- El tren. Fija de una vez las versiones de Eureka, Config y
+           LoadBalancer: por eso ninguna dependencia de spring-cloud lleva
+           <version> abajo. Escribir una a mano es la forma más rápida de
+           romperlo todo. -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.zonky.test.postgres</groupId>
+        <artifactId>embedded-postgres-binaries-bom</artifactId>
+        <version>16.14.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <build>
+    <plugins>
+      <!--
+        ================================================================
+         POR QUÉ aquí el `repackage` SÍ corre, y en el laboratorio no
+        ================================================================
+         QUÉ HACE · empaqueta el jar ejecutable, con todas sus
+         dependencias dentro. Es lo que `levantar.sh` arranca con
+         `java -jar`.
+
+         POR QUÉ · en el laboratorio son cuatro procesos y se arrancan
+         con `./mvnw spring-boot:run`, que es lo que el alumno teclea.
+         Aquí son SEIS, y arrancarlos con seis Maven significa seis JVM
+         de Maven además de las seis de las aplicaciones: más memoria y
+         varios segundos más de arranque, en una demostración donde el
+         tiempo total de arranque es justo uno de los números que hay
+         que enseñar. Con `java -jar` no hay intermediario.
+
+         Es la misma decisión, y por la misma razón, que tomó la
+         demostración con Docker.
+        ================================================================
+      -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

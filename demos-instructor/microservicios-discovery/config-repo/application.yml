@@ -1,0 +1,167 @@
+# =============================================================================
+#  application.yml — lo que vale para LOS CUATRO servicios
+# -----------------------------------------------------------------------------
+#  El Config Server sirve dos archivos a cada cliente: éste, que es común, y el
+#  suyo propio (`tramites.yml`, `gateway.yml`, …). Lo del archivo propio manda
+#  sobre lo de aquí.
+#
+#  Que exista este archivo ES la mitad del argumento del Config Server. En el
+#  laboratorio, «cada servicio habla con Eureka» habría que escribirlo cuatro
+#  veces, en cuatro `application.yml`, y mantenerlo sincronizado a mano. El día
+#  que el registro cambia de puerto se tocan cuatro archivos, se recompilan
+#  cuatro proyectos y se reinician cuatro procesos — o se olvida uno, que es lo
+#  que pasa de verdad.
+# =============================================================================
+
+eureka:
+  instance:
+    # =======================================================================
+    #  ⚠️  ESTA LÍNEA NO ES DECORATIVA — se descubrió midiendo, no leyendo
+    # =======================================================================
+    #  Sin ella, `POST /actuator/refresh` devuelve HTTP 500. El refresco SÍ se
+    #  aplica —la propiedad cambia— pero el endpoint contesta con un error, y una
+    #  demostración en la que el comando correcto devuelve 500 no es una
+    #  demostración.
+    #
+    #  Qué pasa por dentro, medido en esta misma máquina: al refrescar, Spring
+    #  Cloud reconstruye el bean `eurekaClient` (está en `@RefreshScope`). Al
+    #  reconstruirse, el `DiscoveryClient` de Netflix vuelve a leer el registro y
+    #  llama a `Application.getByInstanceId(...)` con un id que en ese camino
+    #  viene nulo:
+    #
+    #      ERROR ... DiscoveryClient : Fetch registry error at startup:
+    #                Cannot invoke "Object.hashCode()" because "key" is null
+    #      java.lang.NullPointerException
+    #        at com.netflix.discovery.shared.Application.getByInstanceId(Application.java:181)
+    #        at com.netflix.discovery.DiscoveryClient.updateInstanceRemoteStatus(DiscoveryClient.java:1006)
+    #
+    #  Fijando el `instance-id` a mano, el id deja de venir nulo y el endpoint
+    #  devuelve 200 con la lista de propiedades que cambiaron. Es el precio
+    #  concreto de correr el tren 2025.1.3 (compilado contra Boot 4.0.8) sobre el
+    #  Boot 4.1.0 del curso: no rompe nada del funcionamiento normal, pero deja
+    #  esta arista. Está documentada en el informe de la SPEC-048.
+    #
+    #  Y de paso hace el panel legible: sin esto los ids son
+    #  `192.168.100.218:tramites:8232` y con esto son `tramites:8232`.
+    # =======================================================================
+    instance-id: ${spring.application.name}:${server.port}
+
+    # ---------------------------------------------------------------------
+    #  LOS DOS RELOJES DEL CLIENTE. Valores de fábrica, escritos a propósito:
+    #  son los números que el bloque 4 de la demostración mide en vivo.
+    # ---------------------------------------------------------------------
+    # Cada cuánto este servicio le dice al registro «sigo vivo».
+    lease-renewal-interval-in-seconds: 30
+    # Cuánto aguanta el registro sin latidos antes de darlo por muerto.
+    lease-expiration-duration-in-seconds: 90
+
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+    # =====================================================================
+    #  ⚠️  SIN ESTA LÍNEA LA DEMOSTRACIÓN SE ROMPE A SÍ MISMA
+    # =====================================================================
+    #  Y no es una exageración: es lo que pasaba, medido, y estuvo a punto de
+    #  costar el bloque 4 entero.
+    #
+    #  QUÉ PASABA. De fábrica, el bean `eurekaClient` está en `@RefreshScope`,
+    #  así que un `POST /actuator/refresh` —el comando del BLOQUE 3— lo
+    #  reconstruye. En esta combinación de versiones, al reconstruirlo el
+    #  servicio SE DA DE BAJA del registro y ya no consigue volver a inscribirse:
+    #
+    #      18:15:11.720 INFO  TRAMITES - Unregistering ...
+    #      18:15:11.731 INFO  TRAMITES - deregister  status: 200      <- se fue
+    #      18:15:11.756 WARN  TRAMITES - registration failed
+    #                          Cannot execute request on any known server
+    #      18:14:24.527 WARN  TRAMITES - registration failed          <- y a los 30 s
+    #      ...                                                           otra vez, y otra
+    #
+    #  Y el servidor de Eureka estaba VIVO: el `deregister` le contestó 200 doce
+    #  milisegundos antes. O sea que trámites se borró del registro y se quedó
+    #  fuera hasta que alguien lo reiniciara. Consecuencia en pantalla: el gateway
+    #  dejaba de encontrarlo y `GET /tramites/1` pasaba a HTTP 503 — el bloque 3
+    #  rompía el sistema justo antes del bloque 4.
+    #
+    #  QUÉ HACE ESTA LÍNEA. Con `refresh.enable: false`, Spring Cloud usa la
+    #  configuración NO refrescable del cliente de Eureka
+    #  (`EurekaClientAutoConfiguration$EurekaClientConfiguration` en vez de
+    #  `$RefreshableEurekaClientConfiguration`). El cliente pasa a ser un
+    #  singleton normal que el refresco no toca. Medido después del cambio: cero
+    #  bajas, el refresco sigue devolviendo 200 con las claves que cambiaron, y
+    #  los cinco siguen en el registro.
+    #
+    #  QUÉ SE PIERDE, porque algo se pierde. Las propiedades `eureka.*` dejan de
+    #  ser recargables en caliente: cambiar la dirección del registro ahora pide
+    #  reiniciar el servicio. Es un precio pequeño —esa dirección no cambia nunca
+    #  en una demostración— y a cambio el resto de la configuración sigue
+    #  recargándose, que es lo que el bloque 3 enseña.
+    #
+    #  Se probó antes otra hipótesis y NO era: poner `service-url` en el
+    #  `application.yml` local en vez de traerlo del Config Server no cambia nada.
+    #  El problema está en la reconstrucción del cliente, no en de dónde salen sus
+    #  propiedades.
+    # =====================================================================
+    refresh:
+      enable: false
+
+    # =====================================================================
+    #  EL NÚMERO DEL BLOQUE 4, y el más importante de esta demostración.
+    # =====================================================================
+    #  Cada cuánto el cliente se baja una copia del registro entero y la guarda
+    #  EN SU PROPIA MEMORIA. Entre una bajada y la siguiente, este servicio NO
+    #  habla con Eureka para nada: resuelve los nombres contra su copia local.
+    #
+    #  De ahí sale la respuesta a «¿qué pasa si se cae el registro?»: no pasa
+    #  nada, durante bastante rato. Bajarlo a 5 s NO cambia eso — cuando el
+    #  registro no contesta, el cliente se queda con la última copia buena, y da
+    #  igual cada cuánto lo intente. El bloque 4 se mide igual.
+    #
+    #  ---------------------------------------------------------------------
+    #  POR QUÉ 5 Y NO LOS 30 DE FÁBRICA — medido, y es el número que decidió
+    #  que esta demostración sea proyectable
+    #  ---------------------------------------------------------------------
+    #  Con los 30 s de fábrica, el sistema tarda en SERVIR mucho más de lo que
+    #  tarda en ARRANCAR. Medido en esta máquina, tres corridas iguales:
+    #
+    #      los seis procesos responden a /salud .............. 25 s
+    #      la primera petición de punta a punta devuelve 200 .. 48 s
+    #      -> 24 segundos de HTTP 503 con TODO el sistema sano
+    #
+    #  La causa no es un fallo: el gateway arrancó antes que trámites, se bajó
+    #  un registro donde trámites todavía no estaba, y hasta la siguiente bajada
+    #  —hasta 30 s después— para él trámites no existe:
+    #
+    #      WARN GATEWAY - No servers available for service: tramites
+    #      WARN GATEWAY - [GATEWAY] tramites no contestó: IllegalStateException
+    #
+    #  Medio minuto de 503 mientras el instructor explica que todo está bien no
+    #  es una demostración: es un accidente. Con 5 s la ventana baja a menos de
+    #  cinco segundos, y `levantar.sh` además espera a que se cierre antes de
+    #  decir «listo», así que en la clase no se ve nunca.
+    #
+    #  Y el número de fábrica no se esconde, se ENSEÑA: es la explicación de por
+    #  qué un sistema con registro tarda en estabilizarse después de un
+    #  despliegue, y de por qué todo el que llama a otro servicio necesita un
+    #  circuit breaker. La lista siempre va un poco por detrás de la realidad.
+    # =====================================================================
+    registry-fetch-interval-seconds: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # `refresh` es el del bloque 3. `health` y `info` porque un servicio sin
+        # salud en un sistema repartido es una caja negra (Lab 11).
+        include: refresh,health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: WARN
+    cl.dgt: INFO
+    org.springframework.boot.tomcat: INFO
+    org.flywaydb: INFO
+    com.netflix.discovery: INFO

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+   config — el Config Server del sistema
+  .............................................................................
+   Backend `native`: la configuración son ARCHIVOS, en `config-repo/`, al lado
+   del sistema y versionados con él. Es la misma decisión que tomó el lab
+   antiguo, y sus razones siguen siendo buenas:
+
+     · Se VE. El instructor abre `config-repo/tramites.yml` en el editor,
+       proyectado, y cambia una línea delante de la sala. Un backend Git
+       obligaría a hacer un commit en medio de la demostración.
+     · No depende de la red. Una demostración que necesita GitHub arriba para
+       arrancar es una demostración que a veces no arranca, y el aula del SII no
+       es el sitio donde probar suerte.
+
+   En PRODUCCIÓN el backend es un repositorio Git, y no por moda: se quiere el
+   historial (quién bajó el timeout y cuándo) y la reversión (`git revert` sobre
+   el cambio de configuración que tumbó el sistema anoche). Es el mismo Config
+   Server con otro `spring.cloud.config.server.*`; el concepto no cambia y la
+   demostración vale igual.
+  =============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>cl.dgt</groupId>
+  <artifactId>microservicios-config-discovery</artifactId>
+  <version>0.1.0</version>
+  <name>microservicios-config-discovery</name>
+  <description>Demo Discovery · config — Config Server: la configuración de los seis, fuera de ellos</description>
+
+  <properties>
+    <java.version>25</java.version>
+    <spring-cloud.version>2025.1.3</spring-cloud.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-config-server</artifactId>
+    </dependency>
+    <!-- Se registra en Eureka como uno más: en el panel del bloque 1 sale él
+         también, y eso es deliberado. La infraestructura no está exenta de las
+         reglas que le impone al resto. -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- El jar ejecutable: es lo que `levantar.sh` arranca con `java -jar`.
+           Sin este bloque el plugin queda solo en el `pluginManagement` del
+           padre, no se ejecuta, y el jar sale de 5 KB — compila, y no arranca. -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
