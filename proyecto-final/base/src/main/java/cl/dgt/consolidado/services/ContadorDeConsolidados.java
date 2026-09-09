@@ -15,6 +15,13 @@ import org.springframework.stereotype.Service;
  * </pre>
  *
  * <p>Se comprueba con {@code GET /actuator/metrics/dgt.consolidados.emitidos}.
+ *
+ * <p><b>Y ojo con qué prueba esa comprobación.</b> El contador se registra al arrancar, así que
+ * ese endpoint responde <b>200</b> con un cuerpo de aspecto perfectamente sano —una medición
+ * {@code COUNT} con {@code value: 0.0}— aunque nunca hayas llamado a {@code increment()}.
+ * Que conteste no demuestra nada: lo que hay que mirar es que el número
+ * <b>suba</b> después de pedir un consolidado. Si se queda en 0 pedido tras pedido, la línea
+ * falta — y nada más te lo va a decir.
  */
 @Service
 public class ContadorDeConsolidados {

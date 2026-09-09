@@ -36,7 +36,29 @@ public class SeguridadConfig {
                         // devuelve ni un dato. Y sin esto `/swagger-ui.html` daría 401, que es la
                         // primera pantalla que alguien abre para entender el servicio.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // Las reglas del encargo van aquí.
+                        // Las reglas del encargo van AQUÍ, y el sitio importa: esta lista se
+                        // evalúa de arriba abajo y GANA LA PRIMERA REGLA QUE CASA.
+                        // `anyRequest()` casa con todo, así que va la última — siempre.
+                        //
+                        // Ponerla DESPUÉS de `anyRequest()` es ruidoso, y eso es una suerte: la
+                        // aplicación no arranca y dice por qué —«Can't configure requestMatchers
+                        // after anyRequest»—, así que lo ves en el primer intento.
+                        //
+                        // Lo SILENCIOSO es ensombrecer tu regla con otra anterior que ya case
+                        // con la misma ruta (un `.authenticated()` de más sobre
+                        // `/consolidados/**`, por ejemplo): la segunda no se ejecuta jamás, no
+                        // hay error ni WARNING, y cualquier autenticado —también el
+                        // CONTRIBUYENTE— entra con un 200. Una sola regla por ruta.
+                        //
+                        // Y NO la escribas como `@PreAuthorize` en el controller: sin
+                        // `@EnableMethodSecurity`, que este proyecto no trae, esa anotación se
+                        // ignora ENTERA, sin error ni aviso, y el endpoint queda abierto a
+                        // cualquier autenticado. Comprobado. La autorización vive en esta
+                        // cadena y en ningún otro sitio — es lo que mira el criterio 4.
+                        //
+                        // La autoridad que trae el token es `ROLE_FISCALIZADOR`, tal cual: la
+                        // arma `ServicioDeTokens` y la lee `conversorDeRoles`, ahí abajo, sin
+                        // añadirle prefijo.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();

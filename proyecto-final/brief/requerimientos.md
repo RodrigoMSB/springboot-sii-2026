@@ -97,6 +97,23 @@ Y es tan parte del encargo como lo anterior — **no** se evalúa, y hacerlo no 
 Necesitarás además un `@RestControllerAdvice` para el 404 y el 400 con cuerpo — es el manejador de
 errores del Lab 03.
 
+### Cuatro sitios donde se falla en silencio
+
+Aclaración, no requisito nuevo: nada de esto cambia lo pedido. Los cuatro tienen en común que **no
+dan error** — el proyecto arranca, la petición responde 200, y algo está mal. Los cuatro están
+avisados además con un comentario en el propio archivo de `base/`.
+
+| dónde | qué pasa si te equivocas |
+|---|---|
+| `entities/Tramite.java` | El campo se llama `monto` dentro y `montoDeclarado` en el JSON. Devolver la entidad, o llamarle `monto` al campo del DTO, saca el nombre equivocado con un 200 |
+| `entities/Contribuyente.java` | `getTramites()` trae **todos** los trámites del contribuyente, de cualquier año. No falla, no avisa, y el total sale mal |
+| `seguridad/SeguridadConfig.java` | Tu regla, ensombrecida por otra anterior que ya case con la ruta, no se ejecuta nunca y entra cualquier autenticado. Y `@PreAuthorize` en el controller se ignora **entero**: este proyecto no lleva `@EnableMethodSecurity` |
+| `services/ContadorDeConsolidados.java` | `/actuator/metrics/dgt.consolidados.emitidos` responde 200 con `value: 0.0` aunque nunca hayas llamado a `increment()`. Que conteste no prueba nada: tiene que **subir** |
+
+Lo que sí da un error legible no está en esta lista, porque no hace falta: una fecha mal escrita,
+una columna que no existe en la tabla o la regla de seguridad puesta después de `anyRequest()`
+paran el arranque o la petición diciendo qué pasó.
+
 ---
 
 ## De dónde partes · `base/`
