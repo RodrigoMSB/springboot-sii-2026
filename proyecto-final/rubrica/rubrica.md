@@ -34,7 +34,7 @@ cd base                     # la carpeta que entregó el alumno
 # y en otra terminal, el token de fiscalizador:
 TOKEN=$(curl -s -X POST localhost:8107/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"usuario":"ana","clave":"dgt2026"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+  -d '{"usuario":"ana","clave":"dgt2026"}' | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 ```
 
 ---
@@ -56,7 +56,7 @@ Que cada pieza esté donde le toca y no sepa de más.
 cat src/main/java/cl/dgt/consolidado/controllers/ConsolidadoController.java
 
 # y NO devuelve la entidad
-grep -r "Contribuyente\b" src/main/java/cl/dgt/consolidado/controllers/
+grep -rn "\bContribuyente\b" src/main/java/cl/dgt/consolidado/controllers/
 ```
 
 > **El DTO es una lista blanca**, y es el criterio que más se cae: si devuelve la entidad, cualquier
@@ -84,7 +84,7 @@ curl -s -o /dev/null -w "%{http_code}\n" \
 
 # 2 · token de CONTRIBUYENTE  ->  403
 TC=$(curl -s -X POST localhost:8107/auth/login -H 'Content-Type: application/json' \
-     -d '{"usuario":"luis","clave":"dgt2026"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+     -d '{"usuario":"luis","clave":"dgt2026"}' | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $TC" \
   "localhost:8107/consolidados/76.111.111-1?desde=2026-01-01&hasta=2026-12-31"
 
