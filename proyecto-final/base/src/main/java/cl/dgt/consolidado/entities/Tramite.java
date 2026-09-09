@@ -22,9 +22,23 @@ public class Tramite {
     @Column(nullable = false)
     private LocalDate fecha;
 
+    // OJO CON EL NOMBRE. Aquí dentro el campo se llama `monto`. En el JSON que pide el brief se
+    // llama `montoDeclarado`. No es un descuido: el nombre de dentro es del modelo y el de fuera
+    // es del contrato de la API, y conviene que puedan cambiar por separado. La traducción se
+    // hace en el servicio, al armar el DTO.
+    //
+    // Si devuelves la entidad —o un DTO cuyo campo se llame `monto`— el JSON sale con "monto" y
+    // NADIE te avisa: la petición responde 200, los números están bien y el formato está mal.
+    // Es el error de formato más común de este encargo.
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal monto;
 
+    // LAZY: esto no es el contribuyente todavía, es un proxy, y se carga con la PRIMERA llamada
+    // a `getContribuyente()`. Si al mapear la lista de trámites a DTO pasas por aquí, sale un
+    // SELECT por cada trámite — el N+1 del Lab 06, y en silencio: la respuesta es correcta y lo
+    // único que lo delata es el log de SQL, que es justo lo que mira el criterio 5 de la rúbrica.
+    // Se evita con un `join fetch` en la consulta, o no pasando por aquí: la razón social ya la
+    // tienes del contribuyente que buscaste por RUT.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contribuyente_id", nullable = false)
     private Contribuyente contribuyente;

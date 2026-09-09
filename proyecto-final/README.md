@@ -89,6 +89,12 @@ rm -rf target .datos-pg          # que el zip no lleve basura ni tu base local
 ls -lh target/jib-image.tar
 ```
 
+> **El zip es de `base/`, pero `base/` no corre suelto.** El `./mvnw` de este curso no descarga
+> nada: usa el Maven, el JDK y las dependencias que viajan en el repositorio, y los busca subiendo
+> carpetas hasta dar con `tools/maven/`. Descomprimido fuera del clon, el primer comando se planta
+> con *«No encuentro tools/maven/ subiendo desde: …»*. Para probarlo —y para corregirlo— la carpeta
+> tiene que estar en su sitio: `proyecto-final/base/`, dentro de un clon del repositorio.
+
 Y los cuatro `curl` de la rúbrica, con la aplicación corriendo. **Son literalmente los que se van a
 ejecutar**: están escritos, uno a uno, en `rubrica/rubrica.md` §2.
 
