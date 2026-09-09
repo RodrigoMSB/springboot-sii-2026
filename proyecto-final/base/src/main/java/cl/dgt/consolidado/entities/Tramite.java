@@ -54,6 +54,16 @@ public class Tramite {
      * Constructor SÓLO para tests. La aplicación no lo usa: los trámites los crea Hibernate al
      * leer la tabla. Está aquí para que un test de servicio pueda armar un trámite sin levantar
      * la base ni recurrir a reflexión.
+     *
+     * <p>Dos avisos, porque los dos muerden en el test y no en la aplicación:
+     *
+     * <p><b>No recibe {@code contribuyente}</b>, así que queda en {@code null}. Un mapeo a DTO
+     * que pase por {@code getContribuyente()} revienta con NPE en el test — y eso es una señal,
+     * no un estorbo: la razón social sale del contribuyente que ya buscaste por RUT, no de cada
+     * trámite.
+     *
+     * <p><b>El último argumento es {@code oficinaCodigo}</b>, que es del ejemplo resuelto de
+     * {@code ejemplo/}. Para tu encargo da exactamente igual lo que pongas ahí.
      */
     public Tramite(Long id, String tipo, String estado, java.time.LocalDate fecha,
                    java.math.BigDecimal monto, String oficinaCodigo) {

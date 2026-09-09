@@ -84,10 +84,16 @@ Antes de mandarlo, comprueba tú mismo lo que se va a comprobar al corregir:
 cd base
 rm -rf target .datos-pg          # que el zip no lleve basura ni tu base local
 
-./mvnw test                      # los tres tests en verde
+./mvnw test                      # los tres en verde: el de contexto + tus dos
 ./mvnw package jib:buildTar      # la imagen se construye
 ls -lh target/jib-image.tar
 ```
+
+> **«Los tres» es el estado en la entrega, no el del primer día.** `base/` trae **un** test, el de
+> contexto, y `./mvnw test` recién clonado dice `Tests run: 1`. Eso es lo correcto: los otros dos
+> los escribes tú — son la pieza 6 del brief, el de servicio con `@Mock` y el de controller con
+> `MockMvc`. El número final puede ser mayor que tres si repartes en varios métodos; la rúbrica
+> pide **al menos** tres en verde.
 
 > **El zip es de `base/`, pero `base/` no corre suelto.** El `./mvnw` de este curso no descarga
 > nada: usa el Maven, el JDK y las dependencias que viajan en el repositorio, y los busca subiendo

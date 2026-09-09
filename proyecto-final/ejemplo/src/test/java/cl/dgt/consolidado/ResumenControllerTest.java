@@ -62,4 +62,28 @@ class ResumenControllerTest {
     //
     //   La seguridad se comprueba aparte, con los curl de la rúbrica (401 sin token, 403 con el
     //   token equivocado). Cada test al nivel más barato que responda su pregunta — Lab 08.
+    //
+    //   ---------------------------------------------------------------------------------------
+    //   Y SI TE VAS AL OTRO EXTREMO, LEE ESTO ANTES DE PERDER LA TARDE.
+    //
+    //   Si en vez de este slice montas un `@SpringBootTest` + `@AutoConfigureMockMvc` con la
+    //   cadena ENCENDIDA, `@WithMockUser` NO autentica la petición. Sale 401, y encima con
+    //   cabecera `WWW-Authenticate: Bearer`, que se lee como «mi token está mal» cuando lo que
+    //   pasa es que no hubo token ninguno.
+    //
+    //   El motivo: `@WithMockUser` sólo llena el `TestSecurityContextHolder`. Para que ese
+    //   contexto llegue a la cadena hace falta el post-procesador que instala
+    //   `SecurityMockMvcConfigurers.springSecurity()`, y el `MockMvc` que inyecta
+    //   `@AutoConfigureMockMvc` en este proyecto monta el filtro de seguridad pero NO ese
+    //   post-procesador. Comprobado, y comprobado también que la culpa no es de `STATELESS` ni
+    //   de `oauth2ResourceServer`: quitarlos no arregla nada, sólo cambia el 401 por un 403.
+    //
+    //   Cualquiera de estas cuatro funciona, y las cuatro dan 200:
+    //
+    //       .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_FISCALIZADOR")))
+    //       .with(user("ana").authorities(new SimpleGrantedAuthority("ROLE_FISCALIZADOR")))
+    //       @WithMockUser  +  .with(testSecurityContext())
+    //       MockMvcBuilders.webAppContextSetup(ctx).apply(springSecurity()).build()
+    //
+    //   Para el encargo no necesitas ninguna: el test que pide el brief es éste, el del 404.
 }
